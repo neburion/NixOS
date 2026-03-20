@@ -3,11 +3,10 @@
   imports = [ 
     ./hyprland.nix
     ./waybar.nix
-    ./wofi.nix
+    ./wofi
     ./mako.nix
     ./wallpaper.nix
     ./gtk.nix
-    ./scripts
   ];
 
   home.packages = with pkgs; [
