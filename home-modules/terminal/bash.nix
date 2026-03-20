@@ -6,11 +6,11 @@
     shellAliases = {
       # NixOS
       cd-conf = "cd ~/NixOS";
-      conf = "sudo -e ~/NixOS/configuration.nix";
-      h-conf = "sudo -e ~/NixOS/home.nix";
-      f-conf = "sudo -e ~/NixOS/flake.nix";
-      m-conf = "sudo nvim ~/NixOS/modules";
-      hm-conf = "sudo nvim ~/NixOS/home-modules";
+      conf = "-e ~/NixOS/configuration.nix";
+      h-conf = "-e ~/NixOS/home.nix";
+      f-conf = "-e ~/NixOS/flake.nix";
+      m-conf = "nvim ~/NixOS/modules";
+      hm-conf = "nvim ~/NixOS/home-modules";
       rebuild = "sudo nixos-rebuild switch --flake ~/NixOS#pod042";
       f-rebuild = "sudo nix flake update --flake ~/NixOS && sudo nixos-rebuild switch --flake ~/NixOS#pod042";
 
