@@ -16,7 +16,7 @@ let
   toArg = k: v:
     if v == true  then "--${k}"
     else if v == false then ""
-    else "--${k}=${toString v}";
+    else "--${k}=\"${toString v}\"";
 
   wofiArgs = lib.concatStringsSep " "
     (lib.filter (s: s != "")
