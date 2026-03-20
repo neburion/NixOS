@@ -15,17 +15,17 @@
       };
 
       battery = {
-        format      = "󰂀 {capacity}%";
-        format-100  = "󰁹 {capacity}%";
-        format-90   = "󰂂 {capacity}%";
-        format-80   = "󰂁 {capacity}%";
-        format-70   = "󰂀 {capacity}%";
-        format-60   = "󰁿 {capacity}%";
-        format-50   = "󰁾 {capacity}%";
-        format-40   = "󰁽 {capacity}%";
-        format-30   = "󰁼 {capacity}%";
-        format-20   = "󰁻 {capacity}%";
-        format-10   = "󰁺 {capacity}%";
+        format      = "󰂀{capacity}%";
+        format-100  = "󰁹{capacity}%";
+        format-90   = "󰂂{capacity}%";
+        format-80   = "󰂁{capacity}%";
+        format-70   = "󰂀{capacity}%";
+        format-60   = "󰁿{capacity}%";
+        format-50   = "󰁾{capacity}%";
+        format-40   = "󰁽{capacity}%";
+        format-30   = "󰁼{capacity}%";
+        format-20   = "󰁻{capacity}%";
+        format-10   = "󰁺{capacity}%";
         interval    = 5;
         states = {
           "100" = 100;
@@ -65,7 +65,7 @@
       pulseaudio = {
         scroll-step      = 5;
         max-volume       = 150;
-        format           = "  {volume}%";
+        format           = " {volume}%";
         nospacing        = 1;
         on-click         = "pavucontrol";
         tooltip          = false;
