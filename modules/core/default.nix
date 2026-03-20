@@ -1,6 +1,6 @@
 { ... }:
 {
-  import = [
+  imports = [
       ./hardware.nix
       ./networking.nix
       ./audio.nix

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  import = [
+  imports = [
     ./gaming.nix
     ./emulation
   ];
