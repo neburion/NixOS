@@ -44,7 +44,7 @@
   #battery,
   #cpu,
   #memory,
-  #custom-gpu
+  #custom-gpu,
   #pulseaudio,
   #tray { padding: 0px 7px; }
 
