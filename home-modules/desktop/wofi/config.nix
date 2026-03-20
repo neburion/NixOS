@@ -1,7 +1,7 @@
 { lib, config, ... }:
 
 let
-  inherit (import ./settings.nix { inherit lib; }) sharedSettings;
+  inherit (import ./shared-config.nix { inherit lib; }) sharedSettings;
 in
 {
   programs.wofi = {

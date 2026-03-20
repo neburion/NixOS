@@ -15,6 +15,8 @@
       # Apps
       "$terminal" = "ghostty";
       "$appLauncher" = "wofi --show drun";
+      "$themeSwitcher" = "wofi-theme-switcher";
+      "$powerMenu" = "wofi-power-menu";
       "$fileManager" = "thunar";
       "$wallpaperManager" = "waypaper";
       "$audioManager" = "pavucontrol";
@@ -24,9 +26,6 @@
       "$notesApp" = "obsidian";
       "$messenger" = "signal";
       "$discord" = "discord";
-      #"$waydroid-on" = "waydroid session start && waydroid show-full-ui";
-      #"$waydroid-off" = "waydroid session stop";
-      #"$debug" = ''notify-send "Debug" "Testing keybind"'';
 
       # Auto Exec
       exec-once = [
@@ -55,6 +54,8 @@
         # Apps
         "$mod, Return, exec, $terminal"
         "$mod, Space, exec, $appLauncher"
+        "$mod SHIFT, Space, exec, $themeSwitcher"
+        "$mod ALT, Space, exec, $powerMenu"
         "$mod, F, exec, $fileManager"
         "$mod, W, exec, $wallpaperManager"
         "$mod, A, exec, $audioManager"
@@ -65,10 +66,6 @@
         "$mod, D, exec, $discord"
         "$mod, G, exec, heroic"
         "$mod SHIFT, G, exec, steam"
-        # Emulation
-        #"$mod, Z, exec, debug"
-        #"$mod, Z, exec, waydroid-on"
-        #"$mod SHIFT, Z, exec, waydroid-off"
         # Windows
         "$mod, Backspace, killactive"
         "$mod SHIFT, S, togglesplit"

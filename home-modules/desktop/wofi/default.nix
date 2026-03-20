@@ -27,13 +27,13 @@ let
     #input, #entry:selected { border-radius: 20px; border: 0px; }
   '';
 
-  inherit (import ./settings.nix { inherit lib; }) wofiArgs;
+  inherit (import ./shared-config.nix { inherit lib; }) wofiArgs;
 
   wofi-power-menu     = import ./scripts/wofi-power-menu.nix     { inherit pkgs wofiArgs; };
   wofi-theme-switcher = import ./scripts/wofi-theme-switcher.nix { inherit pkgs wofiArgs; homeDir = config.home.homeDirectory; };
 in
 {
-  imports = [ ./wofi.nix ];
+  imports = [ ./config.nix ];
 
   home.packages = [ wofi-power-menu wofi-theme-switcher ];
 
