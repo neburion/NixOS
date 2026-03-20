@@ -7,6 +7,7 @@
     ./mako.nix
     ./wallpaper.nix
     ./gtk.nix
+    ./scripts
   ];
 
   home.packages = with pkgs; [
