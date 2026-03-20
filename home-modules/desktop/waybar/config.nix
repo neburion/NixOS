@@ -65,7 +65,7 @@
       pulseaudio = {
         scroll-step      = 5;
         max-volume       = 150;
-        format           = " {volume}%";
+        format           = "󰕾 {volume}%";
         nospacing        = 1;
         on-click         = "pavucontrol";
         tooltip          = false;
