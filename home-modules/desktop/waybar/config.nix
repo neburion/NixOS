@@ -43,7 +43,7 @@
       };
 
       cpu = {
-        format          = "  {usage}%";
+        format          = " {usage}%";
         interval        = 2;
         states.critical = 90;
         tooltip         = false;
@@ -56,7 +56,7 @@
       };
 
       memory = {
-        format          = "  {percentage}%";
+        format          = " {percentage}%";
         interval        = 2;
         states.critical = 80;
         tooltip         = false;
