@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, lib, config, ... }:
 
 let
   themes = {
@@ -15,8 +15,6 @@ let
     @define-color text ${c.fg};
     @define-color selection ${c.selection};
   '';
-
-  activeTheme = themes.dark;
 in
 {
   imports = [
@@ -25,5 +23,11 @@ in
     ./scripts/power-toggle.nix
   ];
 
-  programs.waybar.style = (mkWaybarTheme activeTheme) + (import ./style.nix);
+  xdg.configFile = lib.mapAttrs' (name: colors:
+    lib.nameValuePair "waybar/themes/${name}.css" { text = mkWaybarTheme colors; }
+  ) themes;
+
+  programs.waybar.style =
+    ''@import "${config.home.homeDirectory}/.config/waybar/themes/active.css";''
+    + (import ./style.nix);
 }

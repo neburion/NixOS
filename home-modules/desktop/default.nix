@@ -2,7 +2,7 @@
 {
   imports = [ 
     ./hyprland.nix
-    ./waybar.nix
+    ./waybar
     ./wofi
     ./mako.nix
     ./wallpaper.nix
