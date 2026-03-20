@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, config, ... }:
 
 let
   inherit (import ./settings.nix { inherit lib; }) sharedSettings;
@@ -18,6 +18,6 @@ in
       key_expand    = "Tab";
       key_exit      = "Escape";
     };
-    style = import ./style.nix;
+    style = import ./style.nix { homeDir = config.home.homeDirectory; };
   };
 }

@@ -1,5 +1,6 @@
+{ homeDir }:
 ''
-  @import "themes/active.css";
+  @import "${homeDir}/.config/wofi/themes/active.css";
 
   * {
       font-family: "FiraMono Nerd Font";
