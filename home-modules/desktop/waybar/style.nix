@@ -11,6 +11,7 @@
       background: @background;
   }
 
+  /*Capsules*/
   #clock,
   #custom-power-toggle,
   .modules-center,
@@ -43,6 +44,7 @@
   #battery,
   #cpu,
   #memory,
+  #custom-gpu
   #pulseaudio,
   #tray { padding: 0px 7px; }
 
