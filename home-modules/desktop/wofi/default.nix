@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 
 let
   themes = {
@@ -30,7 +30,7 @@ let
   inherit (import ./settings.nix { inherit lib; }) wofiArgs;
 
   wofi-power-menu     = import ./scripts/wofi-power-menu.nix     { inherit pkgs wofiArgs; };
-  wofi-theme-switcher = import ./scripts/wofi-theme-switcher.nix { inherit pkgs wofiArgs; };
+  wofi-theme-switcher = import ./scripts/wofi-theme-switcher.nix { inherit pkgs wofiArgs; homeDir = config.home.homeDirectory; };
 in
 {
   imports = [ ./wofi.nix ];

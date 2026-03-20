@@ -1,7 +1,7 @@
-{ pkgs, wofiArgs, ... }:
+{ pkgs, wofiArgs, homeDir, ... }:
 
 pkgs.writeShellScriptBin "wofi-theme-switcher" ''
-  THEMES_DIR="$HOME/.config/wofi/themes"
+  THEMES_DIR="${homeDir}/.config/wofi/themes"
   ACTIVE="$THEMES_DIR/active.css"
 
   # Create active.css if it doesn't exist yet
