@@ -41,9 +41,19 @@ let
   mkMakoConfig = c: baseConfig + (mkMakoTheme c);
 in
 {
-  home.packages = with pkgs; [ libnotify ];
+  home.packages = with pkgs; [ libnotify mako ];
 
-  services.mako.enable = true;
+  systemd.user.services.mako = {
+    Unit = {
+      Description = "Mako notification daemon";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.mako}/bin/mako";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   # Write per-theme full configs
   xdg.configFile = lib.mapAttrs' (name: colors:
