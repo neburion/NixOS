@@ -5,12 +5,12 @@
 
     shellAliases = {
       # NixOS
-      cd-conf = "cd /etc/nixos";
-      conf = "sudo -e /etc/nixos/configuration.nix";
-      m-conf = "sudo nvim /etc/nixos/modules";
-      h-conf = "sudo -e /etc/nixos/home.nix";
-      hm-conf = "sudo nvim /etc/nixos/home-modules";
-      f-conf = "sudo -e /etc/nixos/flake.nix";
+      cd-conf = "cd ~/NixOS";
+      conf = "sudo -e ~/NixOS/configuration.nix";
+      h-conf = "sudo -e ~/NixOS/home.nix";
+      f-conf = "sudo -e ~/NixOS/flake.nix";
+      m-conf = "sudo nvim ~/NixOS/modules";
+      hm-conf = "sudo nvim ~/NixOS/home-modules";
       rebuild = "sudo nixos-rebuild switch --flake ~/NixOS#pod042";
       f-rebuild = "sudo nix flake update --flake ~/NixOS && sudo nixos-rebuild switch --flake ~/NixOS#pod042";
 
@@ -18,12 +18,10 @@
       spf = "superfile";
       sspf = "sudo superfile";
 
-      # Git
-      mkrepo = "gh repo create \$(basename \"$PWD\") --public --source=. --remote=origin --push";
-      rmrepo = "git remote remove origin && gh repo delete neburion/$(basename \"$PWD\")";
-      
       # Dev
       cd-dev = "cd ~/Projects/Dev";
+      mkrepo = "gh repo create \$(basename \"$PWD\") --public --source=. --remote=origin --push";
+      rmrepo = "git remote remove origin && gh repo delete neburion/$(basename \"$PWD\")";
     };
 
     sessionVariables = {
