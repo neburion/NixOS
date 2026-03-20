@@ -2,12 +2,30 @@
 
 let
   themes = {
-    dark       = import ../../themes/dark.nix;
     catppuccin = import ../../themes/catppuccin.nix;
-    gruvbox    = import ../../themes/gruvbox.nix;
+    dark       = import ../../themes/dark.nix;
     everforest = import ../../themes/everforest.nix;
+    gruvbox    = import ../../themes/gruvbox.nix;
     nord       = import ../../themes/nord.nix;
   };
+
+  # Generate wofi-specific CSS from a color attrset
+  mkWofiTheme = c: ''
+    #window { background-color: ${c.bg}; }
+    #outer-box { padding: 10px; }
+    #input {
+        background-color: ${c.surface};
+        color: ${c.fg};
+        border-radius: 20px;
+        padding: 12px;
+    }
+    #scroll { margin-top: 10px; margin-bottom: 10px; }
+    #text { color: ${c.fg}; padding-left: 10px; }
+    #text:selected { color: ${c.fg}; }
+    #entry { padding: 5px; margin-top: 5px; }
+    #entry:selected { background-color: ${c.selection}; }
+    #input, #entry:selected { border-radius: 20px; border: 0px; }
+  '';
 
   inherit (import ./settings.nix { inherit lib; }) wofiArgs;
 
@@ -19,7 +37,7 @@ in
 
   home.packages = [ wofi-power-menu wofi-theme-switcher ];
 
-  xdg.configFile = lib.mapAttrs' (name: css:
-    lib.nameValuePair "wofi/themes/${name}.css" { text = css; }
+  xdg.configFile = lib.mapAttrs' (name: colors:
+    lib.nameValuePair "wofi/themes/${name}.css" { text = mkWofiTheme colors; }
   ) themes;
 }
