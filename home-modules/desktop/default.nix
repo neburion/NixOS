@@ -4,7 +4,7 @@
     ./hyprland.nix
     ./waybar
     ./wofi
-    ./mako.nix
+    ./mako
     ./wallpaper.nix
     ./gtk.nix
   ];
