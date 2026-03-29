@@ -8,7 +8,7 @@
     ../../modules/core/lid-keep-on.nix
     ../../modules/core/locale.nix
     ../../modules/core/boot.nix
-
+    ../../modules/core/shell.nix
   ];
 
   nixpkgs.config.allowUnfree = true;

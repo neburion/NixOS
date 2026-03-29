@@ -10,7 +10,7 @@
       ../../modules/core/audio.nix
       ../../modules/core/locale.nix
       ../../modules/core/boot.nix
-      ../../modules/core/env.nix # temporary
+      ../../modules/core/shell.nix # temporary
       ../../modules/desktop
       ../../modules/scripts/backup.nix
     ];
