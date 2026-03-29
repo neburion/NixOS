@@ -1,6 +1,5 @@
 {
   description = "NixOS configuration";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     home-manager = {
@@ -16,10 +15,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, ... }:
+  outputs = { nixpkgs, home-manager, zen-browser, nvf, ... }@inputs:
   let
-    # Reusable HM config applied to every user on every host
     sharedHMConfig = {
       useGlobalPkgs = true;
       useUserPackages = true;
@@ -32,14 +29,13 @@
         })
       ];
     };
-
-    # Helper to build a NixOS system
     mkSystem = { host, system ? "x86_64-linux", users }:
       nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit zen-browser nvf; };
+        specialArgs = { inherit zen-browser nvf inputs; };
         modules = [
           ./hosts/${host}/configuration.nix
+          { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           home-manager.nixosModules.home-manager
           {
             home-manager = sharedHMConfig // {
@@ -56,15 +52,12 @@
         users = {
           neburion = import ./users/neburion.nix;
           nululy   = import ./users/nululy.nix;
-          # add more pod042 users here
         };
       };
-
       pod153 = mkSystem {
         host = "pod153";
         users = {
           "9s" = import ./users/9s.nix;
-          # add more pod153 users here
         };
       };
     };

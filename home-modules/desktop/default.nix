@@ -29,8 +29,6 @@
     signal-desktop
     discord
     obsidian
-
-    firefox
   ];
 
   # XDG Directories
