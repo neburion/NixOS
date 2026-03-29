@@ -29,6 +29,8 @@
     signal-desktop
     discord
     obsidian
+
+    obs-studio
   ];
 
   # XDG Directories

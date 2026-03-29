@@ -24,7 +24,6 @@
     enable = true;
     xwayland.enable = true;
   };
-  #programs.sway.enable = true;
 
   # Login
   services.displayManager.sddm = {

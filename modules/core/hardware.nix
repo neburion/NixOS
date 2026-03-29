@@ -9,7 +9,7 @@
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;
-    open = true; # confirmed fine for RTX 4060 (Turing+)
+    open = true; # testing with false
     nvidiaSettings = true;
     prime = {
       offload = {
