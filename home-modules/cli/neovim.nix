@@ -41,7 +41,11 @@
         clang.enable = true;   # C
         rust.enable = true;    # Rust
         python.enable = true;  # Python
-        nix.enable = true;     # Nix
+        languages.nix = {      # Nix
+          enable = true;
+          lsp.enable = true;
+          lsp.server = "nixd"; # or "nil"
+        };
       };
 
       # Keybinds
