@@ -6,10 +6,9 @@
 
     shellAliases = {
       # NixOS
-      cd-conf = "cd /home/neburion/NixOS";
-      scd-conf = "sudo cd /home/neburion/NixOS";
-      rebuild = "sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042";
-      f-rebuild = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042";
+      cd-conf = "cd /home/neburion/NixOS 2>/dev/null || cd /home/9s/NixOS";
+      rebuild = "sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
+      f-rebuild = "sudo nix flake update --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS) && sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
 
       # Superfile
       spf = "superfile";
@@ -17,7 +16,7 @@
 
       # Dev
       cd-dev = "cd ~/Projects/Dev";
-      mkrepo = "gh repo create \$(basename \"$PWD\") --public --source=. --remote=origin --push";
+      mkrepo = "gh repo create $(basename \"$PWD\") --public --source=. --remote=origin --push";
       rmrepo = "git remote remove origin && gh repo delete neburion/$(basename \"$PWD\")";
     };
 
