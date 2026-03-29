@@ -23,7 +23,6 @@ in
       ARCHIVE="${home}/backup_$DATE.7z"
       GDRIVE="gDrive:/Backups"
       HOMESERVER="pod153:/home/9s/Backups"
-      STAGING="${home}/backup-staging"
 
       trap '${rm} -rf "$STAGING"; ${rm} -f "$ARCHIVE"' EXIT
 
