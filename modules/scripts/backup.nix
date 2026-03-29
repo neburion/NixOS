@@ -8,16 +8,13 @@ let
   mkdir  = "${pkgs.coreutils}/bin/mkdir";
   date   = "${pkgs.coreutils}/bin/date";
   home   = "/home/neburion";
-  nixos  = "/home/neburionNixOS";
+  nixos  = "/home/neburion/NixOS";
 in
 {
   systemd.services.backup = {
     description = "Daily backup";
     script = ''
       set -euo pipefail
-      STAGING="${home}/backup-staging"
-      ARCHIVE=""
-      trap '${rm} -rf "$STAGING"; ${rm} -f "$ARCHIVE"' EXIT
 
       # --- Config ---
       PASSWORD=$(cat ${home}/Docs/Passwords/backup-password)
@@ -26,6 +23,9 @@ in
       ARCHIVE="${home}/backup_$DATE.7z"
       GDRIVE="gDrive:/Backups"
       HOMESERVER="pod153:/home/9s/Backups"
+      STAGING="${home}/backup-staging"
+
+      trap '${rm} -rf "$STAGING"; ${rm} -f "$ARCHIVE"' EXIT
 
       # --- Stage files ---
       ${rm}    -rf "$STAGING"
