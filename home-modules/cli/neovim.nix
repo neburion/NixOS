@@ -37,13 +37,15 @@
       languages = {
         enableTreesitter = true;
 
-        clang.enable = true;   # C
+        clang.enable = true;   # C/C++
         rust.enable = true;    # Rust
         python.enable = true;  # Python
-        languages.nix = {      # Nix
+        nix = {                # Nix
           enable = true;
-          lsp.enable = true;
-          lsp.server = "nixd"; # or "nil"
+          lsp = {
+            enable = true;
+            server = ["nixd"]; # or "nil"
+          };
         };
       };
 
