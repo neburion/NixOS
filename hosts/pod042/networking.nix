@@ -40,9 +40,11 @@
           devices = [ "phone" ];
         };
 
-        "Configs" = {
+        "Config" = {
+          id = "config";
           path = "/home/neburion/NixOS";
           devices = [ "pod153" ];
+          type = "sendonly";
         };
       };
     };
