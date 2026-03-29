@@ -5,9 +5,9 @@
     ./hardware-configuration.nix
     ./users.nix
     ./networking.nix
-    ../../modules/lid-keep-on.nix
-    ../../modules/locale.nix
-    ../../modules/boot.nix
+    ../../modules/core/lid-keep-on.nix
+    ../../modules/core/locale.nix
+    ../../modules/core/boot.nix
 
   ];
 
