@@ -22,6 +22,7 @@
 
       # Autocomplete
       autocomplete.nvim-cmp.enable = true;
+      lsp.nvimCmp.enable = true;
 
       # Treesitter
       treesitter = {

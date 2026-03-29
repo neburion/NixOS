@@ -38,6 +38,6 @@
     enable = true;
     createDirectories = false;
     download = "/home/neburion/Downloads";
-    documents = "/home/neburion/.local/share/documents";
+    documents = "/home/neburion/.local/share/documents"; # placeholder fix since some apps like to mess with the documents directory
   };
 }
