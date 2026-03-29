@@ -41,7 +41,7 @@
         };
 
         "Configs" = {
-          path = "/home/neburion/Projects/Dev/configs";
+          path = "/home/neburion/NixOS";
           devices = [ "pod153" ];
         };
       };
