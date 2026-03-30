@@ -10,7 +10,6 @@
     sddm-astronaut # SDDM Theme Manager
     brightnessctl # Brightness Manager
     xdg-user-dirs
-    vesktop
   ];
   programs.kdeconnect.enable = true;
 

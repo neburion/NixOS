@@ -19,10 +19,5 @@
       mkrepo = "gh repo create $(basename \"$PWD\") --public --source=. --remote=origin --push";
       rmrepo = "git remote remove origin && gh repo delete neburion/$(basename \"$PWD\")";
     };
-
-    sessionVariables = {
-      EDITOR = "nvim";
-      SUDO_EDITOR = "nvim";
-    };
   };
 }

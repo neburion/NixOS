@@ -27,9 +27,10 @@
     # Desktop Apps
     spotify
     signal-desktop
-    discord
+    discord vencord
+    vesktop
+    fluffychat
     obsidian
-
     obs-studio
   ];
 

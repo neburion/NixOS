@@ -30,4 +30,5 @@
       on-button-right = "none";
     };
   };
+  xdg.configFile."mako/config".force = true;
 }

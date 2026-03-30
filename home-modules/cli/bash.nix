@@ -7,6 +7,7 @@
     shellAliases = {
       # NixOS
       cd-conf = "cd /home/neburion/NixOS 2>/dev/null || cd /home/9s/NixOS";
+      t-rebuild = "sudo nixos-rebuild test --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
       rebuild = "sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
       f-rebuild = "sudo nix flake update --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS) && sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
 

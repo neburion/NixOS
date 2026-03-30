@@ -3,6 +3,7 @@
 {
   imports = [ 
     ./bash.nix
+    ./fish.nix
     ./superfile.nix
     ./neovim.nix
     ./git.nix
