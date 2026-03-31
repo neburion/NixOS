@@ -6,13 +6,16 @@
 
     shellAliases = {
       # NixOS
-      cd-conf = "cd /home/neburion/NixOS 2>/dev/null || cd /home/9s/NixOS";
-      t-rebuild = "sudo nixos-rebuild test --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
-      rebuild = "sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
-      f-rebuild = "sudo nix flake update --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS) && sudo nixos-rebuild switch --flake $([ -d /home/neburion/NixOS ] && echo /home/neburion/NixOS || echo /home/9s/NixOS)#$(hostname)";
+      cd-conf   = "cd /home/neburion/NixOS || cd /home/9s/NixOS";
+      rebuild   = "sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042
+                 ||sudo nixos-rebuild switch --flake /home/9s/NixOS#pod153";
+      t-rebuild = "sudo nixos-rebuild test --flake /home/neburion/NixOS#pod042
+                 ||sudo nixos-rebuild test --flake /home/9s/NixOS#pod153";
+      f-rebuild = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS
+                 ||sudo nix flake update --flake /home/9s/NixOS && sudo nixos-rebuild switch --flake /home/9s/NixOS";
 
       # Superfile
-      spf = "superfile";
+      spf  = "superfile";
       sspf = "sudo superfile";
 
       # Dev
