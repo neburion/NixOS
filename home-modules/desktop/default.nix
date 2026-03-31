@@ -23,12 +23,14 @@
     grim                 # Screenshot
     slurp                # Screen Select
     wl-clipboard         # Wayland Clipboard
+    ente-desktop
 
     # Desktop Apps
     spotify
     signal-desktop
     discord vencord
     vesktop
+    element-desktop
     fluffychat
     obsidian
     obs-studio
