@@ -44,17 +44,9 @@ in
         ${home}'/Gaming/Heroic/Wine Prefixes/'   \
         "$STAGING"/Gaming/
 
-      # --- Copy NixOS Config Files ---
-      ${cp} -rf \
-        ${nixos}/configuration.nix \
-        ${nixos}/flake.nix         \
-        ${nixos}/home.nix          \
-        ${nixos}/modules/          \
-        ${nixos}/home-modules/     \
-        "$STAGING"/nixos/
-
       # --- Copy Config Files ---
       ${cp} -rf \
+        ${nixos}/                  \
         ${home}/.config/zen/       \
         ${home}/.config/rclone/    \
         ${home}/.config/keepassxc/ \
