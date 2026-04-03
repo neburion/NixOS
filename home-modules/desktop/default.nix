@@ -17,7 +17,7 @@
     xfce.thunar          # File Manager
     pavucontrol          # Audio Manager
     keepassxc            # Password Manager
-    localsend            # File Sharing Manager
+    #localsend            # File Sharing Manager
     solaar               # Logitech Manager
     razergenie           # Razer Manager
     grim                 # Screenshot
@@ -28,10 +28,8 @@
     # Desktop Apps
     spotify
     signal-desktop
-    discord vencord
     vesktop
     element-desktop
-    fluffychat
     obsidian
     obs-studio
   ];
