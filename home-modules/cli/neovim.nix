@@ -4,13 +4,19 @@
   programs.nvf = {
     enable = true;
     settings.vim = {
-      # Line numbers
+      # Line numbers and Tabs
       options = {
         number = true;
         relativenumber = true;
         tabstop = 4;
         shiftwidth = 4;
         expandtab = true;
+      };
+      vim.languageSpecificOptions = {
+        nix = {
+          tabstop = 2;
+          shiftwidth = 2;
+        };
       };
 
       # Theme
@@ -37,13 +43,11 @@
       languages = {
         enableTreesitter = true;
 
-        clang.enable  = true;  # C/C++
-        rust.enable   = true;  # Rust
-        python.enable = true;  # Python
-        nix = {                # Nix
-          enable = true;
-          lsp.servers = ["nixd"]; # or "nil"
-        };
+        clang.enable  = true; # C/C++
+        rust.enable   = true; # Rust
+        python.enable = true; # Python
+        nix.enable    = true; # Nix
+          
       };
 
       # Keybinds
@@ -53,34 +57,13 @@
           action = "<cmd>Telescope find_files<CR>";
           desc = "Find files";
         };
-        "<leader>fg" = {
-          action = "<cmd>Telescope live_grep<CR>";
-          desc = "Live grep";
-        };
-        "<leader>fb" = {
-          action = "<cmd>Telescope buffers<CR>";
-          desc = "Buffers";
-        };
 
-        # LSP diagnostics
-        "<leader>dd" = {
-          action = "<cmd>Telescope diagnostics<CR>";
-          desc = "Show diagnostics";
-        };
-        "[d" = {
-          action = "<cmd>lua vim.diagnostic.goto_prev()<CR>";
-          desc = "Previous diagnostic";
-        };
-        "]d" = {
-          action = "<cmd>lua vim.diagnostic.goto_next()<CR>";
-          desc = "Next diagnostic";
-        };
+        # Shows Diagnostics
         "<leader>e" = {
           action = "<cmd>lua vim.diagnostic.open_float()<CR>";
           desc = "Diagnostic float";
         };
       };
-
     };
   };
 }
