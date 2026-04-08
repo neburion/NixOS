@@ -12,7 +12,7 @@
         shiftwidth = 4;
         expandtab = true;
       };
-      vim.languageSpecificOptions = {
+      languageSpecificOptions = {
         nix = {
           tabstop = 2;
           shiftwidth = 2;
