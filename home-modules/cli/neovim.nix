@@ -4,7 +4,7 @@
   programs.nvf = {
     enable = true;
     settings.vim = {
-      # Line numbers and Tabs
+      # Line numbers and tabs
       options = {
         number = true;
         relativenumber = true;
@@ -12,12 +12,15 @@
         shiftwidth = 4;
         expandtab = true;
       };
-      languageSpecificOptions = {
-        nix = {
-          tabstop = 2;
-          shiftwidth = 2;
-        };
-      };
+      luaConfigRC.nix-indentation = ''
+        vim.api.nvim_create_autocmd("FileType", {
+          pattern = "nix",
+          callback = function()
+          vim.bo.tabstop = 2
+          vim.bo.shiftwidth = 2
+          end,
+        })
+      '';
 
       # Theme
       theme = {
@@ -47,7 +50,6 @@
         rust.enable   = true; # Rust
         python.enable = true; # Python
         nix.enable    = true; # Nix
-          
       };
 
       # Keybinds

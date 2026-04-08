@@ -5,7 +5,7 @@
     ./bash.nix
     ./fish.nix
     ./superfile.nix
-    ./neovim.nix
+    ./neovim
     ./git.nix
   ];
   home.packages = with pkgs; [
