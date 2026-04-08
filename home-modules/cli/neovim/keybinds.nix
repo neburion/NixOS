@@ -2,7 +2,7 @@
 
 {
   programs.nvf.settings.vim.maps.normal = {
-    "<leader>ff" = {
+    "<leader>f" = {
       action = "<cmd>Telescope find_files<CR>";
       desc = "Find files";
     };
