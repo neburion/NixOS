@@ -1,15 +1,15 @@
 { ... }:
 
 {
-  programs.nvf.settings.vim.maps.normal = {
-    "<leader>ff" = {
-      action = "<cmd>Telescope find_files<CR>";
-      desc = "Find files";
-    };
+  programs.nvf.settings.vim = {
+    lsp.enable = true;
+    languages = {
+      enableTreesitter = true;
 
-    "<leader>e" = {
-      action = "<cmd>lua vim.diagnostic.open_float()<CR>";
-      desc = "Diagnostic float";
+      clang.enable  = true; # C/C++
+      rust.enable   = true; # Rust
+      python.enable = true; # Java
+      nix.enable    = true; # Nix
     };
   };
 }

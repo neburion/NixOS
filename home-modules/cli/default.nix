@@ -5,8 +5,8 @@
     ./bash.nix
     ./fish.nix
     ./superfile.nix
-    ./neovim
     ./git.nix
+    ./neovim
   ];
   home.packages = with pkgs; [
     p7zip
