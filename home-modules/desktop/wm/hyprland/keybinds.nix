@@ -59,8 +59,8 @@
       "$mod, Escape, exec, hyprctl dispatch exit"
 
       # Screenshot
-      ", Print, exec, sh -c 'f=\"/home/neburion/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
-      "SHIFT, Print, exec, sh -c 'f=\"/home/neburion/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
+      ", Print, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
+      "SHIFT, Print, exec, sh -c 'f=\"$HOME//Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
 
       # Audio
       "$mod, equal, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"

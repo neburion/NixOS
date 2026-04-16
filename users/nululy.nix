@@ -4,6 +4,7 @@
   imports = [
     ../home-modules/desktop
     ../home-modules/cli
+    ../home-modules/dev
   ];
 
   home.packages = with pkgs; [firefox];
