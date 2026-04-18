@@ -6,6 +6,7 @@
     ./art
     ./gaming
     ./terminal
+    ./school
   ];
 
   home.packages = with pkgs; [
