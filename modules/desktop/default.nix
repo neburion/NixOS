@@ -36,4 +36,6 @@
     NIXOS_OZONE_WL = "1"; # Make electron apps use Wayland
     MOZ_ENABLE_WAYLAND=1;
   };
+
+  services.flatpak.enable = true;
 }

@@ -8,6 +8,7 @@
     ./terminal
     ./school
     ./appimage.nix
+    ./flatpak.nix
   ];
 
   home.packages = with pkgs; [
