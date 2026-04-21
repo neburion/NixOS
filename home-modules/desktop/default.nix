@@ -7,6 +7,7 @@
     ./gaming
     ./terminal
     ./school
+    ./appimage.nix
   ];
 
   home.packages = with pkgs; [
