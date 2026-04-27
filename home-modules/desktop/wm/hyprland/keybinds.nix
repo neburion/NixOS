@@ -19,6 +19,8 @@
       "$mod,       D,      exec, $discord"
       "$mod,       G,      exec, heroic"
       "$mod SHIFT, G,      exec, steam"
+      "$mod      , P,      exec, keepassxc"
+      "$mod      , S,      exec, localsend"
 
       # Windows
       "$mod,       Backspace, killactive"
