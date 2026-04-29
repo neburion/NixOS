@@ -3,6 +3,6 @@
 {
   home.packages = with pkgs; [
     heroic
-    atlauncher
+    (pkgs.callPackage ./atlauncher.nix { })
   ];
 }
