@@ -1,8 +1,9 @@
 { pkgs, ... }:
 
 {
+  # Java 25 for minecraft v26
   environment.systemPackages = with pkgs; [
-    glfw
+    jdk25
   ];
 
   # Steam
