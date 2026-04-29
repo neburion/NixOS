@@ -37,5 +37,9 @@
     MOZ_ENABLE_WAYLAND=1;
   };
 
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-38.8.4"
+  ];
+
   services.flatpak.enable = true;
 }
