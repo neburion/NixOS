@@ -11,7 +11,7 @@
                  ||sudo nixos-rebuild switch --flake /home/9s/NixOS#pod153";
       t-rebuild = "sudo nixos-rebuild test --flake /home/neburion/NixOS#pod042
                  ||sudo nixos-rebuild test --flake /home/9s/NixOS#pod153";
-      f-rebuild = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS
+      update    = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS
                  ||sudo nix flake update --flake /home/9s/NixOS && sudo nixos-rebuild switch --flake /home/9s/NixOS";
 
       # Superfile
