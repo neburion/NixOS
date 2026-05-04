@@ -31,34 +31,14 @@
 
     settings = {
       devices = {
-        "pod153" = { id = "L6DR4TI-AB4NCIU-D4QXLPE-UP4OT6U-7VAHLU4-ODYQ44D-4J7SLPC-GDMKBAQ"; };
-        "phone" = { id = "D7S7PTY-ZKFQBRV-5QQCRGV-O5M6SWS-TMAZLSO-HLOCN4X-QTHJ7LR-CXIIFQ5"; };
+        "phone"  = { id = "5PLKE3M-NSHU2A4-D3QBZQA-4X3GZFV-CEXR6FM-EGVJOUW-7K3QWCS-42GQXAH"; };
       };
-
       folders = {
         "Passwords" = {
           path = "/home/neburion/Docs/Passwords";
           devices = [ "phone" ];
         };
-
-        "Reading" = {
-          path = "/home/neburion/Media/Books/Reading-Ob";
-          devices = [ "phone" ];
-        };
-
-        "School" = {
-          path = "/home/neburion/School";
-          devices = [ "phone" ];
-        };
-
-        "Config" = {
-          id = "config";
-          path = "/home/neburion/NixOS";
-          devices = [ "pod153" ];
-          type = "sendonly";
-        };
       };
     };
   };
-
 }
