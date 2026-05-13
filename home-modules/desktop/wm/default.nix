@@ -3,6 +3,7 @@
 {
   imports = [ 
     ./hyprland
+    ./terminal
     ./waybar
     ./wofi
     ./mako

@@ -6,13 +6,10 @@
 
     shellAliases = {
       # NixOS
-      cd-conf   = "cd /home/neburion/NixOS || cd /home/9s/NixOS";
-      rebuild   = "sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042
-                 ||sudo nixos-rebuild switch --flake /home/9s/NixOS#pod153";
-      t-rebuild = "sudo nixos-rebuild test --flake /home/neburion/NixOS#pod042
-                 ||sudo nixos-rebuild test --flake /home/9s/NixOS#pod153";
-      update    = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS
-                 ||sudo nix flake update --flake /home/9s/NixOS && sudo nixos-rebuild switch --flake /home/9s/NixOS";
+      cdnixos   = "cd /home/neburion/NixOS";
+      rebuild   = "sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042";
+      trebuild  = "sudo nixos-rebuild test --flake /home/neburion/NixOS#pod042";
+      update    = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS";
 
       # Superfile
       spf  = "superfile";

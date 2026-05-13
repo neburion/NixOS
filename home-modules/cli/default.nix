@@ -3,10 +3,10 @@
 {
   imports = [ 
     ./bash.nix
-    ./fish.nix
     ./superfile.nix
     ./git.nix
     ./neovim
+    ./package
   ];
   home.packages = with pkgs; [
     p7zip

@@ -13,13 +13,13 @@
   # Local Send
   programs.localsend = {
     enable = true;
-    openFirewall = true;  # opens port 53317 TCP+UDP automatically
+    #openFirewall = true;  # opens port 53317 TCP+UDP automatically
   };
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 53317 ];
-    allowedUDPPorts = [ 53317 ];
-  };
+  #networking.firewall = {
+    #enable = true;
+    #allowedTCPPorts = [ 53317 ];
+    #allowedUDPPorts = [ 53317 ];
+  #};
 
   # Syncthing
   services.syncthing = {

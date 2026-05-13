@@ -3,12 +3,8 @@
 {
   imports = [ 
     ./wm
-    ./art
     ./gaming
-    ./terminal
-    ./school
-    ./appimage.nix
-    ./flatpak.nix
+    ./art
   ];
 
   home.packages = with pkgs; [
@@ -31,6 +27,7 @@
     spotify
     signal-desktop
     vesktop
+   #discord
     obsidian
     obs-studio
   ];
