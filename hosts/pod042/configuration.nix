@@ -1,9 +1,9 @@
 { ... }:
-
 {
   imports =
     [ 
       ./hardware-configuration.nix
+      ./disko.nix
       ./users.nix
       ./networking.nix
       ../../modules/core/hardware.nix
@@ -15,7 +15,6 @@
       ../../modules/desktop
       ../../modules/scripts/backup.nix
     ];
-
   # NixOS
   nixpkgs.config.allowUnfree = true; # Package Manager
   nix.settings.experimental-features = [ "flakes" "nix-command" ]; # Flake

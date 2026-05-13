@@ -14,8 +14,12 @@
       url = "github:notashelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, ... }@inputs:
+  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
   let
     sharedHMConfig = {
       useGlobalPkgs = true;
@@ -32,8 +36,9 @@
     mkSystem = { host, system ? "x86_64-linux", users }:
       nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit zen-browser nvf inputs; };
+        specialArgs = { inherit zen-browser nvf disko inputs; };
         modules = [
+          disko.nixosModules.disko
           ./hosts/${host}/configuration.nix
           { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           home-manager.nixosModules.home-manager
@@ -59,6 +64,14 @@
         users = {
           "9s" = import ./users/9s.nix;
         };
+      };
+      iso = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+          ./hosts/iso/default.nix
+        ];
       };
     };
   };
