@@ -3,7 +3,6 @@
   imports =
     [ 
       ./hardware-configuration.nix
-      ./disko.nix
       ./users.nix
       ./networking.nix
       ../../modules/core/hardware.nix
