@@ -1,0 +1,16 @@
+- core/
+	- audio.nix
+	- boot.nix
+	- hardware.nix (not to be confused with hardware-configuration.nix)
+	- lid-keep-on.nix
+	- locale.nix
+	- nix.nix (temporary)
+	- shell.nix (need rewrite)
+- desktop/
+	- default.nix (needs to get cut into modules)
+	- gaming.nix
+	- emulation/ (not functional for know, might not be good idea to have it in desktop as it makes it either activated or disactivated for every host that uses the desktop module)
+		- waydroid.nix
+		- default.nix
+- scripts/ (temporary to put the backup.nix in)
+	- backup.nix (stopped working)

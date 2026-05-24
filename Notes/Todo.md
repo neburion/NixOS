@@ -1,0 +1,3 @@
+- [ ] Clean up the ISO file generation logic
+- [ ] Remove all modules in the host directory
+- [ ] Restructure modules and home-modules so they can be more interchangeable

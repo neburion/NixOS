@@ -36,7 +36,7 @@
     mkSystem = { host, system ? "x86_64-linux", users }:
       nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit zen-browser nvf disko inputs; };
+        specialArgs = { inherit zen-browser nvf inputs; };
         modules = [
           disko.nixosModules.disko
           ./hosts/${host}/configuration.nix
@@ -57,12 +57,6 @@
         users = {
           neburion = import ./users/neburion.nix;
           nululy   = import ./users/nululy.nix;
-        };
-      };
-      pod153 = mkSystem {
-        host = "pod153";
-        users = {
-          "9s" = import ./users/9s.nix;
         };
       };
       iso = nixpkgs.lib.nixosSystem {

@@ -10,6 +10,7 @@
       rebuild   = "sudo nixos-rebuild switch --flake /home/neburion/NixOS#pod042";
       trebuild  = "sudo nixos-rebuild test --flake /home/neburion/NixOS#pod042";
       update    = "sudo nix flake update --flake /home/neburion/NixOS && sudo nixos-rebuild switch --flake /home/neburion/NixOS";
+      build-iso = "nix build /home/neburion/NixOS#nixosConfigurations.iso.config.system.build.isoImage --out-link /home/neburion/NixOS/result";
 
       # Superfile
       spf  = "superfile";
