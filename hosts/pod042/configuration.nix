@@ -12,6 +12,7 @@
       ../../modules/core/nix.nix # temporary fix
       ../../modules/core/shell.nix # temporary?
       ../../modules/desktop
+      ../../modules/desktop/remote-access.nix
       ../../modules/scripts/backup.nix
     ];
   # NixOS

@@ -5,6 +5,6 @@
   ];
   home.packages = with pkgs; [
     opencode
-    claudecode
+    #claudecode
   ];
 }
