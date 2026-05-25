@@ -4,7 +4,7 @@
     [ 
       ./hardware-configuration.nix
       ./users.nix
-      ./networking.nix
+      ../../modules/core/networking.nix
       ../../modules/core/hardware.nix
       ../../modules/core/audio.nix
       ../../modules/core/locale.nix

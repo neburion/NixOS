@@ -1,6 +1,7 @@
 - core/
 	- audio.nix
 	- boot.nix
+	- network.nix
 	- hardware.nix (not to be confused with hardware-configuration.nix)
 	- lid-keep-on.nix
 	- locale.nix

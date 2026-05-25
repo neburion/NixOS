@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "Modules List.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
@@ -185,10 +185,10 @@
   },
   "active": "cde528052417e948",
   "lastOpenFiles": [
+    "Todo.md",
+    "Modules List.md",
     "Home Module List.md",
     "Directory.md",
-    "Modules List.md",
-    "Todo.md",
     "Welcome.md"
   ]
 }
