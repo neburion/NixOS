@@ -6,7 +6,6 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    sddm-astronaut # SDDM Theme Manager
     brightnessctl  # Brightness Manager
     xdg-user-dirs
   ];
@@ -24,14 +23,6 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-  };
-
-  # Login
-  services.displayManager.sddm = {
-    enable = true;
-    wayland.enable = true;
-    theme = "sddm-astronaut-theme";
-    extraPackages = [ pkgs.sddm-astronaut ];
   };
 
   environment.sessionVariables = {

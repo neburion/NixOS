@@ -16,6 +16,7 @@
   };
   users.users.shrine = {
     isNormalUser    = true;
+    shell           = pkgs.fish;
     initialPassword = "shrine";
   };
 

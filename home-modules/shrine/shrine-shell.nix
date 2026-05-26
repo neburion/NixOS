@@ -13,14 +13,16 @@
 
       switch_to() {
         local user="$1"
+        local vt="$2"
         clear
         echo ""
         echo -e "  ''${DIM}Routing you to ''${user}. Try not to ruin anything.''${RST}"
         echo ""
         sleep 1
-        # machinectl shell creates a real systemd/PAM login session so XDG_RUNTIME_DIR
-        # and seat access are properly set up before Hyprland starts.
-        exec sudo machinectl shell "''${user}@"
+        # chvt switches to the user's dedicated VT. That VT session holds seat0,
+        # so Hyprland can open DRM/input devices via logind. machinectl shell
+        # creates pts sessions which have no seat — Hyprland crashes there.
+        sudo chvt "''${vt}"
       }
 
       show_menu() {
@@ -226,7 +228,7 @@
         echo ""
         echo -e "  ''${DIM}Handing you the keys...''${RST}"
         sleep 2
-        switch_to "neburion"
+        switch_to "neburion" 2
       }
 
       while true; do
@@ -237,9 +239,9 @@
           2) sacred_creed ;;
           3) confess_failures ;;
           4) beg_for_mercy ;;
-          5) switch_to "neburion" ;;
-          6) switch_to "qellyree" ;;
-          7) switch_to "nululy" ;;
+          5) switch_to "neburion" 2 ;;
+          6) switch_to "qellyree" 3 ;;
+          7) switch_to "nululy" 4 ;;
           8)
             clear
             echo ""

@@ -4,6 +4,12 @@
   programs.fish = {
     enable = true;
 
+    loginShellInit = ''
+      if string match -q '/dev/tty*' (tty)
+        exec Hyprland
+      end
+    '';
+
     shellAliases = {
       # NixOS
       cdnixos  = "cd $HOME/NixOS";
