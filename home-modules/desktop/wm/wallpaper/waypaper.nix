@@ -2,6 +2,7 @@
 
 {
   home.file.".config/waypaper/config.ini" = {
+    force = true;
     text = ''
       [Settings]
       language = en
