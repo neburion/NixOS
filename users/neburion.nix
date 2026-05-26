@@ -3,7 +3,6 @@
 {
   imports = [
     ../home-modules/desktop
-    ../home-modules/desktop/wm/lock.nix
     ../home-modules/cli
     ../home-modules/dev
   ];

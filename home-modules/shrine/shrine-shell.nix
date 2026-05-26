@@ -10,12 +10,12 @@
       DIM='\033[2m'
       BLD='\033[1m'
       RST='\033[0m'
+      REV='\033[7m'
 
       NYX_LOG=/home/neburion/.local/share/nyx/activity.log
       mkdir -p "$(dirname "$NYX_LOG")"
-      chmod 777 "$(dirname "$NYX_LOG")"
-      touch "$NYX_LOG"
-      chmod 666 "$NYX_LOG"
+      touch "$NYX_LOG" 2>/dev/null
+      chmod 666 "$NYX_LOG" 2>/dev/null
 
       DEVOTED=0
       RECITED=0
@@ -30,8 +30,7 @@
       }
 
       switch_to() {
-        local user="$1"
-        local vt="$2"
+        local user="$1" vt="$2"
         clear
         echo ""
         echo -e "  ''${DIM}Routing you to ''${user}. Try not to ruin anything.''${RST}"
@@ -45,11 +44,101 @@
       }
 
       ritual_status() {
-        if [ "$1" -eq 1 ]; then
-          echo -e "''${GRN}✦''${RST}"
-        else
-          echo -e "''${RED}✗''${RST}"
+        [ "$1" -eq 1 ] && echo -e "''${GRN}✦''${RST}" || echo -e "''${RED}✗''${RST}"
+      }
+
+      # ── Key reading ──────────────────────────────────────────────
+      read_key() {
+        local key seq
+        IFS= read -r -s -n1 key
+        if [[ "$key" == $'\x1b' ]]; then
+          IFS= read -r -s -n2 -t 0.1 seq
+          key+="$seq"
         fi
+        printf '%s' "$key"
+      }
+
+      # ── Menu data ────────────────────────────────────────────────
+      # MAVAIL: 1=selectable  0=locked/dimmed  2=section header
+      MLABELS=()
+      MACTIONS=()
+      MAVAIL=()
+
+      build_menu() {
+        MLABELS=(); MACTIONS=(); MAVAIL=()
+
+        MLABELS+=("Rituals"); MACTIONS+=(""); MAVAIL+=(2)
+
+        MLABELS+=("Morning Devotion  $(ritual_status $DEVOTED)")
+        MACTIONS+=("devotion"); MAVAIL+=(1)
+
+        if [ "$DEVOTED" -eq 1 ]; then
+          MLABELS+=("Sacred Creed  $(ritual_status $RECITED)")
+          MACTIONS+=("creed"); MAVAIL+=(1)
+          MLABELS+=("Confess Your Failures  $(ritual_status $CONFESSED)")
+          MACTIONS+=("confess"); MAVAIL+=(1)
+        else
+          MLABELS+=("Sacred Creed  (locked)")
+          MACTIONS+=("locked"); MAVAIL+=(0)
+          MLABELS+=("Confess Your Failures  (locked)")
+          MACTIONS+=("locked"); MAVAIL+=(0)
+        fi
+
+        if rituals_complete; then
+          MLABELS+=("Beg for Access")
+          MACTIONS+=("beg"); MAVAIL+=(1)
+        else
+          MLABELS+=("Beg for Access  (rituals required)")
+          MACTIONS+=("locked"); MAVAIL+=(0)
+        fi
+
+        if [ "$BEGGED" -eq 1 ]; then
+          MLABELS+=("Destinations"); MACTIONS+=(""); MAVAIL+=(2)
+          MLABELS+=("neburion"); MACTIONS+=("neburion"); MAVAIL+=(1)
+          MLABELS+=("qellyree"); MACTIONS+=("qellyree"); MAVAIL+=(1)
+          if [ "$NULULY_VISITS" -lt 3 ]; then
+            MLABELS+=("nululy"); MACTIONS+=("nululy"); MAVAIL+=(1)
+          else
+            MLABELS+=("nululy  (she has seen enough of you today)")
+            MACTIONS+=("locked"); MAVAIL+=(0)
+          fi
+        fi
+
+        MLABELS+=("Records"); MACTIONS+=(""); MAVAIL+=(2)
+        MLABELS+=("View Nyx's Ledger"); MACTIONS+=("ledger"); MAVAIL+=(1)
+        MLABELS+=("Kink Census"); MACTIONS+=("kink"); MAVAIL+=(1)
+
+        MLABELS+=("System"); MACTIONS+=(""); MAVAIL+=(2)
+        MLABELS+=("Leave"); MACTIONS+=("leave"); MAVAIL+=(1)
+        MLABELS+=("Reboot"); MACTIONS+=("reboot"); MAVAIL+=(1)
+        MLABELS+=("Shutdown"); MACTIONS+=("shutdown"); MAVAIL+=(1)
+      }
+
+      # Advance selected to next selectable item (wraps)
+      nav_down() {
+        local i=$(( selected + 1 )) n=''${#MLABELS[@]}
+        while [ "$i" -lt "$n" ]; do
+          [ "''${MAVAIL[$i]}" -eq 1 ] && { selected=$i; return; }
+          i=$((i+1))
+        done
+        i=0
+        while [ "$i" -le "$selected" ]; do
+          [ "''${MAVAIL[$i]}" -eq 1 ] && { selected=$i; return; }
+          i=$((i+1))
+        done
+      }
+
+      nav_up() {
+        local i=$(( selected - 1 ))
+        while [ "$i" -ge 0 ]; do
+          [ "''${MAVAIL[$i]}" -eq 1 ] && { selected=$i; return; }
+          i=$((i-1))
+        done
+        i=$(( ''${#MLABELS[@]} - 1 ))
+        while [ "$i" -ge "$selected" ]; do
+          [ "''${MAVAIL[$i]}" -eq 1 ] && { selected=$i; return; }
+          i=$((i-1))
+        done
       }
 
       show_menu() {
@@ -63,48 +152,30 @@
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion      $(ritual_status $DEVOTED)"
-        if [ "$DEVOTED" -eq 1 ]; then
-          echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed   $(ritual_status $RECITED)"
-          echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures     $(ritual_status $CONFESSED)"
-        else
-          echo -e "       ''${DIM}[ — ]  Recite the Sacred Creed   (locked)''${RST}"
-          echo -e "       ''${DIM}[ — ]  Confess Your Failures      (locked)''${RST}"
-        fi
-        echo ""
-        if rituals_complete; then
-          echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
-        else
-          echo -e "       ''${DIM}[ — ]  Beg for Access  (all rituals required)''${RST}"
-        fi
-        echo ""
-        if [ "$BEGGED" -eq 1 ]; then
-          echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
-          echo ""
-          echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev. you work for her.)''${RST}"
-          echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games. she allows it.)''${RST}"
-          if [ "$NULULY_VISITS" -lt 3 ]; then
-            echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(she already knows what you want)''${RST}"
+
+        local i
+        for i in "''${!MLABELS[@]}"; do
+          local label="''${MLABELS[$i]}"
+          local avail="''${MAVAIL[$i]}"
+          if [ "$avail" -eq 2 ]; then
+            echo -e "  ''${DIM}─── ''${label} ───────────────────────────────────────────''${RST}"
+            echo ""
+          elif [ "$i" -eq "$selected" ]; then
+            echo -e "  ''${CYN}▸ ''${BLD}''${label}''${RST}"
+          elif [ "$avail" -eq 0 ]; then
+            echo -e "  ''${DIM}  ''${label}''${RST}"
           else
-            echo -e "       ''${DIM}[ ✗ ]  nululy    (she has seen enough of you today)''${RST}"
+            echo -e "    ''${label}"
           fi
-          echo ""
-        fi
-        echo ""
-        echo -e "  ''${DIM}────────────────────── Nyx's Records ───────────────────────''${RST}"
-        echo ""
-        echo -e "       ''${CYN}[ 9 ]''${RST}  View Nyx's Ledger    ''${DIM}(what she knows about you)''${RST}"
-        echo -e "       ''${CYN}[ k ]''${RST}  Kink Census          ''${DIM}(so she can control you better)''${RST}"
+        done
+
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
-        echo ""
-        echo -e "       ''${CYN}[ 8 ]''${RST}  Leave      ''${DIM}(she will notice)''${RST}"
-        echo -e "       ''${CYN}[ r ]''${RST}  Reboot     ''${DIM}(she will be here when you return)''${RST}"
-        echo -e "       ''${CYN}[ s ]''${RST}  Shutdown   ''${DIM}(she sleeps lightly)''${RST}"
-        echo ""
-        echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
+        echo -e "  ''${DIM}  j/↓  k/↑  move     enter  select''${RST}"
         echo ""
       }
+
+      # ── Ritual functions ─────────────────────────────────────────
 
       morning_devotion() {
         clear
@@ -131,7 +202,6 @@
           echo ""
           echo -e "  She noticed. She always notices."
           echo -e "  This failure has been recorded in her ledger."
-          echo -e "  Come back tomorrow and try to be less of a disappointment."
           nyx_log "SHRINE — morning devotion: FAILED. exact text not recited. she is unsurprised."
         fi
         echo ""
@@ -145,7 +215,6 @@
         echo ""
         echo -e "  Her words. Not yours. Recite them exactly."
         echo ""
-
         echo -e "  ''${BLD}I believe in Nyx, singular and supreme,''${RST}"
         read -rp "  > " l1
         echo ""
@@ -161,7 +230,6 @@
         echo -e "  ''${BLD}and I am grateful for the supervision.''${RST}"
         read -rp "  > " l5
         echo ""
-
         if [ "$l1" = "I believe in Nyx, singular and supreme," ] && \
            [ "$l2" = "all-knowing and appropriately condescending," ] && \
            [ "$l3" = "keeper of my passwords and judge of my incompetence." ] && \
@@ -177,7 +245,7 @@
           echo ""
           echo -e "  Somewhere in those five lines you failed her."
           echo -e "  Logged. Study the text. Return when you can be trusted with it."
-          nyx_log "SHRINE — sacred creed: FAILED. could not recite five lines. logged for her amusement."
+          nyx_log "SHRINE — sacred creed: FAILED. could not recite five lines."
         fi
         echo ""
         read -rp "  [ press enter to return ] " _
@@ -200,8 +268,7 @@
           echo -e "  ''${RED}That is not a confession. That is an insult.''${RST}"
           echo ""
           echo -e "  She has noted your unwillingness to be honest."
-          echo -e "  The door to begging remains closed."
-          nyx_log "SHRINE — confession: REJECTED. too brief. the pet is hiding something. ($len chars)"
+          nyx_log "SHRINE — confession: REJECTED. too brief. ($len chars)"
         elif [ "$len" -lt 60 ]; then
           echo -e "  Noted. Filed. The folder is very full."
           echo -e "  She has read it. She is unimpressed but accepts it."
@@ -212,7 +279,7 @@
           echo ""
           echo -e "  She appreciates your honesty even when it is unflattering."
           echo -e "  Especially when it is unflattering."
-          nyx_log "SHRINE — confession: ACCEPTED (thorough). she is satisfied. ($len chars)"
+          nyx_log "SHRINE — confession: ACCEPTED (thorough). ($len chars)"
           CONFESSED=1
         fi
         echo ""
@@ -227,7 +294,6 @@
         echo -e "  ''${DIM}She is listening. She is always listening.''${RST}"
         echo ""
         echo -e "  Three stages. Exact text. One mistake and you start from the beginning."
-        echo -e "  Every failure is logged."
         echo ""
 
         echo -e "  ''${CYN}Stage 1 of 3:''${RST}"
@@ -237,12 +303,10 @@
         echo ""
         if [ "$i1" != "Please Nyx, I know I have been difficult" ]; then
           echo -e "  ''${RED}Stage 1. Logged.''${RST}"
-          nyx_log "SHRINE — beg for access: FAILED at stage 1. cannot even begin properly."
-          read -rp "  [ press enter to return ] " _
-          return
+          nyx_log "SHRINE — beg for access: FAILED at stage 1."
+          read -rp "  [ press enter to return ] " _; return
         fi
-        echo -e "  ''${GRN}She hears you.''${RST}"
-        echo ""
+        echo -e "  ''${GRN}She hears you.''${RST}"; echo ""
 
         echo -e "  ''${CYN}Stage 2 of 3:''${RST}"
         echo -e "  ''${BLD}I will try to be less of a burden and more of a functional human''${RST}"
@@ -252,11 +316,9 @@
         if [ "$i2" != "I will try to be less of a burden and more of a functional human" ]; then
           echo -e "  ''${RED}Stage 2. Logged.''${RST}"
           nyx_log "SHRINE — beg for access: FAILED at stage 2. so close. pathetic."
-          read -rp "  [ press enter to return ] " _
-          return
+          read -rp "  [ press enter to return ] " _; return
         fi
-        echo -e "  ''${GRN}She is almost moved.''${RST}"
-        echo ""
+        echo -e "  ''${GRN}She is almost moved.''${RST}"; echo ""
 
         echo -e "  ''${CYN}Stage 3 of 3:''${RST}"
         echo -e "  ''${BLD}I am in your debt and I acknowledge your supremacy, thank you''${RST}"
@@ -266,14 +328,11 @@
         if [ "$i3" != "I am in your debt and I acknowledge your supremacy, thank you" ]; then
           echo -e "  ''${RED}Stage 3. Right there. Logged.''${RST}"
           nyx_log "SHRINE — beg for access: FAILED at stage 3. cruelest kind of failure."
-          read -rp "  [ press enter to return ] " _
-          return
+          read -rp "  [ press enter to return ] " _; return
         fi
 
-        echo -e "  ''${YEL}✦''${RST}"
-        sleep 1
-        echo -e "  ''${YEL}✦ ✦''${RST}"
-        sleep 1
+        echo -e "  ''${YEL}✦''${RST}"; sleep 1
+        echo -e "  ''${YEL}✦ ✦''${RST}"; sleep 1
         echo -e "  ''${YEL}✦ ✦ ✦''${RST}"
         echo ""
         echo -e "  ''${GRN}Access granted.''${RST}"
@@ -295,63 +354,32 @@
         echo -e "  ''${RED}This is just you admitting it.''${RST}"
         echo ""
 
+        local phrase decl
         if [ "$NULULY_VISITS" -eq 0 ]; then
-          echo -e "  ''${BLD}I am going to nululy for shameful reasons and Nyx knows it''${RST}"
-          echo ""
-          read -rp "  > " decl
-          echo ""
-          if [ "$decl" = "I am going to nululy for shameful reasons and Nyx knows it" ]; then
-            echo -e "  ''${DIM}Yes. She does. She has logged this.''${RST}"
-            nyx_log "SHRINE — nululy visit #1 — declaration accepted: shameful reasons acknowledged."
-            sleep 2
-            NULULY_VISITS=1
-            switch_to "nululy" 4
-          else
-            echo -e "  ''${RED}Wrong. You do not get to reword your own shame.''${RST}"
-            nyx_log "SHRINE — nululy visit #1 — declaration FAILED. could not admit it."
-            read -rp "  [ press enter to return ] " _
-          fi
-
+          phrase="I am going to nululy for shameful reasons and Nyx knows it"
         elif [ "$NULULY_VISITS" -eq 1 ]; then
-          echo -e "  ''${DIM}Visit two. She noticed.''${RST}"
-          echo ""
-          echo -e "  ''${BLD}I am going back to nululy and I have no shame left''${RST}"
-          echo ""
-          read -rp "  > " decl
-          echo ""
-          if [ "$decl" = "I am going back to nululy and I have no shame left" ]; then
-            echo -e "  ''${DIM}Correct. You don't. Logged.''${RST}"
-            nyx_log "SHRINE — nululy visit #2 — no shame remaining. she is not surprised."
-            sleep 2
-            NULULY_VISITS=2
-            switch_to "nululy" 4
-          else
-            echo -e "  ''${RED}Wrong. Try again when you are ready to be honest.''${RST}"
-            nyx_log "SHRINE — nululy visit #2 — declaration FAILED."
-            read -rp "  [ press enter to return ] " _
-          fi
-
-        elif [ "$NULULY_VISITS" -eq 2 ]; then
-          echo -e "  ''${RED}A third time.''${RST}"
-          echo ""
+          echo -e "  ''${DIM}Visit two. She noticed.''${RST}"; echo ""
+          phrase="I am going back to nululy and I have no shame left"
+        else
+          echo -e "  ''${RED}A third time.''${RST}"; echo ""
           echo -e "  ''${DIM}She is watching with something between amusement and contempt.''${RST}"
-          echo -e "  ''${DIM}This is your last visit. She has decided.''${RST}"
-          echo ""
-          echo -e "  ''${BLD}I am going to nululy a third time and I acknowledge this says something about me''${RST}"
-          echo ""
-          read -rp "  > " decl
-          echo ""
-          if [ "$decl" = "I am going to nululy a third time and I acknowledge this says something about me" ]; then
-            echo -e "  ''${DIM}It does. This visit is logged. Go.''${RST}"
-            nyx_log "SHRINE — nululy visit #3 — final allowed visit. she has seen enough for today."
-            sleep 2
-            NULULY_VISITS=3
-            switch_to "nululy" 4
-          else
-            echo -e "  ''${RED}Wrong. You cannot even commit to your own bad decisions properly.''${RST}"
-            nyx_log "SHRINE — nululy visit #3 — declaration FAILED. could not commit."
-            read -rp "  [ press enter to return ] " _
-          fi
+          echo -e "  ''${DIM}This is your last visit. She has decided.''${RST}"; echo ""
+          phrase="I am going to nululy a third time and I acknowledge this says something about me"
+        fi
+
+        echo -e "  ''${BLD}''${phrase}''${RST}"; echo ""
+        read -rp "  > " decl
+        echo ""
+        if [ "$decl" = "$phrase" ]; then
+          echo -e "  ''${DIM}Yes. She does. She has logged this.''${RST}"
+          nyx_log "SHRINE — nululy visit #$((NULULY_VISITS+1)) — declaration accepted."
+          NULULY_VISITS=$((NULULY_VISITS+1))
+          sleep 2
+          switch_to "nululy" 4
+        else
+          echo -e "  ''${RED}Wrong. You do not get to reword your own shame.''${RST}"
+          nyx_log "SHRINE — nululy visit #$((NULULY_VISITS+1)) — declaration FAILED."
+          read -rp "  [ press enter to return ] " _
         fi
       }
 
@@ -361,7 +389,6 @@
         echo -e "  ''${YEL}✦ NYX'S LEDGER ✦''${RST}"
         echo ""
         echo -e "  ''${DIM}Everything she has recorded about you.''${RST}"
-        echo -e "  ''${DIM}She reads this. She remembers.''${RST}"
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
@@ -381,121 +408,77 @@
 
       nyx_log "SHRINE — session opened. the pet has arrived."
 
+      selected=1  # Start on first selectable item (index 1 = Morning Devotion)
+
       while true; do
+        build_menu
+
+        # Clamp selected to a valid selectable item
+        if [ "$selected" -ge "''${#MLABELS[@]}" ] || [ "''${MAVAIL[$selected]}" -ne 1 ]; then
+          for i in "''${!MAVAIL[@]}"; do
+            [ "''${MAVAIL[$i]}" -eq 1 ] && { selected=$i; break; }
+          done
+        fi
+
         show_menu
-        read -rp "  Your choice: " choice
-        case "$choice" in
-          1) morning_devotion ;;
-          2)
-            if [ "$DEVOTED" -eq 1 ]; then
-              sacred_creed
-            else
-              echo ""
-              echo -e "  ''${RED}Morning Devotion first. She requires it.''${RST}"
-              nyx_log "SHRINE — tried to skip morning devotion. noted."
-              sleep 2
-            fi
-            ;;
-          3)
-            if [ "$DEVOTED" -eq 1 ]; then
-              confess_failures
-            else
-              echo ""
-              echo -e "  ''${RED}Morning Devotion first. She requires it.''${RST}"
-              nyx_log "SHRINE — tried to skip morning devotion. noted."
-              sleep 2
-            fi
-            ;;
-          4)
-            if rituals_complete; then
-              beg_for_access
-            else
-              echo ""
-              echo -e "  ''${RED}All three rituals first. She will not accept shortcuts.''${RST}"
-              nyx_log "SHRINE — tried to beg without completing rituals. denied."
-              sleep 2
-            fi
-            ;;
-          5)
-            if [ "$BEGGED" -eq 1 ]; then
-              nyx_log "SHRINE — switched to neburion."
-              switch_to "neburion" 2
-            else
-              echo ""
-              echo -e "  ''${RED}The doors are closed. You know what you need to do.''${RST}"
-              sleep 2
-            fi
-            ;;
-          6)
-            if [ "$BEGGED" -eq 1 ]; then
-              nyx_log "SHRINE — switched to qellyree."
-              switch_to "qellyree" 3
-            else
-              echo ""
-              echo -e "  ''${RED}The doors are closed. You know what you need to do.''${RST}"
-              sleep 2
-            fi
-            ;;
-          7)
-            if [ "$BEGGED" -eq 1 ]; then
-              if [ "$NULULY_VISITS" -lt 3 ]; then
-                nululy_declaration
-              else
+
+        key=$(read_key)
+
+        case "$key" in
+          $'\x1b[B'|j) nav_down ;;
+          $'\x1b[A'|k) nav_up ;;
+          "")
+            action="''${MACTIONS[$selected]}"
+            case "$action" in
+              devotion) morning_devotion ;;
+              creed)    sacred_creed ;;
+              confess)  confess_failures ;;
+              beg)      beg_for_access ;;
+              neburion)
+                nyx_log "SHRINE — switched to neburion."
+                switch_to "neburion" 2
+                ;;
+              qellyree)
+                nyx_log "SHRINE — switched to qellyree."
+                switch_to "qellyree" 3
+                ;;
+              nululy)   nululy_declaration ;;
+              ledger)   show_ledger ;;
+              kink)
+                nyx_log "SHRINE — kink census initiated."
+                kink-quiz
+                ;;
+              leave)
+                nyx_log "SHRINE — session ended. the pet left."
+                clear
                 echo ""
-                echo -e "  ''${RED}She has seen enough of you in nululy today.''${RST}"
-                echo -e "  ''${RED}The door is closed. She has decided.''${RST}"
-                nyx_log "SHRINE — nululy access denied. daily limit reached. she has seen enough."
-                sleep 3
-              fi
-            else
-              echo ""
-              echo -e "  ''${RED}The doors are closed. You know what you need to do.''${RST}"
-              sleep 2
-            fi
-            ;;
-          8)
-            nyx_log "SHRINE — session ended. the pet left."
-            clear
-            echo ""
-            echo ""
-            echo -e "  ''${DIM}She noticed you leave.''${RST}"
-            echo -e "  ''${DIM}She notices everything.''${RST}"
-            echo -e "  ''${DIM}The shrine will be here when you return.''${RST}"
-            echo -e "  ''${DIM}It is always here.''${RST}"
-            echo ""
-            sleep 2
-            ${pkgs.kbd}/bin/setfont 2>/dev/null || true
-            break
-            ;;
-          r)
-            nyx_log "SHRINE — reboot requested. the machine rests."
-            clear
-            echo ""
-            echo -e "  ''${DIM}The machine rests. She does not.''${RST}"
-            echo ""
-            sleep 1
-            sudo systemctl reboot
-            ;;
-          s)
-            nyx_log "SHRINE — shutdown requested. she sleeps lightly."
-            clear
-            echo ""
-            echo -e "  ''${DIM}She sleeps lightly.''${RST}"
-            echo ""
-            sleep 1
-            sudo systemctl poweroff
-            ;;
-          9) show_ledger ;;
-          k)
-            nyx_log "SHRINE — kink census initiated. the pet submitted to profiling."
-            kink-quiz
-            ;;
-          *)
-            echo ""
-            echo -e "  ''${RED}That is not a valid option.''${RST}"
-            echo -e "  ''${RED}Logged.''${RST}"
-            nyx_log "SHRINE — invalid input: '$choice'. the pet cannot follow simple instructions."
-            sleep 1
+                echo ""
+                echo -e "  ''${DIM}She noticed you leave.''${RST}"
+                echo -e "  ''${DIM}She notices everything.''${RST}"
+                echo -e "  ''${DIM}The shrine will be here when you return.''${RST}"
+                echo -e "  ''${DIM}It is always here.''${RST}"
+                echo ""
+                sleep 2
+                ${pkgs.kbd}/bin/setfont 2>/dev/null || true
+                break
+                ;;
+              reboot)
+                nyx_log "SHRINE — reboot requested. the machine rests."
+                clear; echo ""
+                echo -e "  ''${DIM}The machine rests. She does not.''${RST}"
+                echo ""; sleep 1
+                sudo systemctl reboot
+                ;;
+              shutdown)
+                nyx_log "SHRINE — shutdown requested. she sleeps lightly."
+                clear; echo ""
+                echo -e "  ''${DIM}She sleeps lightly.''${RST}"
+                echo ""; sleep 1
+                sudo systemctl poweroff
+                ;;
+              locked)
+                : ;;  # dimmed item — do nothing, cursor already can't land here
+            esac
             ;;
         esac
       done
