@@ -34,11 +34,7 @@ let
   mkMakoConfig = c: baseConfig + (mkMakoTheme c);
 in
 {
-  imports = [
-    ./config.nix
-  ];
-
-  home.packages = with pkgs; [ libnotify ];
+  home.packages = with pkgs; [ libnotify mako ];
 
   xdg.configFile = lib.mapAttrs' (name: colors:
     lib.nameValuePair "mako/themes/${name}" { text = mkMakoConfig colors; }

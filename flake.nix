@@ -24,6 +24,7 @@
     sharedHMConfig = {
       useGlobalPkgs = true;
       useUserPackages = true;
+      backupFileExtension = "backup";
       extraSpecialArgs = { inherit zen-browser; };
       sharedModules = [
         nvf.homeManagerModules.default
