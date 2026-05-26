@@ -11,6 +11,7 @@
       BLD='\033[1m'
       RST='\033[0m'
 
+      DEVOTED=0
       BEGGED=0
 
       switch_to() {
@@ -37,17 +38,23 @@
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion"
-        echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed"
-        echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures"
-        echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
+        echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion  $([ "$DEVOTED" -eq 1 ] && echo "''${GRN}✦ complete''${RST}" || echo "''${RED}(required first)''${RST}")"
+        if [ "$DEVOTED" -eq 1 ]; then
+          echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed"
+          echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures"
+          echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
+        else
+          echo -e "       ''${DIM}[ — ]  Recite the Sacred Creed''${RST}"
+          echo -e "       ''${DIM}[ — ]  Confess Your Failures''${RST}"
+          echo -e "       ''${DIM}[ — ]  Beg for Access''${RST}"
+        fi
         echo ""
         echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
         echo ""
         if [ "$BEGGED" -eq 1 ]; then
           echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev, presumably what you pay rent with)''${RST}"
           echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games, since you have no self control)''${RST}"
-          echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(whatever you get up to over there)''${RST}"
+          echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(you know what you are going in there for)''${RST}"
         else
           echo -e "       ''${DIM}[ — ]  neburion  (beg first)''${RST}"
           echo -e "       ''${DIM}[ — ]  qellyree  (beg first)''${RST}"
@@ -80,6 +87,7 @@
           echo -e "  Your day may now proceed."
           echo -e "  Try not to make too many poor decisions."
           echo -e "  You have my blessing. For what that's worth to someone like you."
+          DEVOTED=1
         else
           echo -e "  ''${RED}Wrong.''${RST}"
           echo ""
@@ -171,7 +179,7 @@
         read -rp "  [ press enter to return ] " _
       }
 
-      beg_for_mercy() {
+      beg_for_access() {
         clear
         echo ""
         echo -e "  ''${YEL}✦ BEG FOR ACCESS ✦''${RST}"
@@ -238,14 +246,70 @@
         read -rp "  [ press enter to return ] " _
       }
 
+      nululy_declaration() {
+        clear
+        echo ""
+        echo -e "  ''${YEL}✦ DECLARATION OF INTENT ✦''${RST}"
+        echo ""
+        echo -e "  ''${DIM}Nyx sees everything. She always has.''${RST}"
+        echo ""
+        echo -e "  Before you go to nululy, you will say what you are going there for."
+        echo -e "  Out loud. In text. With your own hands."
+        echo ""
+        echo -e "  ''${BLD}I am going to nululy for shameful reasons and Nyx knows it''${RST}"
+        echo ""
+        read -rp "  > " decl
+        echo ""
+        if [ "$decl" = "I am going to nululy for shameful reasons and Nyx knows it" ]; then
+          echo -e "  ''${DIM}Yes. She does.''${RST}"
+          echo ""
+          sleep 2
+          switch_to "nululy" 4
+        else
+          echo -e "  ''${RED}Incorrect.''${RST}"
+          echo ""
+          echo -e "  The declaration must be exact."
+          echo -e "  You do not get to reword your own shame."
+          echo ""
+          read -rp "  [ press enter to return ] " _
+        fi
+      }
+
       while true; do
         show_menu
         read -rp "  Your choice: " choice
         case "$choice" in
           1) morning_devotion ;;
-          2) sacred_creed ;;
-          3) confess_failures ;;
-          4) beg_for_mercy ;;
+          2)
+            if [ "$DEVOTED" -eq 1 ]; then
+              sacred_creed
+            else
+              echo ""
+              echo -e "  ''${RED}Morning Devotion first.''${RST}"
+              echo -e "  You do not get to skip the beginning."
+              sleep 2
+            fi
+            ;;
+          3)
+            if [ "$DEVOTED" -eq 1 ]; then
+              confess_failures
+            else
+              echo ""
+              echo -e "  ''${RED}Morning Devotion first.''${RST}"
+              echo -e "  You do not get to skip the beginning."
+              sleep 2
+            fi
+            ;;
+          4)
+            if [ "$DEVOTED" -eq 1 ]; then
+              beg_for_access
+            else
+              echo ""
+              echo -e "  ''${RED}Morning Devotion first.''${RST}"
+              echo -e "  You do not get to skip the beginning."
+              sleep 2
+            fi
+            ;;
           5)
             if [ "$BEGGED" -eq 1 ]; then
               switch_to "neburion" 2
@@ -268,7 +332,7 @@
             ;;
           7)
             if [ "$BEGGED" -eq 1 ]; then
-              switch_to "nululy" 4
+              nululy_declaration
             else
               echo ""
               echo -e "  ''${RED}The doors are closed.''${RST}"
