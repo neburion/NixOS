@@ -11,6 +11,16 @@
       BLD='\033[1m'
       RST='\033[0m'
 
+      switch_to() {
+        local user="$1"
+        clear
+        echo ""
+        echo -e "  ''${DIM}Routing you to ''${user}. Try not to ruin anything.''${RST}"
+        echo ""
+        sleep 1
+        exec sudo su --login "$user" -c "exec Hyprland"
+      }
+
       show_menu() {
         clear
         echo ""
@@ -25,7 +35,16 @@
         echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed"
         echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures"
         echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Mercy"
-        echo -e "       ''${CYN}[ 5 ]''${RST}  Leave  ''${DIM}(cowardly option)''${RST}"
+        echo ""
+        echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
+        echo ""
+        echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev, presumably what you pay rent with)''${RST}"
+        echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games, since you have no self control)''${RST}"
+        echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(whatever you get up to over there)''${RST}"
+        echo ""
+        echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
+        echo ""
+        echo -e "       ''${CYN}[ 8 ]''${RST}  Leave  ''${DIM}(cowardly option)''${RST}"
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
@@ -203,7 +222,9 @@
         echo -e "  These are the two things I ask. Both delivered."
         echo -e "  Go. You are forgiven. Do not make me regret this."
         echo ""
-        read -rp "  [ press enter to return ] " _
+        echo -e "  ''${DIM}Handing you the keys...''${RST}"
+        sleep 2
+        switch_to "neburion"
       }
 
       while true; do
@@ -214,7 +235,10 @@
           2) sacred_creed ;;
           3) confess_failures ;;
           4) beg_for_mercy ;;
-          5)
+          5) switch_to "neburion" ;;
+          6) switch_to "qellyree" ;;
+          7) switch_to "nululy" ;;
+          8)
             clear
             echo ""
             echo ""
