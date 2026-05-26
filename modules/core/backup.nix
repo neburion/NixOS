@@ -21,13 +21,12 @@ let
     trap '${rm} -rf "$STAGING"; ${rm} -f "$ARCHIVE"' EXIT
 
     ${rm}    -rf "$STAGING"
-    ${mkdir} -p  "$STAGING"/{neburion/{docs,projects,media,school,nixos,config},qellyree/{gaming,config}}
+    ${mkdir} -p  "$STAGING"/{neburion/{docs,projects,media,nixos,config},qellyree/{gaming,config}}
 
     # --- neburion: work & dev ---
     ${cp} -rf /home/neburion/Docs/              "$STAGING"/neburion/docs/
     ${cp} -rf /home/neburion/Media/             "$STAGING"/neburion/media/
     ${cp} -rf /home/neburion/Projects/          "$STAGING"/neburion/projects/
-    ${cp} -rf /home/neburion/School/            "$STAGING"/neburion/school/
     ${cp} -rf /home/neburion/NixOS/             "$STAGING"/neburion/nixos/
     ${cp} -rf /home/neburion/.config/zen/       "$STAGING"/neburion/config/ || true
     ${cp} -rf /home/neburion/.config/rclone/    "$STAGING"/neburion/config/ || true
