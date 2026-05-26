@@ -17,6 +17,8 @@
 
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
+
+  security.sudo.wheelNeedsPassword = false;
   system.stateVersion = "25.11"; # Initial nixos version on install no need to change
 
   programs.fish.enable = true;
