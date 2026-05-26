@@ -14,12 +14,6 @@
     isNormalUser = true;
     extraGroups  = [ "networkmanager" ];
   };
-  users.users.shrine = {
-    isNormalUser    = true;
-    shell           = pkgs.fish;
-    initialPassword = "shrine";
-  };
-
   # Allow neburion's user services to run without an active login session
   systemd.tmpfiles.rules = [
     "f /var/lib/systemd/linger/neburion - - - -"

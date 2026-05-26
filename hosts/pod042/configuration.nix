@@ -11,7 +11,6 @@
       ../../modules/core/locale.nix
       ../../modules/core/boot.nix
       ../../modules/core/backup.nix
-      ../../modules/core/shrine-entry.nix
       ../../modules/desktop
       ../../modules/desktop/remote-access.nix
     ];

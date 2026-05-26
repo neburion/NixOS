@@ -54,8 +54,7 @@
       "$mod SHIFT, 9, movetoworkspace, 9"
       "$mod SHIFT, 0, movetoworkspace, 10"
 
-      # Session — return to shrine, not exit
-      "$mod, Escape, exec, sudo chvt 1"
+      "$mod, Escape, exec, hyprlock"
 
       # Screenshot
       ", Print, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
