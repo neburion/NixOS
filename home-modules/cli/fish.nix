@@ -37,6 +37,9 @@
           set_color 'cba6f7'
           printf '%s' (string replace $HOME '~' $PWD)
           set_color normal
+          set_color '555555'
+          printf ' [nyx]'
+          set_color normal
           printf '$ '
         '';
       };

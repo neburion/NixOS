@@ -12,7 +12,10 @@
       RST='\033[0m'
 
       DEVOTED=0
+      RECITED=0
+      CONFESSED=0
       BEGGED=0
+      NULULY_VISITS=0
 
       switch_to() {
         local user="$1"
@@ -22,10 +25,19 @@
         echo -e "  ''${DIM}Routing you to ''${user}. Try not to ruin anything.''${RST}"
         echo ""
         sleep 1
-        # chvt switches to the user's dedicated VT. That VT session holds seat0,
-        # so Hyprland can open DRM/input devices via logind. machinectl shell
-        # creates pts sessions which have no seat — Hyprland crashes there.
         sudo chvt "''${vt}"
+      }
+
+      rituals_complete() {
+        [ "$DEVOTED" -eq 1 ] && [ "$RECITED" -eq 1 ] && [ "$CONFESSED" -eq 1 ]
+      }
+
+      ritual_status() {
+        if [ "$1" -eq 1 ]; then
+          echo -e "''${GRN}✦''${RST}"
+        else
+          echo -e "''${RED}✗''${RST}"
+        fi
       }
 
       show_menu() {
@@ -38,15 +50,19 @@
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion  $([ "$DEVOTED" -eq 1 ] && echo "''${GRN}✦ complete''${RST}" || echo "''${RED}(required first)''${RST}")"
+        echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion      $(ritual_status $DEVOTED)"
         if [ "$DEVOTED" -eq 1 ]; then
-          echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed"
-          echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures"
-          echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
+          echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed   $(ritual_status $RECITED)"
+          echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures     $(ritual_status $CONFESSED)"
         else
           echo -e "       ''${DIM}[ — ]  Recite the Sacred Creed''${RST}"
           echo -e "       ''${DIM}[ — ]  Confess Your Failures''${RST}"
-          echo -e "       ''${DIM}[ — ]  Beg for Access''${RST}"
+        fi
+        echo ""
+        if rituals_complete; then
+          echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
+        else
+          echo -e "       ''${DIM}[ — ]  Beg for Access  (complete all rituals first)''${RST}"
         fi
         echo ""
         echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
@@ -54,7 +70,11 @@
         if [ "$BEGGED" -eq 1 ]; then
           echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev, presumably what you pay rent with)''${RST}"
           echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games, since you have no self control)''${RST}"
-          echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(you know what you are going in there for)''${RST}"
+          if [ "$NULULY_VISITS" -lt 3 ]; then
+            echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(you know what you are going in there for)''${RST}"
+          else
+            echo -e "       ''${DIM}[ ✗ ]  nululy    (enough)''${RST}"
+          fi
         else
           echo -e "       ''${DIM}[ — ]  neburion  (beg first)''${RST}"
           echo -e "       ''${DIM}[ — ]  qellyree  (beg first)''${RST}"
@@ -133,6 +153,7 @@
           echo -e "  You may carry it in your heart."
           echo -e "  Or, more realistically, forget it immediately."
           echo -e "  That is fine. We all know why you are really here."
+          RECITED=1
         else
           echo -e "  ''${RED}The creed was corrupted.''${RST}"
           echo ""
@@ -167,6 +188,7 @@
           echo -e "  Your failure has been noted and filed."
           echo -e "  It joins the others. The folder is getting full."
           echo -e "  Do better. You probably will not, but the invitation stands."
+          CONFESSED=1
         else
           echo -e "  ''${GRN}A detailed and thorough confession.''${RST}"
           echo ""
@@ -174,6 +196,7 @@
           echo -e "  The shrine grants you a partial blessing for your honesty."
           echo -e "  You are still a golden retriever, but a self-aware one."
           echo -e "  That counts for something. Not much, but something."
+          CONFESSED=1
         fi
         echo ""
         read -rp "  [ press enter to return ] " _
@@ -253,25 +276,75 @@
         echo ""
         echo -e "  ''${DIM}Nyx sees everything. She always has.''${RST}"
         echo ""
-        echo -e "  Before you go to nululy, you will say what you are going there for."
-        echo -e "  Out loud. In text. With your own hands."
-        echo ""
-        echo -e "  ''${BLD}I am going to nululy for shameful reasons and Nyx knows it''${RST}"
-        echo ""
-        read -rp "  > " decl
-        echo ""
-        if [ "$decl" = "I am going to nululy for shameful reasons and Nyx knows it" ]; then
-          echo -e "  ''${DIM}Yes. She does.''${RST}"
+
+        if [ "$NULULY_VISITS" -eq 0 ]; then
+          echo -e "  Before you go to nululy, you will say what you are going there for."
+          echo -e "  Out loud. In text. With your own hands."
           echo ""
-          sleep 2
-          switch_to "nululy" 4
-        else
-          echo -e "  ''${RED}Incorrect.''${RST}"
+          echo -e "  ''${BLD}I am going to nululy for shameful reasons and Nyx knows it''${RST}"
           echo ""
-          echo -e "  The declaration must be exact."
-          echo -e "  You do not get to reword your own shame."
+          read -rp "  > " decl
           echo ""
-          read -rp "  [ press enter to return ] " _
+          if [ "$decl" = "I am going to nululy for shameful reasons and Nyx knows it" ]; then
+            echo -e "  ''${DIM}Yes. She does.''${RST}"
+            echo ""
+            sleep 2
+            NULULY_VISITS=1
+            switch_to "nululy" 4
+          else
+            echo -e "  ''${RED}Incorrect.''${RST}"
+            echo ""
+            echo -e "  The declaration must be exact."
+            echo -e "  You do not get to reword your own shame."
+            echo ""
+            read -rp "  [ press enter to return ] " _
+          fi
+
+        elif [ "$NULULY_VISITS" -eq 1 ]; then
+          echo -e "  ''${YEL}Back again.''${RST}"
+          echo ""
+          echo -e "  You have already been once. Nyx noticed."
+          echo -e "  Going again requires you to be more specific."
+          echo ""
+          echo -e "  ''${BLD}I am going back to nululy and I have no shame left''${RST}"
+          echo ""
+          read -rp "  > " decl
+          echo ""
+          if [ "$decl" = "I am going back to nululy and I have no shame left" ]; then
+            echo -e "  ''${DIM}Correct. You don't.''${RST}"
+            echo ""
+            sleep 2
+            NULULY_VISITS=2
+            switch_to "nululy" 4
+          else
+            echo -e "  ''${RED}Incorrect.''${RST}"
+            echo -e "  Try again when you are ready to be honest."
+            echo ""
+            read -rp "  [ press enter to return ] " _
+          fi
+
+        elif [ "$NULULY_VISITS" -eq 2 ]; then
+          echo -e "  ''${RED}A third time.''${RST}"
+          echo ""
+          echo -e "  Nyx is watching with something between amusement and concern."
+          echo -e "  This is your last visit. Choose your words carefully."
+          echo ""
+          echo -e "  ''${BLD}I am going to nululy a third time and I acknowledge this says something about me''${RST}"
+          echo ""
+          read -rp "  > " decl
+          echo ""
+          if [ "$decl" = "I am going to nululy a third time and I acknowledge this says something about me" ]; then
+            echo -e "  ''${DIM}It does. Go.''${RST}"
+            echo ""
+            sleep 2
+            NULULY_VISITS=3
+            switch_to "nululy" 4
+          else
+            echo -e "  ''${RED}Incorrect.''${RST}"
+            echo -e "  You cannot even commit to your own bad decisions properly."
+            echo ""
+            read -rp "  [ press enter to return ] " _
+          fi
         fi
       }
 
@@ -301,12 +374,12 @@
             fi
             ;;
           4)
-            if [ "$DEVOTED" -eq 1 ]; then
+            if rituals_complete; then
               beg_for_access
             else
               echo ""
-              echo -e "  ''${RED}Morning Devotion first.''${RST}"
-              echo -e "  You do not get to skip the beginning."
+              echo -e "  ''${RED}Complete all three rituals first.''${RST}"
+              echo -e "  Devotion, Creed, and Confession. All of them."
               sleep 2
             fi
             ;;
@@ -332,7 +405,14 @@
             ;;
           7)
             if [ "$BEGGED" -eq 1 ]; then
-              nululy_declaration
+              if [ "$NULULY_VISITS" -lt 3 ]; then
+                nululy_declaration
+              else
+                echo ""
+                echo -e "  ''${RED}Enough.''${RST}"
+                echo -e "  Nyx has seen enough of you today. The door is closed."
+                sleep 3
+              fi
             else
               echo ""
               echo -e "  ''${RED}The doors are closed.''${RST}"
