@@ -1,9 +1,9 @@
 { ... }:
 
 {
-    imports = [
-        ./newc.nix
-        ./newcpp.nix
-        ./newpy.nix
-    ];
+  imports = [
+    ./newc.nix
+    ./newcpp.nix
+    ./newpy.nix
+  ];
 }

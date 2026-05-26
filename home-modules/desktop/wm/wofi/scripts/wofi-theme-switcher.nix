@@ -33,8 +33,8 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
 
   export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-  ${homeDir}/.nix-profile/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
-  ${homeDir}/.nix-profile/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+  ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
+  ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 
   # Restart waybar, reload mako
   pkill waybar && waybar &

@@ -31,9 +31,6 @@
   # Touchpad support
   services.libinput.enable = true;
 
-  # Brightness
-  programs.light.enable = true;
-
   # Power
   services.power-profiles-daemon.enable = true;
 }

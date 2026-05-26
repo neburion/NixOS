@@ -3,7 +3,7 @@
 {
   imports = [ 
     ./hyprland
-    ./terminal
+    ./terminal/ghostty.nix
     ./waybar
     ./wofi
     ./mako

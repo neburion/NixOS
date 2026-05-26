@@ -24,13 +24,9 @@
     sharedHMConfig = {
       useGlobalPkgs = true;
       useUserPackages = true;
-      extraSpecialArgs = { inherit zen-browser nvf; };
+      extraSpecialArgs = { inherit zen-browser; };
       sharedModules = [
         nvf.homeManagerModules.default
-        ({ pkgs, ... }: {
-          home.packages = [ zen-browser.packages.${pkgs.system}.default ];
-          programs.nvf.enable = true;
-        })
       ];
     };
     mkSystem = { host, system ? "x86_64-linux", users }:

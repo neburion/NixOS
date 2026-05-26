@@ -8,7 +8,7 @@
 
       clang.enable  = true; # C/C++
       rust.enable   = true; # Rust
-      python.enable = true; # Java
+      python.enable = true; # Python
       nix.enable    = true; # Nix
     };
   };

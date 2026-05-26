@@ -1,13 +1,7 @@
 { pkgs, lib, config, ... }:
 
 let
-  themes = {
-    catppuccin = import ../../../themes/catppuccin.nix;
-    dark       = import ../../../themes/dark.nix;
-    everforest = import ../../../themes/everforest.nix;
-    gruvbox    = import ../../../themes/gruvbox.nix;
-    nord       = import ../../../themes/nord.nix;
-  };
+  themes = import ../../../themes;
 
   # Generate wofi-specific CSS from a color attrset
   mkWofiTheme = c: ''

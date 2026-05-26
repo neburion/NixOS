@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
   home.file.".config/waypaper/config.ini" = {
@@ -28,7 +28,7 @@
       mpvpaper_sound = False
       mpvpaper_options = 
       use_xdg_state = False
-      stylesheet = /home/neburion/.config/waypaper/style.css
+      stylesheet = ${config.home.homeDirectory}/.config/waypaper/style.css
     '';
   };
 }

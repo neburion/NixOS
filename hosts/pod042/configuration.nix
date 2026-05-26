@@ -1,22 +1,26 @@
 { ... }:
 {
   imports =
-    [ 
+    [
       ./hardware-configuration.nix
       ./users.nix
       ../../modules/core/networking.nix
+      ../../modules/core/syncthing.nix
       ../../modules/core/hardware.nix
       ../../modules/core/audio.nix
       ../../modules/core/locale.nix
       ../../modules/core/boot.nix
-      ../../modules/core/nix.nix # temporary fix
-      ../../modules/core/shell.nix # temporary?
       ../../modules/desktop
       ../../modules/desktop/remote-access.nix
-      ../../modules/scripts/backup.nix
     ];
-  # NixOS
-  nixpkgs.config.allowUnfree = true; # Package Manager
-  nix.settings.experimental-features = [ "flakes" "nix-command" ]; # Flake
+
+  nixpkgs.config.allowUnfree = true;
+  nix.settings.experimental-features = [ "flakes" "nix-command" ];
   system.stateVersion = "25.11"; # Initial nixos version on install no need to change
+
+  programs.fish.enable = true;
+  environment.sessionVariables = {
+    EDITOR = "nvim";
+    SUDO_EDITOR = "nvim";
+  };
 }

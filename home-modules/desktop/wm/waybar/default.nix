@@ -1,13 +1,7 @@
 { lib, config, ... }:
 
 let
-  themes = {
-    catppuccin = import ../../../themes/catppuccin.nix;
-    dark       = import ../../../themes/dark.nix;
-    everforest = import ../../../themes/everforest.nix;
-    gruvbox    = import ../../../themes/gruvbox.nix;
-    nord       = import ../../../themes/nord.nix;
-  };
+  themes = import ../../../themes;
 
   mkWaybarTheme = c: ''
     @define-color background ${c.bg};

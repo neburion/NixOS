@@ -8,9 +8,4 @@
     ./languages.nix
     ./keybinds.nix
   ];
-
-  programs.nvf = {
-    enable = true;
-    settings.vim = {};
-  };
 }

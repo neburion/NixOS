@@ -4,7 +4,7 @@
     # Utils
     "$statusBar"          = "waybar";
     "$notificationDaemon" = "mako";
-    "$wallpaperEngine"    = "sww-daemon";
+    "$wallpaperEngine"    = "swww-daemon";
     "$networkApplet"      = "nm-applet";
     "$bluetoothApplet"    = "blueman-applet";
 

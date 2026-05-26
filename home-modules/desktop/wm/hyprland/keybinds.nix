@@ -17,6 +17,7 @@
       "$mod,       M,      exec, $musicPlayer"
       "$mod,       N,      exec, $notesApp"
       "$mod,       D,      exec, $discord"
+      "$mod,       C,      exec, $messenger"
       "$mod,       G,      exec, heroic"
       "$mod SHIFT, G,      exec, steam"
       "$mod,       P,      exec, keepassxc"

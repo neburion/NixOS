@@ -1,8 +1,9 @@
 { pkgs, ... }:
 
 {
-  imports = [ 
+  imports = [
     ./scripts
+    ./ai
   ];
 
   home.packages = with pkgs; [

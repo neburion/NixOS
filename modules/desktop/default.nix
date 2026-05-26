@@ -3,7 +3,6 @@
 {
   imports = [
     ./gaming.nix
-    ./emulation
   ];
 
   environment.systemPackages = with pkgs; [
