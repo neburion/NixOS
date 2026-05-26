@@ -38,19 +38,7 @@ in
     ./config.nix
   ];
 
-  home.packages = with pkgs; [ libnotify mako ];
-
-  systemd.user.services.mako = {
-    Unit = {
-      Description = "Mako notification daemon";
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      ExecStart = "${pkgs.mako}/bin/mako";
-      Restart = "on-failure";
-    };
-    Install.WantedBy = [ "graphical-session.target" ];
-  };
+  home.packages = with pkgs; [ libnotify ];
 
   xdg.configFile = lib.mapAttrs' (name: colors:
     lib.nameValuePair "mako/themes/${name}" { text = mkMakoConfig colors; }

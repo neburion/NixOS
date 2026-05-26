@@ -37,6 +37,6 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 
   # Restart waybar, reload mako
-  pkill waybar && waybar &
+  pkill waybar; waybar &
   makoctl reload
 ''
