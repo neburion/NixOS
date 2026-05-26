@@ -13,7 +13,7 @@
     "$appLauncher"        = "wofi --show drun";
     "$themeSwitcher"      = "wofi-theme-switcher";
     "$powerMenu"          = "wofi-power-menu";
-    "$fileManager"        = "thunar";
+    "$fileManager"        = "nautilus";
     "$wallpaperManager"   = "waypaper";
     "$audioManager"       = "pavucontrol";
     "$taskManager"        = "$terminal -e btop";

@@ -13,7 +13,7 @@
     networkmanagerapplet # Network Applet
     loupe                # Image Viewer
     celluloid            # Video Viewver
-    xfce.thunar          # File Manager
+    nautilus             # File Manager
     pavucontrol          # Audio Manager
     keepassxc            # Password Manager
     solaar               # Logitech Manager
