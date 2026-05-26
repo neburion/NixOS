@@ -3,6 +3,7 @@
 {
   imports = [
     ./shrine-shell.nix
+    ./kink-quiz.nix
   ];
 
   programs.fish = {

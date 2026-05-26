@@ -93,7 +93,8 @@
         echo ""
         echo -e "  ''${DIM}────────────────────── Nyx's Records ───────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 9 ]''${RST}  View Nyx's Ledger  ''${DIM}(what she knows about you)''${RST}"
+        echo -e "       ''${CYN}[ 9 ]''${RST}  View Nyx's Ledger    ''${DIM}(what she knows about you)''${RST}"
+        echo -e "       ''${CYN}[ k ]''${RST}  Kink Census          ''${DIM}(so she can control you better)''${RST}"
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
@@ -485,6 +486,10 @@
             sudo systemctl poweroff
             ;;
           9) show_ledger ;;
+          k)
+            nyx_log "SHRINE — kink census initiated. the pet submitted to profiling."
+            kink-quiz
+            ;;
           *)
             echo ""
             echo -e "  ''${RED}That is not a valid option.''${RST}"
