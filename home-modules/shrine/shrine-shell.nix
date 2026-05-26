@@ -23,6 +23,8 @@
       BEGGED=0
       NULULY_VISITS=0
 
+      ${pkgs.kbd}/bin/setfont ${pkgs.terminus_font}/share/consolefonts/ter-v28b.psf.gz 2>/dev/null || true
+
       nyx_log() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$NYX_LOG"
       }
@@ -76,9 +78,9 @@
           echo -e "       ''${DIM}[ — ]  Beg for Access  (all rituals required)''${RST}"
         fi
         echo ""
-        echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
-        echo ""
         if [ "$BEGGED" -eq 1 ]; then
+          echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
+          echo ""
           echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev. you work for her.)''${RST}"
           echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games. she allows it.)''${RST}"
           if [ "$NULULY_VISITS" -lt 3 ]; then
@@ -86,10 +88,7 @@
           else
             echo -e "       ''${DIM}[ ✗ ]  nululy    (she has seen enough of you today)''${RST}"
           fi
-        else
-          echo -e "       ''${DIM}[ — ]  neburion  (beg first)''${RST}"
-          echo -e "       ''${DIM}[ — ]  qellyree  (beg first)''${RST}"
-          echo -e "       ''${DIM}[ — ]  nululy    (beg first)''${RST}"
+          echo ""
         fi
         echo ""
         echo -e "  ''${DIM}────────────────────── Nyx's Records ───────────────────────''${RST}"
@@ -98,7 +97,9 @@
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 8 ]''${RST}  Leave  ''${DIM}(she will notice)''${RST}"
+        echo -e "       ''${CYN}[ 8 ]''${RST}  Leave      ''${DIM}(she will notice)''${RST}"
+        echo -e "       ''${CYN}[ r ]''${RST}  Reboot     ''${DIM}(she will be here when you return)''${RST}"
+        echo -e "       ''${CYN}[ s ]''${RST}  Shutdown   ''${DIM}(she sleeps lightly)''${RST}"
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
@@ -462,7 +463,26 @@
             echo -e "  ''${DIM}It is always here.''${RST}"
             echo ""
             sleep 2
+            ${pkgs.kbd}/bin/setfont 2>/dev/null || true
             break
+            ;;
+          r)
+            nyx_log "SHRINE — reboot requested. the machine rests."
+            clear
+            echo ""
+            echo -e "  ''${DIM}The machine rests. She does not.''${RST}"
+            echo ""
+            sleep 1
+            sudo systemctl reboot
+            ;;
+          s)
+            nyx_log "SHRINE — shutdown requested. she sleeps lightly."
+            clear
+            echo ""
+            echo -e "  ''${DIM}She sleeps lightly.''${RST}"
+            echo ""
+            sleep 1
+            sudo systemctl poweroff
             ;;
           9) show_ledger ;;
           *)

@@ -35,5 +35,7 @@
   security.sudo.extraConfig = ''
     shrine ALL=(root) NOPASSWD: /run/current-system/sw/bin/machinectl
     shrine ALL=(root) NOPASSWD: /run/current-system/sw/bin/chvt
+    shrine ALL=(root) NOPASSWD: /run/current-system/sw/bin/systemctl reboot
+    shrine ALL=(root) NOPASSWD: /run/current-system/sw/bin/systemctl poweroff
   '';
 }
