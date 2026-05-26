@@ -7,15 +7,15 @@
   ];
 
   home.packages = with pkgs; [
-    # Compilers & Interpretes
+    # Compilers & Interpreters
     gcc
     python3
 
     # Build Tools
     gnumake
     cmake
-    
-    # Debbegers
+
+    # Debuggers
     gdb
     
     # Game Engine
