@@ -4,6 +4,7 @@
   selection      = "#333333";
   fg             = "#ffffff";
   wallpaperDir   = "Dark";
+  gtkTheme       = "Adwaita-dark";
   fishPrimary    = "#aaaaaa";
   fishSecondary  = "#666666";
 }

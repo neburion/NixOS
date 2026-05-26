@@ -3,12 +3,15 @@
 let
   strip = lib.removePrefix "#";
 
-  # Bake theme→wallpaperDir mapping at build time from the palette definitions.
+  # Bake all theme→value mappings at build time from the palette definitions.
   wallpaperDirLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
     ''WALLPAPER_DIRS["${name}"]="${t.wallpaperDir or name}"''
   ) themes);
 
-  # Bake theme→fish prompt colors at build time.
+  gtkThemeLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
+    ''GTK_THEMES["${name}"]="${t.gtkTheme or "Adwaita-dark"}"''
+  ) themes);
+
   fishColorLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t: ''
     FISH_PRIMARY["${name}"]="${strip (t.fishPrimary or "ffffff")}"
     FISH_SECONDARY["${name}"]="${strip (t.fishSecondary or "aaaaaa")}"''
@@ -52,16 +55,11 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   echo "theme = $chosen" > "$GHOSTTY_THEMES/active.conf"
 
   # GTK theme
-  case "$chosen" in
-    catppuccin) gtk_theme="catppuccin-mocha-blue-standard" ;;
-    gruvbox)    gtk_theme="gruvbox-dark" ;;
-    nord)       gtk_theme="Nordic-darker" ;;
-    everforest) gtk_theme="Everforest-Dark-B" ;;
-    *)          gtk_theme="Adwaita-dark" ;;
-  esac
+  declare -A GTK_THEMES
+  ${gtkThemeLines}
   export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-  ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
+  ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "''${GTK_THEMES[$chosen]:-Adwaita-dark}"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 
   # Fish prompt colors via universal variables (propagate instantly to all running sessions).

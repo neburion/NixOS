@@ -13,6 +13,7 @@
       "GDK_SCALE,1"
       "XDG_CURRENT_DESKTOP,Hyprland"
       "XDG_SESSION_DESKTOP,Hyprland"
+      "ADW_DEBUG_COLOR_SCHEME,prefer-dark"
 
       # Nvidia
       "XDG_SESSION_TYPE,wayland"

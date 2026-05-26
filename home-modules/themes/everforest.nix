@@ -4,6 +4,7 @@
   selection      = "#3d484d";
   fg             = "#d3c6aa";
   wallpaperDir   = "Everforest";
+  gtkTheme       = "Everforest-Dark-B";
   fishPrimary    = "#a7c080";
   fishSecondary  = "#7fbbb3";
 }
