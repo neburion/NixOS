@@ -2,7 +2,7 @@
 
 let
   p7zip   = "${pkgs.p7zip}/bin/7z";
-  rclone  = "${pkgs.rclone}/bin/rclone --config /home/neburion/.config/rclone/rclone.conf";
+  rclone  = "${pkgs.rclone}/bin/rclone";
   cp      = "${pkgs.coreutils}/bin/cp";
   rm      = "${pkgs.coreutils}/bin/rm";
   mkdir   = "${pkgs.coreutils}/bin/mkdir";
@@ -42,10 +42,11 @@ let
     ${p7zip} a -t7z "$ARCHIVE" "$STAGING/" -p"$PASSWORD" -mhe=on
 
     # --- Upload ---
-    ${rclone} copy   "$ARCHIVE"    "$GDRIVE"
-    ${rclone} delete --min-age 5d  "$GDRIVE"
-    ${rclone} copy   "$ARCHIVE"    "$HOMESERVER"
-    ${rclone} delete --min-age 20d "$HOMESERVER"
+    RCLONE="${rclone} --config /home/neburion/.config/rclone/rclone.conf"
+    $RCLONE copy   "$ARCHIVE"    "$GDRIVE"
+    $RCLONE delete --min-age 5d  "$GDRIVE"
+    $RCLONE copy   "$ARCHIVE"    "$HOMESERVER"
+    $RCLONE delete --min-age 20d "$HOMESERVER"
   '';
 in
 {
