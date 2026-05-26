@@ -16,6 +16,17 @@ let
     FISH_PRIMARY["${name}"]="${strip (t.fishPrimary or "ffffff")}"
     FISH_SECONDARY["${name}"]="${strip (t.fishSecondary or "aaaaaa")}"''
   ) themes);
+
+  # GTK CSS files baked in the nix store (paths are deterministic nix strings).
+  css = import ../../gtk-css.nix { inherit pkgs lib themes; };
+
+  gtk4CssLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: f:
+    ''GTK4_CSS["${name}"]="${f}"''
+  ) css.gtk4Files);
+
+  gtk3CssLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: f:
+    ''GTK3_CSS["${name}"]="${f}"''
+  ) css.gtk3Files);
 in
 pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   WOFI_THEMES="$HOME/.config/wofi/themes"
@@ -61,6 +72,15 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "''${GTK_THEMES[$chosen]:-Adwaita-dark}"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+
+  # GTK4 CSS (Nautilus accent/window colors) + GTK3 CSS (nm-applet selection color fix)
+  declare -A GTK4_CSS
+  ${gtk4CssLines}
+  declare -A GTK3_CSS
+  ${gtk3CssLines}
+  mkdir -p "$HOME/.config/gtk-4.0" "$HOME/.config/gtk-3.0"
+  [[ -n "''${GTK4_CSS[$chosen]}" ]] && cp "''${GTK4_CSS[$chosen]}" "$HOME/.config/gtk-4.0/gtk.css"
+  [[ -n "''${GTK3_CSS[$chosen]}" ]] && cp "''${GTK3_CSS[$chosen]}" "$HOME/.config/gtk-3.0/gtk.css"
 
   # Fish prompt colors via universal variables (propagate instantly to all running sessions).
   declare -A FISH_PRIMARY
