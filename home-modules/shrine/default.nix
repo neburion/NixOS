@@ -17,10 +17,9 @@
       foreground             = "d4af37";
       selection-background   = "d4af37";
       selection-foreground   = "0d0d0d";
-      cursor-color           = "d4af37";
-      font-size              = 16;
-      window-decoration      = false;
-      scrollbar-style        = "overlay";
+      cursor-color      = "d4af37";
+      font-size         = 16;
+      window-decoration = false;
     };
   };
 }
