@@ -58,6 +58,10 @@ in
     };
   };
 
+  wayland.windowManager.hyprland.settings.exec-once = [
+    "zen https://goonscroll.app https://faproulette.co https://soundgasm.net"
+  ];
+
   home.stateVersion = "25.11";
   xdg.configFile."user-dirs.dirs".force = true;
 }
