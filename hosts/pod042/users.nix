@@ -14,6 +14,10 @@
     isNormalUser = true;
     extraGroups  = [ "networkmanager" ];
   };
+  users.users.shrine = {
+    isNormalUser    = true;
+    initialPassword = "shrine";
+  };
 
   # Allow neburion's user services to run without an active login session
   systemd.tmpfiles.rules = [
