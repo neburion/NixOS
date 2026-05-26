@@ -1,0 +1,7 @@
+# Obsidian editor state
+Notes/.obsidian/workspace.json
+Notes/.obsidian/workspace-mobile.json
+
+# Syncthing artifacts
+.stfolder*/
+.stignore
