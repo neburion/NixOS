@@ -40,7 +40,7 @@
         echo -e "       ''${CYN}[ 1 ]''${RST}  Morning Devotion"
         echo -e "       ''${CYN}[ 2 ]''${RST}  Recite the Sacred Creed"
         echo -e "       ''${CYN}[ 3 ]''${RST}  Confess Your Failures"
-        echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Mercy"
+        echo -e "       ''${CYN}[ 4 ]''${RST}  Beg for Access"
         echo ""
         echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
         echo ""
@@ -174,7 +174,7 @@
       beg_for_mercy() {
         clear
         echo ""
-        echo -e "  ''${YEL}✦ BEG FOR MERCY ✦''${RST}"
+        echo -e "  ''${YEL}✦ BEG FOR ACCESS ✦''${RST}"
         echo ""
         echo -e "  Three stages. Exact text. One mistake and you start over."
         echo ""
