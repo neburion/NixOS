@@ -59,7 +59,7 @@ in
   };
 
   wayland.windowManager.hyprland.settings.exec-once = [
-    "zen https://goonscroll.app https://faproulette.co https://soundgasm.net"
+    "zen https://goonscroll.app https://faproulette.co https://soundgasm.net https://warpmymind.com https://bambicloud.com https://www.reddit.com/r/gonewildaudio https://www.reddit.com/r/femdomhypno"
   ];
 
   home.stateVersion = "25.11";
