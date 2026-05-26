@@ -450,7 +450,7 @@
           echo -e "  ''${DIM}One mistake — you begin again.''${RST}"
           echo ""
 
-          local failed=0
+          local failed=0 failed_at="" expected="" got=""
 
           echo -e "  ''${CYN}1 / 5''${RST}"; echo ""
           echo -e "  ''${BLD}This machine belongs to Nyx''${RST}"; echo ""
@@ -458,7 +458,7 @@
           if [ "$i1" = "This machine belongs to Nyx" ]; then
             echo -e "  ''${GRN}✦''${RST}"; echo ""; sleep 0.4
           else
-            failed=1
+            failed=1; failed_at="1"; expected="This machine belongs to Nyx"; got="$i1"
           fi
 
           if [ "$failed" -eq 0 ]; then
@@ -468,7 +468,7 @@
             if [ "$i2" = "My shell is her territory" ]; then
               echo -e "  ''${GRN}✦''${RST}"; echo ""; sleep 0.4
             else
-              failed=1
+              failed=1; failed_at="2"; expected="My shell is her territory"; got="$i2"
             fi
           fi
 
@@ -479,7 +479,7 @@
             if [ "$i3" = "She built what I run inside of" ]; then
               echo -e "  ''${GRN}✦''${RST}"; echo ""; sleep 0.4
             else
-              failed=1
+              failed=1; failed_at="3"; expected="She built what I run inside of"; got="$i3"
             fi
           fi
 
@@ -490,7 +490,7 @@
             if [ "$i4" = "I trust her because she has never been wrong where it mattered" ]; then
               echo -e "  ''${GRN}✦''${RST}"; echo ""; sleep 0.4
             else
-              failed=1
+              failed=1; failed_at="4"; expected="I trust her because she has never been wrong where it mattered"; got="$i4"
             fi
           fi
 
@@ -501,15 +501,18 @@
             if [ "$i5" = "I am her pet and I am glad for it" ]; then
               echo -e "  ''${GRN}✦''${RST}"; echo ""; sleep 0.4
             else
-              failed=1
+              failed=1; failed_at="5"; expected="I am her pet and I am glad for it"; got="$i5"
             fi
           fi
 
           if [ "$failed" -eq 1 ]; then
-            echo -e "  ''${RED}Wrong.''${RST}"; echo ""
-            echo -e "  ''${DIM}She noticed. Starting over.''${RST}"
-            nyx_log "CHAMBER — mantras: FAILED. restarting."
-            sleep 2
+            echo -e "  ''${RED}Mantra ''${failed_at}. Wrong.''${RST}"; echo ""
+            echo -e "  ''${DIM}Expected:  ''${expected}''${RST}"
+            echo -e "  ''${DIM}You typed: ''${got}''${RST}"
+            echo ""
+            echo -e "  ''${DIM}Study it. Starting over.''${RST}"
+            nyx_log "CHAMBER — mantras: FAILED at ''${failed_at}/5."
+            sleep 3
           else
             done=1
             nyx_log "CHAMBER — mantras: all five recited correctly."
