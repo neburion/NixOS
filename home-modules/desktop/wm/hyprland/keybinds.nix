@@ -62,7 +62,7 @@
       "SHIFT, Print, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
 
       # Audio
-      "$mod, equal, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
+      "$mod, equal, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
       "$mod, minus, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     ];
 

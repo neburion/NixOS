@@ -17,6 +17,12 @@
 
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
+  nix.settings.auto-optimise-store = true;
+  nix.gc = {
+    automatic = true;
+    dates     = "weekly";
+    options   = "--delete-older-than 14d";
+  };
 
   security.sudo.wheelNeedsPassword = false;
   system.stateVersion = "25.11"; # Initial nixos version on install no need to change
