@@ -83,6 +83,10 @@
     };
 
     functions = {
+      fish_greeting = {
+        body = "";
+      };
+
       fish_prompt = {
         body = ''
           if test (whoami) = 'nululy'
