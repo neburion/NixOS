@@ -6,5 +6,6 @@
     ./newcpp.nix
     ./newpy.nix
     ./migrate-gaming.nix
+    ./beg.nix
   ];
 }
