@@ -5,6 +5,7 @@
     ../home-modules/desktop
     ../home-modules/cli
     ../home-modules/dev
+    ../home-modules/conditioning
   ];
 
   home.packages = [
