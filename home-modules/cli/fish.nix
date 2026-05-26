@@ -9,7 +9,7 @@
       cdnixos  = "cd $HOME/NixOS";
       rebuild  = "sudo nixos-rebuild switch --flake $HOME/NixOS#pod042";
       trebuild = "sudo nixos-rebuild test --flake $HOME/NixOS#pod042";
-      update   = "sudo nix flake update --flake $HOME/NixOS && sudo nixos-rebuild switch --flake $HOME/NixOS";
+      update   = "sudo nix flake update --flake $HOME/NixOS && sudo nixos-rebuild switch --flake $HOME/NixOS#pod042";
 
       # Superfile
       spf  = "superfile";
