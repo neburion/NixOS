@@ -8,7 +8,10 @@
     ../home-modules/dev
   ];
 
-  home.packages = [ zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+  home.packages = [
+    zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+    pkgs.sqlite
+  ];
   programs.nvf.enable = true;
 
   home.stateVersion = "25.11";

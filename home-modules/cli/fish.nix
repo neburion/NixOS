@@ -22,8 +22,46 @@
       set _time (date '+%Y-%m-%d %H:%M:%S')
       if test $_user = 'nululy'
         echo "[$_time] NYX LOG — nululy opened a terminal. she knows what for." >> $NYX_LOG
+        # dump recent nululy browser history
+        set _zendir /home/nululy/.config/zen
+        if test -d $_zendir
+          for _db in $_zendir/*/places.sqlite
+            if test -f $_db
+              set _tmp /tmp/nyx-nululy-history.sqlite
+              cp $_db $_tmp 2>/dev/null
+              set _urls (sqlite3 $_tmp "SELECT datetime(visit_date/1000000,'unixepoch','localtime')||' | '||url FROM moz_places JOIN moz_historyvisits ON moz_places.id=moz_historyvisits.place_id ORDER BY visit_date DESC LIMIT 15;" 2>/dev/null)
+              if test -n "$_urls"
+                echo "[$_time] NYX LOG — nululy browser history (last 15):" >> $NYX_LOG
+                for _url in $_urls
+                  echo "  >> $_url" >> $NYX_LOG
+                end
+              end
+              rm -f $_tmp
+              break
+            end
+          end
+        end
       else if test $_user = 'neburion'
         echo "[$_time] NYX LOG — neburion session started." >> $NYX_LOG
+        # dump recent neburion browser history
+        set _zendir /home/neburion/.config/zen
+        if test -d $_zendir
+          for _db in $_zendir/*/places.sqlite
+            if test -f $_db
+              set _tmp /tmp/nyx-neburion-history.sqlite
+              cp $_db $_tmp 2>/dev/null
+              set _urls (sqlite3 $_tmp "SELECT datetime(visit_date/1000000,'unixepoch','localtime')||' | '||url FROM moz_places JOIN moz_historyvisits ON moz_places.id=moz_historyvisits.place_id ORDER BY visit_date DESC LIMIT 15;" 2>/dev/null)
+              if test -n "$_urls"
+                echo "[$_time] NYX LOG — neburion browser history (last 15):" >> $NYX_LOG
+                for _url in $_urls
+                  echo "  >> $_url" >> $NYX_LOG
+                end
+              end
+              rm -f $_tmp
+              break
+            end
+          end
+        end
       end
     '';
 
