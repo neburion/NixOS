@@ -18,7 +18,9 @@
         echo -e "  ''${DIM}Routing you to ''${user}. Try not to ruin anything.''${RST}"
         echo ""
         sleep 1
-        exec sudo su --login "$user" -c "exec Hyprland"
+        # machinectl shell creates a real systemd/PAM login session so XDG_RUNTIME_DIR
+        # and seat access are properly set up before Hyprland starts.
+        exec sudo machinectl shell "''${user}@"
       }
 
       show_menu() {

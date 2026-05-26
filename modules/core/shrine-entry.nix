@@ -5,9 +5,9 @@
   services.getty.autologinUser = "shrine";
 
   # Shrine is the hub — it can hand off to any user without a password.
-  # su skips the target user's password when called as root;
-  # this rule lets shrine invoke sudo su with any args without being asked for its own.
+  # machinectl shell creates a proper systemd/PAM login session (sets XDG_RUNTIME_DIR,
+  # registers the seat, etc.) which su/sudo alone do not provide.
   security.sudo.extraConfig = ''
-    shrine ALL=(root) NOPASSWD: /run/wrappers/bin/su
+    shrine ALL=(root) NOPASSWD: /run/current-system/sw/bin/machinectl
   '';
 }
