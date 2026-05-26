@@ -7,10 +7,13 @@
 
   environment.systemPackages = with pkgs; [
     sddm-astronaut # SDDM Theme Manager
-    brightnessctl # Brightness Manager
+    brightnessctl  # Brightness Manager
     xdg-user-dirs
   ];
   programs.kdeconnect.enable = true;
+
+  # Required for hyprlock PAM authentication
+  security.pam.services.hyprlock = {};
 
   # Fonts
   fonts.packages = with pkgs; [

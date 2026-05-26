@@ -3,9 +3,10 @@
 {
   imports = [
     ../home-modules/desktop
+    ../home-modules/desktop/wm/lock.nix
     ../home-modules/cli
-    ../home-modules/dev
     ../home-modules/cli/backup.nix
+    ../home-modules/dev
   ];
 
   home.packages = [ zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default ];

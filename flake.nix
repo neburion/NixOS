@@ -54,6 +54,7 @@
         users = {
           neburion = import ./users/neburion.nix;
           nululy   = import ./users/nululy.nix;
+          qellyree = import ./users/qellyree.nix;
         };
       };
     };

@@ -25,7 +25,7 @@ let
 
     # --- Stage files ---
     ${rm}    -rf "$STAGING"
-    ${mkdir} -p  "$STAGING"/{Gaming,nixos,.config}
+    ${mkdir} -p  "$STAGING"/{nixos,.config}
 
     # --- Copy Home Files ---
     ${cp} -rf \
@@ -35,19 +35,12 @@ let
       ${home}/School/   \
       "$STAGING"/
 
-    # --- Copy Gaming Files ---
-    ${cp} -rf \
-      ${home}/Gaming/Gaming-Ob/                \
-      ${home}'/Gaming/Heroic/Wine Prefixes/'   \
-      "$STAGING"/Gaming/
-
     # --- Copy Config Files ---
     ${cp} -rf \
       ${nixos}/                  \
       ${home}/.config/zen/       \
       ${home}/.config/rclone/    \
       ${home}/.config/keepassxc/ \
-      ${home}/.config/heroic/    \
       "$STAGING"/.config/
 
     # --- Compress & encrypt ---

@@ -1,18 +1,17 @@
 { pkgs, config, ... }:
 
 {
-  imports = [ 
+  imports = [
     ./wm
-    ./gaming
     ./art
   ];
 
   home.packages = with pkgs; [
-    # Desktop Managers
+    # Desktop Utilities
     blueman              # Bluetooth Manager and Applet
     networkmanagerapplet # Network Applet
     loupe                # Image Viewer
-    celluloid            # Video Viewver
+    celluloid            # Video Player
     nautilus             # File Manager
     pavucontrol          # Audio Manager
     keepassxc            # Password Manager
@@ -23,14 +22,22 @@
     wl-clipboard         # Wayland Clipboard
     ente-desktop
 
-    # Desktop Apps
-    spotify
+    # Apps
     signal-desktop
-    vesktop
-   #discord
     obsidian
-    obs-studio
   ];
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "image/png"        = "org.gnome.Loupe.desktop";
+      "image/jpeg"       = "org.gnome.Loupe.desktop";
+      "image/gif"        = "org.gnome.Loupe.desktop";
+      "image/webp"       = "org.gnome.Loupe.desktop";
+      "image/svg+xml"    = "org.gnome.Loupe.desktop";
+      "inode/directory"  = "org.gnome.Nautilus.desktop";
+    };
+  };
 
   # XDG Directories
   xdg.userDirs = {

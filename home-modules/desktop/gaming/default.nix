@@ -1,8 +1,14 @@
 { pkgs, ... }:
 
 {
+  imports = [
+    ./apps.nix
+    ./hyprland.nix
+    ./backup.nix
+  ];
+
   home.packages = with pkgs; [
-    heroic
-    prismlauncher
+    heroic        # GOG/Epic launcher
+    prismlauncher # Minecraft launcher
   ];
 }

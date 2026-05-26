@@ -14,12 +14,8 @@
       "$mod,       A,      exec, $audioManager"
       "$mod SHIFT, Escape, exec, $taskManager"
       "$mod,       B,      exec, $webBrowser"
-      "$mod,       M,      exec, $musicPlayer"
       "$mod,       N,      exec, $notesApp"
-      "$mod,       D,      exec, $discord"
       "$mod,       C,      exec, $messenger"
-      "$mod,       G,      exec, heroic"
-      "$mod SHIFT, G,      exec, steam"
       "$mod,       P,      exec, keepassxc"
       "$mod,       S,      exec, localsend"
 
