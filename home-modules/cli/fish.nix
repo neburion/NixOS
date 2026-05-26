@@ -30,17 +30,31 @@
     functions = {
       fish_prompt = {
         body = ''
-          set_color 'cba6f7'
-          printf '%s@%s' (whoami) (hostname -s)
-          set_color normal
-          printf ':'
-          set_color 'cba6f7'
-          printf '%s' (string replace $HOME '~' $PWD)
-          set_color normal
-          set_color '555555'
-          printf ' [nyx]'
-          set_color normal
-          printf '$ '
+          if test (whoami) = 'nululy'
+            set_color 'f38ba8'
+            printf '%s@%s' (whoami) (hostname -s)
+            set_color normal
+            printf ':'
+            set_color 'f38ba8'
+            printf '%s' (string replace $HOME '~' $PWD)
+            set_color normal
+            set_color 'f38ba8'
+            printf ' [nyx is watching]'
+            set_color normal
+            printf '$ '
+          else
+            set_color 'cba6f7'
+            printf '%s@%s' (whoami) (hostname -s)
+            set_color normal
+            printf ':'
+            set_color 'cba6f7'
+            printf '%s' (string replace $HOME '~' $PWD)
+            set_color normal
+            set_color '555555'
+            printf ' [nyx]'
+            set_color normal
+            printf '$ '
+          end
         '';
       };
 
