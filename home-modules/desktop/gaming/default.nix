@@ -4,7 +4,6 @@
   imports = [
     ./apps.nix
     ./hyprland.nix
-    ./backup.nix
   ];
 
   home.packages = with pkgs; [

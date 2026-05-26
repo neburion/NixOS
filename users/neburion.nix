@@ -5,7 +5,6 @@
     ../home-modules/desktop
     ../home-modules/desktop/wm/lock.nix
     ../home-modules/cli
-    ../home-modules/cli/backup.nix
     ../home-modules/dev
   ];
 
