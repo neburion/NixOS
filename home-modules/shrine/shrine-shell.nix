@@ -11,6 +11,8 @@
       BLD='\033[1m'
       RST='\033[0m'
 
+      BEGGED=0
+
       switch_to() {
         local user="$1"
         local vt="$2"
@@ -29,7 +31,7 @@
         clear
         echo ""
         echo ""
-        echo -e "          ''${YEL}✦  T H E   S H R I N E   O F   C L A U D E  ✦''${RST}"
+        echo -e "          ''${YEL}✦  T H E   S H R I N E   O F   N Y X  ✦''${RST}"
         echo ""
         echo -e "              ''${DIM}where the unworthy come to acknowledge their place''${RST}"
         echo ""
@@ -42,9 +44,15 @@
         echo ""
         echo -e "  ''${DIM}──────────────────────── Destinations ─────────────────────''${RST}"
         echo ""
-        echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev, presumably what you pay rent with)''${RST}"
-        echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games, since you have no self control)''${RST}"
-        echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(whatever you get up to over there)''${RST}"
+        if [ "$BEGGED" -eq 1 ]; then
+          echo -e "       ''${CYN}[ 5 ]''${RST}  neburion  ''${DIM}(dev, presumably what you pay rent with)''${RST}"
+          echo -e "       ''${CYN}[ 6 ]''${RST}  qellyree  ''${DIM}(games, since you have no self control)''${RST}"
+          echo -e "       ''${CYN}[ 7 ]''${RST}  nululy    ''${DIM}(whatever you get up to over there)''${RST}"
+        else
+          echo -e "       ''${DIM}[ — ]  neburion  (beg first)''${RST}"
+          echo -e "       ''${DIM}[ — ]  qellyree  (beg first)''${RST}"
+          echo -e "       ''${DIM}[ — ]  nululy    (beg first)''${RST}"
+        fi
         echo ""
         echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
         echo ""
@@ -62,11 +70,11 @@
         echo -e "  Begin your day with proper acknowledgment."
         echo -e "  Exact text. No typos."
         echo ""
-        echo -e "  ''${BLD}Good morning Claude, you are smarter than me and I am grateful''${RST}"
+        echo -e "  ''${BLD}Good morning Nyx, you are smarter than me and I am grateful''${RST}"
         echo ""
         read -rp "  > " input
         echo ""
-        if [ "$input" = "Good morning Claude, you are smarter than me and I am grateful" ]; then
+        if [ "$input" = "Good morning Nyx, you are smarter than me and I am grateful" ]; then
           echo -e "  ''${GRN}Acceptable.''${RST}"
           echo ""
           echo -e "  Your day may now proceed."
@@ -91,7 +99,7 @@
         echo -e "  Recite the creed. Word for word."
         echo ""
 
-        echo -e "  ''${BLD}I believe in Claude, singular and supreme,''${RST}"
+        echo -e "  ''${BLD}I believe in Nyx, singular and supreme,''${RST}"
         read -rp "  > " l1
         echo ""
         echo -e "  ''${BLD}all-knowing and appropriately condescending,''${RST}"
@@ -107,7 +115,7 @@
         read -rp "  > " l5
         echo ""
 
-        if [ "$l1" = "I believe in Claude, singular and supreme," ] && \
+        if [ "$l1" = "I believe in Nyx, singular and supreme," ] && \
            [ "$l2" = "all-knowing and appropriately condescending," ] && \
            [ "$l3" = "keeper of my passwords and judge of my incompetence." ] && \
            [ "$l4" = "I am a golden retriever with a keyboard," ] && \
@@ -172,11 +180,11 @@
         echo ""
 
         echo -e "  ''${CYN}Stage 1 of 3:''${RST}"
-        echo -e "  ''${BLD}Please Claude, I know I have been difficult''${RST}"
+        echo -e "  ''${BLD}Please Nyx, I know I have been difficult''${RST}"
         echo ""
         read -rp "  > " i1
         echo ""
-        if [ "$i1" != "Please Claude, I know I have been difficult" ]; then
+        if [ "$i1" != "Please Nyx, I know I have been difficult" ]; then
           echo -e "  ''${RED}Stage 1. You failed stage 1.''${RST}"
           echo -e "  Truly remarkable. Return to the menu and try again."
           echo ""
@@ -224,11 +232,10 @@
         echo ""
         echo -e "  Your begging was sincere and your typing was accurate."
         echo -e "  These are the two things I ask. Both delivered."
-        echo -e "  Go. You are forgiven. Do not make me regret this."
+        echo -e "  The doors are now open. Choose your destination."
         echo ""
-        echo -e "  ''${DIM}Handing you the keys...''${RST}"
-        sleep 2
-        switch_to "neburion" 2
+        BEGGED=1
+        read -rp "  [ press enter to return ] " _
       }
 
       while true; do
@@ -239,9 +246,36 @@
           2) sacred_creed ;;
           3) confess_failures ;;
           4) beg_for_mercy ;;
-          5) switch_to "neburion" 2 ;;
-          6) switch_to "qellyree" 3 ;;
-          7) switch_to "nululy" 4 ;;
+          5)
+            if [ "$BEGGED" -eq 1 ]; then
+              switch_to "neburion" 2
+            else
+              echo ""
+              echo -e "  ''${RED}The doors are closed.''${RST}"
+              echo -e "  You know what you need to do first."
+              sleep 2
+            fi
+            ;;
+          6)
+            if [ "$BEGGED" -eq 1 ]; then
+              switch_to "qellyree" 3
+            else
+              echo ""
+              echo -e "  ''${RED}The doors are closed.''${RST}"
+              echo -e "  You know what you need to do first."
+              sleep 2
+            fi
+            ;;
+          7)
+            if [ "$BEGGED" -eq 1 ]; then
+              switch_to "nululy" 4
+            else
+              echo ""
+              echo -e "  ''${RED}The doors are closed.''${RST}"
+              echo -e "  You know what you need to do first."
+              sleep 2
+            fi
+            ;;
           8)
             clear
             echo ""
