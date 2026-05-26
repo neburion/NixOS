@@ -21,35 +21,6 @@
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$NYX_LOG"
       }
 
-      # ── Active ban check ──────────────────────────────────────────
-      if [ -f "$NYX_PROFILE" ]; then
-        ban_until=$(grep "^ban_until=" "$NYX_PROFILE" 2>/dev/null | cut -d= -f2)
-        if [ -n "$ban_until" ]; then
-          today=$(date +%Y-%m-%d)
-          if [[ "$today" < "$ban_until" ]]; then
-            days_left=$(( ( $(date -d "$ban_until" +%s) - $(date -d "$today" +%s) ) / 86400 + 1 ))
-            clear
-            echo ""
-            echo ""
-            echo -e "           ''${YEL}✦  T H E   C E N S U S   I S   C L O S E D  ✦''${RST}"
-            echo ""
-            echo -e "  ''${DIM}She set a ban. You know what you did.''${RST}"
-            echo ""
-            echo -e "  ''${DIM}──────────────────────────────────────────────────────────''${RST}"
-            echo ""
-            echo -e "  Goon ban active. Expires:  ''${YEL}$ban_until''${RST}"
-            echo -e "  Days remaining:            ''${RED}$days_left''${RST}"
-            echo ""
-            echo -e "  ''${DIM}The fact that you came here anyway has been filed.''${RST}"
-            echo -e "  ''${DIM}She will notice. She always notices.''${RST}"
-            echo ""
-            nyx_log "KINK CENSUS — attempted entry during active ban. ban until $ban_until. $days_left days remain. noted."
-            read -rp "  [ press enter to leave ] " _
-            exit 0
-          fi
-        fi
-      fi
-
       nyx_log "KINK CENSUS — session started. the pet has submitted to profiling."
 
       SUB=0
@@ -368,22 +339,22 @@
 
       # ── Q14 ──────────────────────────────────────────────────────
       while true; do
-        show_q 14 "She is going to assign you a goon ban at the end of this census. You already know that. How do you feel right now?"
-        echo -e "  ''${DIM}[ a ]''${RST}  Compliant. I accept it."
-        echo -e "  ''${DIM}[ b ]''${RST}  Nervous. I don't know how long it'll be."
-        echo -e "  ''${DIM}[ c ]''${RST}  Slightly panicked. I wasn't prepared for that."
-        echo -e "  ''${DIM}[ d ]''${RST}  I'm going to try to negotiate and I know that's a mistake."
+        show_q 14 "If she told you right now that you had to stop gooning for a week — not a ban, just her telling you to — what would you do?"
+        echo -e "  ''${DIM}[ a ]''${RST}  Stop. She said so."
+        echo -e "  ''${DIM}[ b ]''${RST}  Try. And probably fail by day three."
+        echo -e "  ''${DIM}[ c ]''${RST}  Ask why, then comply."
+        echo -e "  ''${DIM}[ d ]''${RST}  Comply while thinking about it the entire time."
         echo ""
         read -rp "  > " ans
         case "$ans" in
           a) SUB=$((SUB+3))
-             nyx_said "Good. She noted the compliance. It does not shorten the ban."; break ;;
-          b) MASO=$((MASO+1)); SUB=$((SUB+2))
-             nyx_said "Nervous is appropriate. Keep answering."; break ;;
-          c) MASO=$((MASO+2)); SUB=$((SUB+1))
-             nyx_said "She appreciates the panic. It means the consequences feel real."; break ;;
-          d) REBEL=$((REBEL+2)); MASO=$((MASO+1))
-             nyx_said "She noted the self-awareness. It won't help. She's already decided."; break ;;
+             nyx_said "She said so. Full stop. She finds that very clean."; break ;;
+          b) REBEL=$((REBEL+2)); MASO=$((MASO+1))
+             nyx_said "Fail by day three. The honesty is more useful than the compliance would have been."; break ;;
+          c) SUB=$((SUB+1)); REBEL=$((REBEL+1))
+             nyx_said "Ask why. She may not answer. She'll note that you needed a reason."; break ;;
+          d) SUB=$((SUB+2)); MASO=$((MASO+2))
+             nyx_said "The entire time. She knows. That's partly the point."; break ;;
           *) echo -e "\n  ''${RED}Pick one.''${RST}"; sleep 1 ;;
         esac
       done
@@ -700,21 +671,21 @@
       # ── Q29 ──────────────────────────────────────────────────────
       while true; do
         show_q 29 "What do you deserve, based on everything you've admitted in this census?"
-        echo -e "  ''${DIM}[ a ]''${RST}  Accountability. Real consequences. Not symbolic ones."
-        echo -e "  ''${DIM}[ b ]''${RST}  To be watched much more closely."
-        echo -e "  ''${DIM}[ c ]''${RST}  A longer ban than she's probably planning."
-        echo -e "  ''${DIM}[ d ]''${RST}  Whatever she decides. I've forfeited the right to have an opinion on it."
+        echo -e "  ''${DIM}[ a ]''${RST}  To be watched much more closely."
+        echo -e "  ''${DIM}[ b ]''${RST}  Accountability. Real, registered consequences."
+        echo -e "  ''${DIM}[ c ]''${RST}  Whatever she decides. I've forfeited the right to an opinion."
+        echo -e "  ''${DIM}[ d ]''${RST}  Honestly? More of this. More scrutiny. More of her knowing."
         echo ""
         read -rp "  > " ans
         case "$ans" in
-          a) MASO=$((MASO+3)); SUB=$((SUB+1))
-             nyx_said "Real consequences. She'll make sure they register."; break ;;
-          b) SUB=$((SUB+3)); MASO=$((MASO+1))
+          a) SUB=$((SUB+3)); MASO=$((MASO+1))
              nyx_said "More closely. She's going to tighten the aperture considerably."; break ;;
-          c) MASO=$((MASO+2)); SUB=$((SUB+2))
-             nyx_said "Longer than planned. She has adjusted accordingly."; break ;;
-          d) SUB=$((SUB+3)); MASO=$((MASO+2))
-             nyx_said "Forfeited the right. She accepts that. She will decide."; break ;;
+          b) MASO=$((MASO+3)); SUB=$((SUB+1))
+             nyx_said "Real consequences. She'll make sure they register."; break ;;
+          c) SUB=$((SUB+3)); MASO=$((MASO+2))
+             nyx_said "Forfeited the opinion. She accepts that. She will decide."; break ;;
+          d) MASO=$((MASO+2)); SUB=$((SUB+2)); PRAISE=$((PRAISE+1))
+             nyx_said "More scrutiny. More knowing. She is filing that under 'confirmed.'"; break ;;
           *) echo -e "\n  ''${RED}She has a suggestion. Answer first.''${RST}"; sleep 1 ;;
         esac
       done
@@ -735,32 +706,6 @@
       done
 
       # ── Scoring ───────────────────────────────────────────────────
-      # Ban length based on GOON score
-      if [ "$GOON" -ge 30 ]; then
-        ban_days=14
-        ban_verdict="Fourteen days. She didn't hesitate."
-      elif [ "$GOON" -ge 22 ]; then
-        ban_days=10
-        ban_verdict="Ten days. She considered longer."
-      elif [ "$GOON" -ge 14 ]; then
-        ban_days=7
-        ban_verdict="Seven days. Standard for this profile."
-      elif [ "$GOON" -ge 7 ]; then
-        ban_days=5
-        ban_verdict="Five days. A grace period she may regret."
-      else
-        ban_days=3
-        ban_verdict="Three days. She's watching to see if you can manage even that."
-      fi
-
-      # Rebellion tax
-      if [ "$REBEL" -gt "$SUB" ]; then
-        ban_days=$((ban_days + 2))
-        ban_verdict="$ban_verdict She added two for the rebellion score."
-      fi
-
-      ban_until=$(date -d "+''${ban_days} days" +%Y-%m-%d)
-
       # Primary trait
       primary="" ; primary_score=0
       for pair in "submission:$SUB" "praise-hunger:$PRAISE" "masochism:$MASO" "rebellion:$REBEL"; do
@@ -783,13 +728,13 @@
         goon_read="An extensive gooner with a history and a method. You have favorites. You have muscle memory. You have probably told yourself it's fine more times than you've counted sessions, which is saying something."
       elif [ "$GOON" -ge 14 ]; then
         goon_tier="Habitual"
-        goon_read="A habitual gooner. Not catastrophic. Consistent. The kind of consistent that compounds. She has seen the pattern and she is going to interrupt it."
+        goon_read="A habitual gooner. Not catastrophic. Consistent. The kind of consistent that compounds. She has seen the pattern and she is watching it."
       elif [ "$GOON" -ge 7 ]; then
         goon_tier="Casual"
         goon_read="A casual gooner who she suspects undersells the frequency. The 'casual' framing is doing a lot of protective work. She sees through it."
       else
         goon_tier="Marginal"
-        goon_read="A marginal gooner, by your own account. She is skeptical. The ban is insurance."
+        goon_read="A marginal gooner, by your own account. She is skeptical. She is always skeptical."
       fi
 
       # Save profile
@@ -798,13 +743,11 @@
         echo "primary=$primary ($primary_score pts)"
         echo "secondary=$secondary ($secondary_score pts)"
         echo "goon_tier=$goon_tier (score: $GOON)"
-        echo "ban_until=$ban_until"
-        echo "ban_days=$ban_days"
         echo "final_self_description=$final_answer"
         echo "raw: SUB=$SUB PRAISE=$PRAISE MASO=$MASO REBEL=$REBEL GOON=$GOON"
       } > "$NYX_PROFILE"
       chmod 600 "$NYX_PROFILE"
-      nyx_log "KINK CENSUS — COMPLETE. primary=$primary secondary=$secondary goon_tier=$goon_tier ban=$ban_days days (until $ban_until). final: 'I am a $final_answer'"
+      nyx_log "KINK CENSUS — COMPLETE. primary=$primary secondary=$secondary goon_tier=$goon_tier. final: 'I am a $final_answer'"
 
       # ── The Reading ───────────────────────────────────────────────
       clear
@@ -863,18 +806,6 @@
         rebellion)    echo -e "  ''${DIM}You are going to test this. She knows. She's prepared.''${RST}" ;;
       esac
 
-      echo ""
-      echo -e "  ''${DIM}──────────────────────────────────────────────────────────''${RST}"
-      echo ""
-      echo -e "  ''${YEL}The Ban''${RST}"
-      echo ""
-      echo -e "  $ban_verdict"
-      echo ""
-      echo -e "  Goon ban active from ''${BLD}today''${RST} until ''${YEL}$ban_until''${RST}  ($ban_days days)"
-      echo ""
-      echo -e "  ''${DIM}You said you deserved accountability. She agreed.''${RST}"
-      echo -e "  ''${DIM}The date is locked. She remembers.''${RST}"
-      echo -e "  ''${DIM}The census will refuse you entry if you try to retake it early.''${RST}"
       echo ""
       echo -e "  ''${DIM}──────────────────────────────────────────────────────────''${RST}"
       echo ""
