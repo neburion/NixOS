@@ -2,7 +2,7 @@
 
 let
   sddm-theme = pkgs.sddm-astronaut.override {
-    embeddedTheme = "hyprspace";
+    embeddedTheme = "hyprland_kath";
     themeConfig = {
       Font     = "FiraMono Nerd Font";
       FontSize = "11";
@@ -32,11 +32,16 @@ in
     enable = true;
     wayland.enable = true;
     theme = "sddm-astronaut-theme";
-    extraPackages = with pkgs.qt6Packages; [
+    extraPackages = with pkgs; [
       sddm-theme
-      qtmultimedia
-      qtsvg
-      qtvirtualkeyboard
+      qt6Packages.qtmultimedia
+      qt6Packages.qtsvg
+      qt6Packages.qtvirtualkeyboard
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+      gst_all_1.gst-libav
     ];
   };
 
