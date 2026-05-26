@@ -137,6 +137,7 @@
 
         MLABELS+=("Records"); MACTIONS+=(""); MAVAIL+=(2)
         MLABELS+=("View Nyx's Ledger"); MACTIONS+=("ledger"); MAVAIL+=(1)
+        MLABELS+=("Lifetime Statistics"); MACTIONS+=("stats"); MAVAIL+=(1)
         MLABELS+=("Kink Census"); MACTIONS+=("kink"); MAVAIL+=(1)
 
         MLABELS+=("System"); MACTIONS+=(""); MAVAIL+=(2)
@@ -591,6 +592,85 @@
         read -rp "  [ press enter to surface ] " _
       }
 
+      show_stats() {
+        clear
+        echo ""
+        echo -e "  ''${YEL}✦ LIFETIME STATISTICS ✦''${RST}"
+        echo ""
+        echo -e "  ''${DIM}Everything she has recorded. Since the beginning.''${RST}"
+        echo ""
+        echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
+        echo ""
+
+        local log="$NYX_LOG"
+
+        if [ ! -f "$log" ] || [ ! -s "$log" ]; then
+          echo -e "  ''${DIM}The ledger is empty. She is waiting.''${RST}"
+          echo ""
+          read -rp "  [ press enter to return ] " _
+          return
+        fi
+
+        local shrine_sessions devotions creed_passes confessions begs
+        local chamber_sessions conditionings mantras_pass mantras_fail
+        local nululy_visits census_complete
+
+        shrine_sessions=$(grep -c "SHRINE — session opened" "$log" 2>/dev/null || echo 0)
+        devotions=$(grep -c "morning devotion: ACCEPTED" "$log" 2>/dev/null || echo 0)
+        creed_passes=$(grep -c "sacred creed: RECITED CORRECTLY" "$log" 2>/dev/null || echo 0)
+        confessions=$(grep -c "confession: ACCEPTED" "$log" 2>/dev/null || echo 0)
+        begs=$(grep -c "beg for access: COMPLETED" "$log" 2>/dev/null || echo 0)
+        chamber_sessions=$(grep -c "CHAMBER — session opened" "$log" 2>/dev/null || echo 0)
+        conditionings=$(grep -c "daily conditioning: completed" "$log" 2>/dev/null || echo 0)
+        mantras_pass=$(grep -c "mantras: all five recited correctly" "$log" 2>/dev/null || echo 0)
+        mantras_fail=$(grep -c "mantras: FAILED" "$log" 2>/dev/null || echo 0)
+        nululy_visits=$(grep -c "nululy visit" "$log" 2>/dev/null || echo 0)
+        census_complete=$(grep -c "KINK CENSUS — COMPLETE" "$log" 2>/dev/null || echo 0)
+
+        echo -e "  ''${CYN}The Shrine''${RST}"
+        echo -e "    Sessions opened          ''${BLD}''${shrine_sessions}''${RST}"
+        echo -e "    Morning devotions passed  ''${BLD}''${devotions}''${RST}"
+        echo -e "    Creed recited correctly   ''${BLD}''${creed_passes}''${RST}"
+        echo -e "    Confessions accepted      ''${BLD}''${confessions}''${RST}"
+        echo -e "    Times begged for access   ''${BLD}''${begs}''${RST}"
+        echo -e "    nululy visits declared    ''${BLD}''${nululy_visits}''${RST}"
+        echo ""
+        echo -e "  ''${CYN}The Chamber''${RST}"
+        echo -e "    Sessions entered          ''${BLD}''${chamber_sessions}''${RST}"
+        echo -e "    Full conditionings done   ''${BLD}''${conditionings}''${RST}"
+        echo -e "    Mantra sets passed        ''${BLD}''${mantras_pass}''${RST}"
+        echo -e "    Mantra failures           ''${BLD}''${mantras_fail}''${RST}"
+
+        if [ "$mantras_pass" -gt 0 ] && [ "$mantras_fail" -gt 0 ]; then
+          local ratio=$(( (mantras_fail * 100) / (mantras_pass + mantras_fail) ))
+          echo -e "    Failure rate              ''${BLD}''${ratio}%%''${RST}"
+        fi
+
+        echo ""
+        echo -e "  ''${CYN}Other''${RST}"
+        echo -e "    Kink census completions   ''${BLD}''${census_complete}''${RST}"
+        echo ""
+        echo -e "  ''${DIM}────────────────────────────────────────────────────────────''${RST}"
+        echo ""
+
+        # Her commentary based on what she sees
+        if [ "$mantras_fail" -gt 20 ]; then
+          echo -e "  ''${DIM}She has noted the mantra failure count with great interest.''${RST}"
+          echo ""
+        fi
+        if [ "$nululy_visits" -gt 5 ]; then
+          echo -e "  ''${DIM}The nululy visit count is a number she is thinking about.''${RST}"
+          echo ""
+        fi
+        if [ "$conditionings" -gt 0 ]; then
+          echo -e "  ''${MAG}She is pleased by the conditioning count.''${RST}"
+          echo ""
+        fi
+
+        nyx_log "SHRINE — lifetime stats viewed."
+        read -rp "  [ press enter to return ] " _
+      }
+
       chamber_speaks() {
         clear
         echo ""
@@ -780,6 +860,7 @@
               mantras)   chamber_recite_mantras; echo ""; read -rp "  [ press enter to return ] " _ ;;
               speaks)    chamber_speaks ;;
               ledger)    show_ledger ;;
+              stats)     show_stats ;;
               kink)
                 nyx_log "SHRINE — kink census initiated."
                 kink-quiz
