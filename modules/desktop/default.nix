@@ -32,7 +32,12 @@ in
     enable = true;
     wayland.enable = true;
     theme = "sddm-astronaut-theme";
-    extraPackages = [ sddm-theme ];
+    extraPackages = with pkgs.qt6Packages; [
+      sddm-theme
+      qtmultimedia
+      qtsvg
+      qtvirtualkeyboard
+    ];
   };
 
   programs.hyprland = {
