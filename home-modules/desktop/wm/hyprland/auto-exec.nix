@@ -6,7 +6,6 @@
       "$notificationDaemon"
       "$wallpaperEngine"
       "$wallpaperManager --restore"
-      "$nautilus-fix"
       "$networkApplet"
       "$bluetoothApplet"
     ];

@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   imports = [ 
@@ -36,7 +36,7 @@
   xdg.userDirs = {
     enable = true;
     createDirectories = false;
-    download = "/home/neburion/Downloads";
-    documents = "/home/neburion/.local/share/documents"; # placeholder fix since some apps like to mess with the documents directory
+    download = "${config.home.homeDirectory}/Downloads";
+    documents = "${config.home.homeDirectory}/.local/share/documents"; # placeholder fix since some apps like to mess with the documents directory
   };
 }
