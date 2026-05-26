@@ -3,7 +3,6 @@
 let
   themes = import ../../../themes;
 
-  # Generate wofi-specific CSS from a color attrset
   mkWofiTheme = c: ''
     #window { background-color: ${c.bg}; }
     #outer-box { padding: 10px; }
@@ -24,7 +23,10 @@ let
   inherit (import ./shared-config.nix { inherit lib; }) wofiArgs;
 
   wofi-power-menu     = import ./scripts/wofi-power-menu.nix     { inherit pkgs wofiArgs; };
-  wofi-theme-switcher = import ./scripts/wofi-theme-switcher.nix { inherit pkgs wofiArgs; homeDir = config.home.homeDirectory; };
+  wofi-theme-switcher = import ./scripts/wofi-theme-switcher.nix {
+    inherit pkgs lib wofiArgs themes;
+    homeDir = config.home.homeDirectory;
+  };
 in
 {
   imports = [ ./config.nix ];

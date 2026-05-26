@@ -1,5 +1,11 @@
-{ pkgs, wofiArgs, homeDir, ... }:
+{ pkgs, lib, wofiArgs, themes, homeDir, ... }:
 
+let
+  # Bake theme→wallpaperDir mapping at build time from the palette definitions.
+  wallpaperDirLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
+    ''WALLPAPER_DIRS["${name}"]="${t.wallpaperDir or name}"''
+  ) themes);
+in
 pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   WOFI_THEMES="$HOME/.config/wofi/themes"
   WAYBAR_THEMES="$HOME/.config/waybar/themes"
@@ -7,6 +13,7 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   MAKO_CONFIG="$HOME/.config/mako/config"
   HYPR_THEMES="$HOME/.config/hypr/themes"
   GHOSTTY_THEMES="$HOME/.config/ghostty/themes"
+  WAYPAPER_CONFIG="$HOME/.config/waypaper/config.ini"
 
   # Initialize active files if missing
   [[ ! -f "$WOFI_THEMES/active.css" ]]        && ln -sf "$WOFI_THEMES/dark.css"   "$WOFI_THEMES/active.css"
@@ -22,9 +29,11 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
 
   [[ -z "$chosen" ]] && exit 0
 
-  # Wofi + Waybar + Mako
+  # Wofi + Waybar
   ln -sf "$WOFI_THEMES/$chosen.css"   "$WOFI_THEMES/active.css"
   ln -sf "$WAYBAR_THEMES/$chosen.css" "$WAYBAR_THEMES/active.css"
+
+  # Mako
   rm -f "$MAKO_CONFIG" && cp "$MAKO_THEMES/$chosen" "$MAKO_CONFIG"
 
   # Hyprland shadow theme
@@ -42,11 +51,33 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
     everforest) gtk_theme="Everforest-Dark-B" ;;
     *)          gtk_theme="Adwaita-dark" ;;
   esac
-
   export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+
+  # Wallpaper pool: switch to this theme's dedicated folder and pick a random wallpaper.
+  declare -A WALLPAPER_DIRS
+  ${wallpaperDirLines}
+
+  wallpaper_dir="$HOME/Media/Wallpapers/''${WALLPAPER_DIRS[$chosen]:-$chosen}"
+
+  # Update waypaper config folder
+  if [ -f "$WAYPAPER_CONFIG" ]; then
+    sed -i "s|^folder = .*|folder = $wallpaper_dir|" "$WAYPAPER_CONFIG"
+  fi
+
+  # Pick a random wallpaper from the theme pool and apply it
+  wallpaper=$(ls "$wallpaper_dir"/*.{png,jpg,jpeg,gif,webp} 2>/dev/null | shuf | head -1)
+  if [ -n "$wallpaper" ] && [ -f "$wallpaper" ]; then
+    ${pkgs.swww}/bin/swww img "$wallpaper" --transition-type any
+    # Update waypaper's saved wallpaper so --restore works correctly
+    if [ -f "$WAYPAPER_CONFIG" ]; then
+      sed -i "s|^wallpaper = .*|wallpaper = $wallpaper|" "$WAYPAPER_CONFIG"
+    fi
+    # Sync to SDDM background
+    sddm-update-wallpaper "$wallpaper"
+  fi
 
   # Restart waybar, reload mako
   pkill waybar; waybar &

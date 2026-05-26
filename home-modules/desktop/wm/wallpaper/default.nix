@@ -1,10 +1,13 @@
 { pkgs, ... }:
 
 {
-  imports = [ ./waypaper.nix ];
+  imports = [
+    ./waypaper.nix
+    ./sync.nix
+  ];
 
   home.packages = with pkgs; [
     swww     # wallpaper engine
-    waypaper # wallpaper manager
+    waypaper # wallpaper manager GUI
   ];
 }
