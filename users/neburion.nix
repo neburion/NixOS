@@ -8,7 +8,7 @@
     ../home-modules/cli/backup.nix
   ];
 
-  home.packages = [ zen-browser.packages.${pkgs.system}.default ];
+  home.packages = [ zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default ];
   programs.nvf.enable = true;
 
   home.stateVersion = "25.11";
