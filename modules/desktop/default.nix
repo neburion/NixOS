@@ -8,11 +8,10 @@
   environment.systemPackages = with pkgs; [
     brightnessctl  # Brightness Manager
     xdg-user-dirs
+    sddm-astronaut
   ];
   programs.kdeconnect.enable = true;
-
-  # Required for hyprlock PAM authentication
-  security.pam.services.hyprlock = {};
+  programs.dconf.enable = true;
 
   # Fonts
   fonts.packages = with pkgs; [
@@ -23,6 +22,8 @@
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
+    theme = "sddm-astronaut-theme";
+    extraPackages = [ pkgs.sddm-astronaut ];
   };
 
   programs.hyprland = {

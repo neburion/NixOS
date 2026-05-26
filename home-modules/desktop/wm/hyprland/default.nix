@@ -10,6 +10,5 @@
     ./env.nix
   ];
 
-  home.packages = with pkgs; [ hyprlock ];
   wayland.windowManager.hyprland.enable = true;
 }
