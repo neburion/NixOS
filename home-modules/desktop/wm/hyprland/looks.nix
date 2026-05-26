@@ -97,7 +97,7 @@
       "keepaspectratio, title:(Picture-in-Picture)"
       "size 426 240,    title:(Picture-in-Picture)"
 
-      # Wayperper
+      # Waypaper
       "float,        class:(waypaper)"
       "size 800 540, class:(waypaper)"
       "center,       class:(waypaper)"
