@@ -17,7 +17,6 @@ let
     [ ! -f "$wallpaper" ] && exit 0
 
     cp "$wallpaper" /var/cache/sddm-wallpaper/current
-    chmod 666 /var/cache/sddm-wallpaper/current
   '';
 in
 {
