@@ -29,9 +29,20 @@
           set_color normal
           printf ':'
           set_color 'cba6f7'
-          printf '%s' (basename $PWD)
+          printf '%s' (string replace $HOME '~' $PWD)
           set_color normal
           printf '$ '
+        '';
+      };
+
+      fish_right_prompt = {
+        body = ''
+          set branch (git branch --show-current 2>/dev/null)
+          if test -n "$branch"
+            set_color '89b4fa'
+            printf ' %s' $branch
+            set_color normal
+          end
         '';
       };
     };
