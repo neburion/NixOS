@@ -57,6 +57,27 @@
           qellyree = import ./users/qellyree.nix;
         };
       };
+
+      # Live USB installer — build with:
+      #   nix build .#nixosConfigurations.installer.config.system.build.isoImage
+      # Flash to USB with:
+      #   nixflash /dev/sdX
+      installer = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+          ({ pkgs, ... }: {
+            environment.systemPackages = with pkgs; [
+              git rclone p7zip jq
+              (pkgs.writeShellScriptBin "nixinstall"
+                (builtins.readFile ./installer/nixinstall.sh))
+            ];
+            environment.etc."nixinstall-disko.nix".source = ./installer/disko.nix;
+            environment.etc."nixrestore.sh".source         = ./installer/nixrestore.sh;
+            nix.settings.experimental-features = [ "nix-command" "flakes" ];
+          })
+        ];
+      };
     };
   };
 }

@@ -12,10 +12,13 @@ pkgs.writeShellScriptBin "wofi-power-menu" ''
     | wofi --show dmenu ${wofiArgs} --cache-file /dev/null)
 
   case "$chosen" in
-    "$shutdown") systemctl poweroff ;;
-    "$reboot")   systemctl reboot ;;
+    "$shutdown") hypr-session-save; systemctl poweroff ;;
+    "$reboot")   hypr-session-save; systemctl reboot ;;
     "$suspend")  systemctl suspend ;;
-    "$lock")     hyprlock ;;
-    "$logout")   hyprctl dispatch exit ;;
+    "$lock")     busctl call org.freedesktop.DisplayManager \
+                   /org/freedesktop/DisplayManager/Seat0 \
+                   org.freedesktop.DisplayManager.Seat \
+                   SwitchToGreeter ;;
+    "$logout")   hypr-session-save; hyprctl dispatch exit ;;
   esac
 ''

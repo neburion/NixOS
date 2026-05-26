@@ -1,5 +1,14 @@
 { pkgs, ... }:
 
+let
+  sddm-theme = pkgs.sddm-astronaut.override {
+    embeddedTheme = "hyprspace";
+    themeConfig = {
+      Font     = "FiraMono Nerd Font";
+      FontSize = "11";
+    };
+  };
+in
 {
   imports = [
     ./gaming.nix
@@ -8,7 +17,7 @@
   environment.systemPackages = with pkgs; [
     brightnessctl  # Brightness Manager
     xdg-user-dirs
-    sddm-astronaut
+    sddm-theme
   ];
   programs.kdeconnect.enable = true;
   programs.dconf.enable = true;
@@ -23,7 +32,7 @@
     enable = true;
     wayland.enable = true;
     theme = "sddm-astronaut-theme";
-    extraPackages = [ pkgs.sddm-astronaut ];
+    extraPackages = [ sddm-theme ];
   };
 
   programs.hyprland = {

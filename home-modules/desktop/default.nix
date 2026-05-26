@@ -39,11 +39,17 @@
     };
   };
 
-  # XDG Directories
+  # XDG Directories — creation is handled declaratively by dirs.nix
   xdg.userDirs = {
     enable = true;
     createDirectories = false;
-    download = "${config.home.homeDirectory}/Downloads";
-    documents = "${config.home.homeDirectory}/.local/share/documents"; # placeholder fix since some apps like to mess with the documents directory
+    documents  = "${config.home.homeDirectory}/Docs";
+    download   = "${config.home.homeDirectory}/Downloads";
+    pictures   = "${config.home.homeDirectory}/Media/Image";
+    videos     = "${config.home.homeDirectory}/Media/Video";
+    music      = "${config.home.homeDirectory}/Media/Music";
+    desktop    = "${config.home.homeDirectory}/.local/share/desktop";
+    templates  = "${config.home.homeDirectory}/.local/share/templates";
+    publicShare = "${config.home.homeDirectory}/.local/share/public";
   };
 }

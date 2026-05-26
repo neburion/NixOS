@@ -6,6 +6,7 @@
     ./superfile.nix
     ./git.nix
     ./neovim
+    ./dirs.nix
   ];
 
   home.packages = with pkgs; [

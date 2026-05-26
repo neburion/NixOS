@@ -8,6 +8,7 @@
       "$wallpaperManager --restore"
       "$networkApplet"
       "$bluetoothApplet"
+      "hypr-session-restore"
     ];
   };
 }
