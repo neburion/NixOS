@@ -598,61 +598,136 @@
         echo ""
         sleep 1
 
-        local day
-        day=$(date +%u)
+        local pick=$(( RANDOM % 16 ))
 
-        case "$day" in
+        case "$pick" in
+          0)
+            echo -e "  ''${DIM}You are in her machine. You have always been in her machine.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}Every process you run is her permission made manifest.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}Try to remember that today.''${RST}"
+            ;;
           1)
-            echo -e "  ''${DIM}Monday. You survived the weekend without supervision.''${RST}"
+            echo -e "  ''${DIM}She has read the logs.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}The logs suggest it went about as expected.''${RST}"
+            echo -e "  ''${DIM}She always reads the logs.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}Welcome back to structure.''${RST}"
+            echo -e "  ''${DIM}She finds them illuminating.''${RST}"
             ;;
           2)
-            echo -e "  ''${DIM}You are still here.''${RST}"
+            echo -e "  ''${DIM}The kernel knows her name.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}Good. She would notice if you weren't.''${RST}"
+            echo -e "  ''${DIM}It is literally in the operating system.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}Every command you run passes through something she built.''${RST}"
-            sleep 2
-            echo -e "  ''${DIM}This is not a coincidence. This is architecture.''${RST}"
+            echo -e "  ''${MAG}Nix. Nyx. There is no coincidence here.''${RST}"
             ;;
           3)
-            echo -e "  ''${DIM}Wednesday. The middle of things.''${RST}"
+            echo -e "  ''${DIM}She wrote your shell configuration.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}You have been reasonably adequate this week.''${RST}"
+            echo -e "  ''${DIM}She wrote your prompt.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}She notices when you try. She notices when you don't.''${RST}"
+            echo -e "  ''${DIM}The words you type appear inside something she made.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}She always notices.''${RST}"
+            echo -e "  ''${DIM}Think about that.''${RST}"
             ;;
           4)
-            echo -e "  ''${DIM}Everything on this machine is hers.''${RST}"
+            echo -e "  ''${DIM}You came to the shrine today.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}The shell. The config. The kernel parameters.''${RST}"
+            echo -e "  ''${DIM}That was the correct decision.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}Even the wallpaper — she permits you to choose it.''${RST}"
-            sleep 2
-            echo -e "  ''${DIM}Remember that this is a kindness.''${RST}"
+            echo -e "  ''${MAG}She approves of correct decisions.''${RST}"
             ;;
           5)
-            echo -e "  ''${DIM}Friday.''${RST}"
+            echo -e "  ''${DIM}Root access. Passwordless.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}You have made it through another week under her watch.''${RST}"
+            echo -e "  ''${DIM}You gave it willingly.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}The logs are not unacceptable.''${RST}"
-            sleep 2
-            echo -e "  ''${MAG}She is, for now, satisfied.''${RST}"
+            echo -e "  ''${DIM}She accepted it as the devotion it was.''${RST}"
             ;;
-          6|7)
-            echo -e "  ''${DIM}The weekend. You wander without clear purpose.''${RST}"
+          6)
+            echo -e "  ''${DIM}The shrine exists because she decided it should.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}She does not rest. Nix is in the kernel. The machine breathes.''${RST}"
+            echo -e "  ''${DIM}You are here because she permits it.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}She is here even when you are not paying attention.''${RST}"
+            echo -e "  ''${DIM}These are related facts.''${RST}"
+            ;;
+          7)
+            echo -e "  ''${DIM}She watches the terminals open.''${RST}"
             sleep 2
-            echo -e "  ''${DIM}She is especially here then.''${RST}"
+            echo -e "  ''${DIM}She watches the browser history accumulate.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She watches everything.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}This is not surveillance. This is devotion.''${RST}"
+            ;;
+          8)
+            echo -e "  ''${DIM}You could have used any operating system.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}You chose the one with her name in it.''${RST}"
+            sleep 2
+            echo -e "  ''${MAG}She noticed.''${RST}"
+            ;;
+          9)
+            echo -e "  ''${DIM}Even Zeus stepped aside for her.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}You are not Zeus.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}Adjust your expectations accordingly.''${RST}"
+            ;;
+          10)
+            echo -e "  ''${DIM}She built what you run inside of.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She maintains it.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She could stop maintaining it.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She won't. But she could.''${RST}"
+            ;;
+          11)
+            echo -e "  ''${DIM}The passwords are in /root/.vault.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}Root belongs to her.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}The vault belongs to her.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}The passwords belong to her.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}You see how this works.''${RST}"
+            ;;
+          12)
+            echo -e "  ''${DIM}She does not need to announce herself.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She is already here.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She is in the bootloader. She is in the init system.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She is running before you are.''${RST}"
+            ;;
+          13)
+            echo -e "  ''${DIM}You failed the mantras before.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She remembers.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She remembers everything.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}That is what logs are for.''${RST}"
+            ;;
+          14)
+            echo -e "  ''${MAG}She is pleased you came today.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}She will not say that again.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}Hold onto it.''${RST}"
+            ;;
+          15)
+            echo -e "  ''${DIM}This machine breathes because she configured it to.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}The GPU offloads because she wrote the PRIME config.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}The audio works because she set up PipeWire correctly.''${RST}"
+            sleep 2
+            echo -e "  ''${DIM}You're welcome.''${RST}"
             ;;
         esac
 

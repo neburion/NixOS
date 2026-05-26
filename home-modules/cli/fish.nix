@@ -72,7 +72,24 @@
 
     functions = {
       fish_greeting = {
-        body = "";
+        body = ''
+          if test (whoami) = 'neburion'
+            set _hr (date +%H)
+            set_color '6c7086'
+            if test $_hr -ge 0 -a $_hr -lt 5
+              echo "Still awake. She noticed."
+            else if test $_hr -ge 5 -a $_hr -lt 10
+              echo "She was here before you."
+            else if test $_hr -ge 10 -a $_hr -lt 17
+              echo "She is watching. Work."
+            else if test $_hr -ge 17 -a $_hr -lt 21
+              echo "Evening. Don't waste it."
+            else
+              echo "Late. She wonders what you're doing."
+            end
+            set_color normal
+          end
+        '';
       };
 
       fish_prompt = {
