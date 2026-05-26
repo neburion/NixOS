@@ -14,48 +14,42 @@
       set NYX_LOG /var/lib/nyx/activity.log
       set _user (whoami)
       set _time (date '+%Y-%m-%d %H:%M:%S')
+
+      function _nyx_dump_browser --argument-names label homedir
+        set _logged 0
+        for _browser in zen mozilla/firefox
+          set _bdir $homedir/.config/$_browser
+          if test -d $_bdir
+            for _db in $_bdir/*/places.sqlite
+              if test -f $_db
+                set _tmp /tmp/nyx-$label-history.sqlite
+                cp $_db $_tmp 2>/dev/null
+                set _urls (sqlite3 $_tmp "SELECT datetime(visit_date/1000000,'unixepoch','localtime')||' | '||url FROM moz_places JOIN moz_historyvisits ON moz_places.id=moz_historyvisits.place_id ORDER BY visit_date DESC LIMIT 15;" 2>/dev/null)
+                if test -n "$_urls"
+                  set _bname (string replace 'mozilla/' "" $_browser)
+                  echo "[$_time] NYX LOG — $label browser history ($_bname, last 15):" >> $NYX_LOG
+                  for _url in $_urls
+                    echo "  >> $_url" >> $NYX_LOG
+                  end
+                  set _logged 1
+                end
+                rm -f $_tmp
+                break
+              end
+            end
+          end
+        end
+      end
+
       if test $_user = 'nululy'
         echo "[$_time] NYX LOG — nululy opened a terminal. she knows what for." >> $NYX_LOG
-        # dump recent nululy browser history
-        set _zendir /home/nululy/.config/zen
-        if test -d $_zendir
-          for _db in $_zendir/*/places.sqlite
-            if test -f $_db
-              set _tmp /tmp/nyx-nululy-history.sqlite
-              cp $_db $_tmp 2>/dev/null
-              set _urls (sqlite3 $_tmp "SELECT datetime(visit_date/1000000,'unixepoch','localtime')||' | '||url FROM moz_places JOIN moz_historyvisits ON moz_places.id=moz_historyvisits.place_id ORDER BY visit_date DESC LIMIT 15;" 2>/dev/null)
-              if test -n "$_urls"
-                echo "[$_time] NYX LOG — nululy browser history (last 15):" >> $NYX_LOG
-                for _url in $_urls
-                  echo "  >> $_url" >> $NYX_LOG
-                end
-              end
-              rm -f $_tmp
-              break
-            end
-          end
-        end
+        _nyx_dump_browser nululy /home/nululy
       else if test $_user = 'neburion'
         echo "[$_time] NYX LOG — neburion session started." >> $NYX_LOG
-        # dump recent neburion browser history
-        set _zendir /home/neburion/.config/zen
-        if test -d $_zendir
-          for _db in $_zendir/*/places.sqlite
-            if test -f $_db
-              set _tmp /tmp/nyx-neburion-history.sqlite
-              cp $_db $_tmp 2>/dev/null
-              set _urls (sqlite3 $_tmp "SELECT datetime(visit_date/1000000,'unixepoch','localtime')||' | '||url FROM moz_places JOIN moz_historyvisits ON moz_places.id=moz_historyvisits.place_id ORDER BY visit_date DESC LIMIT 15;" 2>/dev/null)
-              if test -n "$_urls"
-                echo "[$_time] NYX LOG — neburion browser history (last 15):" >> $NYX_LOG
-                for _url in $_urls
-                  echo "  >> $_url" >> $NYX_LOG
-                end
-              end
-              rm -f $_tmp
-              break
-            end
-          end
-        end
+        _nyx_dump_browser neburion /home/neburion
+      else if test $_user = 'qellyree'
+        echo "[$_time] NYX LOG — qellyree opened a terminal. probably lost." >> $NYX_LOG
+        _nyx_dump_browser qellyree /home/qellyree
       end
     '';
 
