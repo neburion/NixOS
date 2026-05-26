@@ -1,7 +1,9 @@
 {
-  bg           = "#282828";
-  surface      = "#3c3836";
-  selection    = "#504945";
-  fg           = "#ebdbb2";
-  wallpaperDir = "Gruvbox";
+  bg             = "#282828";
+  surface        = "#3c3836";
+  selection      = "#504945";
+  fg             = "#ebdbb2";
+  wallpaperDir   = "Gruvbox";
+  fishPrimary    = "#d79921";
+  fishSecondary  = "#689d6a";
 }

@@ -1,9 +1,17 @@
 { pkgs, lib, wofiArgs, themes, homeDir, ... }:
 
 let
+  strip = lib.removePrefix "#";
+
   # Bake theme→wallpaperDir mapping at build time from the palette definitions.
   wallpaperDirLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
     ''WALLPAPER_DIRS["${name}"]="${t.wallpaperDir or name}"''
+  ) themes);
+
+  # Bake theme→fish prompt colors at build time.
+  fishColorLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t: ''
+    FISH_PRIMARY["${name}"]="${strip (t.fishPrimary or "ffffff")}"
+    FISH_SECONDARY["${name}"]="${strip (t.fishSecondary or "aaaaaa")}"''
   ) themes);
 in
 pkgs.writeShellScriptBin "wofi-theme-switcher" ''
@@ -55,6 +63,12 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   export XDG_RUNTIME_DIR="/run/user/$(id -u)"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
   ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+
+  # Fish prompt colors via universal variables (propagate instantly to all running sessions).
+  declare -A FISH_PRIMARY
+  declare -A FISH_SECONDARY
+  ${fishColorLines}
+  ${pkgs.fish}/bin/fish -c "set -U fish_theme_primary ''${FISH_PRIMARY[$chosen]}; set -U fish_theme_secondary ''${FISH_SECONDARY[$chosen]}" 2>/dev/null || true
 
   # Wallpaper pool: switch to this theme's dedicated folder and pick a random wallpaper.
   declare -A WALLPAPER_DIRS

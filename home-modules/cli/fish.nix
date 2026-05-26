@@ -27,6 +27,11 @@
       rmrepo = "git remote remove origin && gh repo delete neburion/(basename $PWD)";
     };
 
+    interactiveShellInit = ''
+      set -q fish_theme_primary;   or set -U fish_theme_primary   d79921
+      set -q fish_theme_secondary; or set -U fish_theme_secondary 689d6a
+    '';
+
     functions = {
       fish_greeting = {
         body = "";
@@ -34,11 +39,11 @@
 
       fish_prompt = {
         body = ''
-          set_color 'cba6f7'
+          set_color $fish_theme_primary
           printf '%s@%s' (whoami) (hostname -s)
           set_color normal
           printf ':'
-          set_color 'cba6f7'
+          set_color $fish_theme_primary
           printf '%s' (string replace $HOME '~' $PWD)
           set_color normal
           printf '$ '
@@ -49,7 +54,7 @@
         body = ''
           set branch (git branch --show-current 2>/dev/null)
           if test -n "$branch"
-            set_color '89b4fa'
+            set_color $fish_theme_secondary
             printf ' %s' $branch
             set_color normal
           end
