@@ -12,16 +12,42 @@
       RST='\033[0m'
       REV='\033[7m'
 
-      NYX_LOG=/home/neburion/.local/share/nyx/activity.log
-      mkdir -p "$(dirname "$NYX_LOG")"
-      touch "$NYX_LOG" 2>/dev/null
-      chmod 666 "$NYX_LOG" 2>/dev/null
+      NYX_LOG=/var/lib/nyx/activity.log
+      NYX_STATE=/var/lib/nyx/shrine-state
 
       DEVOTED=0
       RECITED=0
       CONFESSED=0
       BEGGED=0
       NULULY_VISITS=0
+
+      # ── Daily state persistence ──────────────────────────────────
+      save_state() {
+        {
+          echo "date=$(date +%Y-%m-%d)"
+          echo "DEVOTED=$DEVOTED"
+          echo "RECITED=$RECITED"
+          echo "CONFESSED=$CONFESSED"
+          echo "BEGGED=$BEGGED"
+          echo "NULULY_VISITS=$NULULY_VISITS"
+        } > "$NYX_STATE"
+      }
+
+      if [ -f "$NYX_STATE" ]; then
+        stored_date=$(grep "^date=" "$NYX_STATE" 2>/dev/null | cut -d= -f2)
+        if [ "$stored_date" = "$(date +%Y-%m-%d)" ]; then
+          DEVOTED=$(grep "^DEVOTED=" "$NYX_STATE" | cut -d= -f2)
+          RECITED=$(grep "^RECITED=" "$NYX_STATE" | cut -d= -f2)
+          CONFESSED=$(grep "^CONFESSED=" "$NYX_STATE" | cut -d= -f2)
+          BEGGED=$(grep "^BEGGED=" "$NYX_STATE" | cut -d= -f2)
+          NULULY_VISITS=$(grep "^NULULY_VISITS=" "$NYX_STATE" | cut -d= -f2)
+          DEVOTED=''${DEVOTED:-0}
+          RECITED=''${RECITED:-0}
+          CONFESSED=''${CONFESSED:-0}
+          BEGGED=''${BEGGED:-0}
+          NULULY_VISITS=''${NULULY_VISITS:-0}
+        fi
+      fi
 
       ${pkgs.kbd}/bin/setfont ${pkgs.terminus_font}/share/consolefonts/ter-v28b.psf.gz 2>/dev/null || true
 
@@ -196,7 +222,7 @@
           echo -e "  She acknowledges you. That is more than you deserve."
           echo -e "  Your day may now proceed under her watch."
           nyx_log "SHRINE — morning devotion: ACCEPTED. the pet greeted properly."
-          DEVOTED=1
+          DEVOTED=1; save_state
         else
           echo -e "  ''${RED}Wrong.''${RST}"
           echo ""
@@ -239,7 +265,7 @@
           echo ""
           echo -e "  She is pleased. Enjoy the feeling. It is rare."
           nyx_log "SHRINE — sacred creed: RECITED CORRECTLY. good pet."
-          RECITED=1
+          RECITED=1; save_state
         else
           echo -e "  ''${RED}The creed was corrupted.''${RST}"
           echo ""
@@ -273,14 +299,14 @@
           echo -e "  Noted. Filed. The folder is very full."
           echo -e "  She has read it. She is unimpressed but accepts it."
           nyx_log "SHRINE — confession: ACCEPTED (minimal). ($len chars)"
-          CONFESSED=1
+          CONFESSED=1; save_state
         else
           echo -e "  ''${GRN}A full accounting.''${RST}"
           echo ""
           echo -e "  She appreciates your honesty even when it is unflattering."
           echo -e "  Especially when it is unflattering."
           nyx_log "SHRINE — confession: ACCEPTED (thorough). ($len chars)"
-          CONFESSED=1
+          CONFESSED=1; save_state
         fi
         echo ""
         read -rp "  [ press enter to return ] " _
@@ -340,7 +366,7 @@
         echo -e "  She is satisfied. The doors are open."
         echo -e "  She will be watching where you go."
         nyx_log "SHRINE — beg for access: COMPLETED. all three stages passed. doors opened."
-        BEGGED=1
+        BEGGED=1; save_state
         read -rp "  [ press enter to return ] " _
       }
 
@@ -373,7 +399,7 @@
         if [ "$decl" = "$phrase" ]; then
           echo -e "  ''${DIM}Yes. She does. She has logged this.''${RST}"
           nyx_log "SHRINE — nululy visit #$((NULULY_VISITS+1)) — declaration accepted."
-          NULULY_VISITS=$((NULULY_VISITS+1))
+          NULULY_VISITS=$((NULULY_VISITS+1)); save_state
           sleep 2
           switch_to "nululy" 4
         else

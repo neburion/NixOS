@@ -30,10 +30,11 @@
     ];
   };
 
-  # Nyx log dir — created at boot so shrine (a different user) can write to it.
-  # 0777 so shrine can create the log file and the kink profile inside.
+  # Nyx data dir — lives outside any user home so shrine can traverse to it.
   systemd.tmpfiles.rules = [
-    "d /home/neburion/.local/share/nyx 0777 neburion users -"
+    "d /var/lib/nyx 0777 neburion users -"
+    "f /var/lib/nyx/activity.log 0666 neburion users -"
+    "f /var/lib/nyx/shrine-state 0666 neburion users -"
   ];
 
   # Shrine switches to a user's VT — chvt transfers seat0 to that VT,

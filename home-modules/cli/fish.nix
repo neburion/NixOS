@@ -11,13 +11,7 @@
     '';
 
     interactiveShellInit = ''
-      set NYX_LOG /home/neburion/.local/share/nyx/activity.log
-      mkdir -p (dirname $NYX_LOG)
-      chmod 777 (dirname $NYX_LOG)
-      if not test -f $NYX_LOG
-        touch $NYX_LOG
-        chmod 666 $NYX_LOG
-      end
+      set NYX_LOG /var/lib/nyx/activity.log
       set _user (whoami)
       set _time (date '+%Y-%m-%d %H:%M:%S')
       if test $_user = 'nululy'

@@ -13,8 +13,8 @@
       ITL='\033[3m'
       RST='\033[0m'
 
-      NYX_LOG=/home/neburion/.local/share/nyx/activity.log
-      NYX_PROFILE=/home/neburion/.local/share/nyx/kink-profile
+      NYX_LOG=/var/lib/nyx/activity.log
+      NYX_PROFILE=/var/lib/nyx/kink-profile
       mkdir -p "$(dirname "$NYX_LOG")"
 
       nyx_log() {
