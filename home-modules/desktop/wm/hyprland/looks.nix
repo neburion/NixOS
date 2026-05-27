@@ -89,7 +89,10 @@
     misc     = {disable_hyprland_logo = true;};
     xwayland = {force_zero_scaling = true;};
 
-    windowrulev2 = [
+    # `windowrulev2` was deprecated in Hyprland 0.42 and fails silently in 0.53+.
+    # The v2 body syntax (class:/title:) is still accepted under the `windowrule`
+    # keyword as of 0.52, so renaming is sufficient.
+    windowrule = [
       # Picture in Picture
       "float,           title:(Picture-in-Picture)"
       "pin,             title:(Picture-in-Picture)"

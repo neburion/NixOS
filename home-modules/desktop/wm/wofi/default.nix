@@ -10,14 +10,22 @@ let
         background-color: ${c.surface};
         color: ${c.fg};
         border-radius: 20px;
+        border: 0px;
         padding: 12px;
     }
     #scroll { margin-top: 10px; margin-bottom: 10px; }
-    #text { color: ${c.fg}; padding-left: 10px; }
-    #text:selected { color: ${c.fg}; }
-    #entry { padding: 5px; margin-top: 5px; }
+    #entry {
+        padding: 8px;
+        margin: 2px 0;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+    #img { background-color: transparent; padding-right: 8px; }
+    #text { color: ${c.fg}; background-color: transparent; padding-left: 4px; }
+    /* Highlight the entire row (icon + text), not just the label. */
     #entry:selected { background-color: ${c.selection}; }
-    #input, #entry:selected { border-radius: 20px; border: 0px; }
+    #entry:selected #img,
+    #entry:selected #text { background-color: transparent; color: ${c.fg}; }
   '';
 
   inherit (import ./shared-config.nix { inherit lib; }) wofiArgs;

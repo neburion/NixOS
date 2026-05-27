@@ -114,4 +114,11 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   # Restart waybar, reload mako
   pkill waybar; waybar &
   makoctl reload
+
+  # Nautilus (and other libadwaita apps) only read ~/.config/gtk-4.0/gtk.css at
+  # startup, so a running instance keeps the old theme. Quit it gracefully so
+  # the next $mod+F launch picks up the new colors.
+  if pgrep -x nautilus >/dev/null; then
+    nautilus --quit 2>/dev/null || pkill nautilus 2>/dev/null || true
+  fi
 ''

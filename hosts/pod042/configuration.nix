@@ -12,7 +12,6 @@
       ../../modules/core/boot.nix
       ../../modules/core/backup.nix
       ../../modules/desktop
-      ../../modules/desktop/remote-access.nix
     ];
 
   nixpkgs.config.allowUnfree = true;

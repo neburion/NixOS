@@ -55,7 +55,8 @@ in
     };
   };
 
-  home.activation.syncGtkTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # Depends on initHyprTheme so the hypr/theme.conf symlink exists on first run.
+  home.activation.syncGtkTheme = lib.hm.dag.entryAfter [ "writeBoundary" "initHyprTheme" ] ''
     HYPR_THEME="$HOME/.config/hypr/theme.conf"
     if [ -L "$HYPR_THEME" ]; then
       name=$(basename "$(readlink "$HYPR_THEME")" .conf)

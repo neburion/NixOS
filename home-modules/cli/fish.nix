@@ -27,9 +27,11 @@
       rmrepo = "git remote remove origin && gh repo delete neburion/(basename $PWD)";
     };
 
+    # Defaults match the `dark` theme (themes/dark.nix). Switching themes via
+    # wofi-theme-switcher overwrites these as universal variables.
     interactiveShellInit = ''
-      set -q fish_theme_primary;   or set -U fish_theme_primary   d79921
-      set -q fish_theme_secondary; or set -U fish_theme_secondary 689d6a
+      set -q fish_theme_primary;   or set -U fish_theme_primary   aaaaaa
+      set -q fish_theme_secondary; or set -U fish_theme_secondary 666666
     '';
 
     functions = {
