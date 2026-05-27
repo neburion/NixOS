@@ -18,18 +18,14 @@
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Community Linux port of the official Anthropic Claude Desktop app.
-    # Pinned to its own nixpkgs (unstable) because the Electron bundle is
-    # finicky and the upstream flake builds against that.
-    claude-desktop.url = "github:k3d3/claude-desktop-linux-flake";
   };
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, claude-desktop, ... }@inputs:
+  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
   let
     sharedHMConfig = {
       useGlobalPkgs = true;
       useUserPackages = true;
       backupFileExtension = "backup";
-      extraSpecialArgs = { inherit zen-browser claude-desktop; };
+      extraSpecialArgs = { inherit zen-browser; };
       sharedModules = [
         nvf.homeManagerModules.default
       ];
