@@ -6,8 +6,5 @@
 - [ ] Fix emulation/waydroid (currently non-functional, consider moving out of desktop/)
 - [ ] Split `modules/desktop/default.nix` into smaller modules
 
-## Theme Switching (bugs)
-- [ ] Remove duplicate mako systemd service from `mako/default.nix` (conflicts with `services.mako`)
-- [ ] Remove stray `xdg.configFile."mako/config".force = true` from `mako/config.nix`
-- [ ] Fix waybar restart: change `pkill waybar && waybar &` to `pkill waybar; waybar &`
-- [ ] Fix GTK theme persistence (currently resets on every `home-manager switch`)
+## Theme Switching
+All previously-tracked bugs (mako dual service, stray `xdg.configFile` force, waybar restart with `&&`, GTK theme reset) are resolved. See [[Theme Switching]] for the current persistence model.

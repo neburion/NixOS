@@ -8,7 +8,7 @@ All keybinds use `SUPER` (`$mod`) as the modifier. Configured in `home-modules/d
 | `SUPER + Space` | App launcher (wofi drun) |
 | `SUPER + SHIFT + Space` | Theme switcher |
 | `SUPER + ALT + Space` | Power menu |
-| `SUPER + F` | File manager (thunar) |
+| `SUPER + F` | File manager (nautilus) |
 | `SUPER + W` | Wallpaper manager (waypaper) |
 | `SUPER + A` | Audio manager (pavucontrol) |
 | `SUPER + SHIFT + Escape` | Task manager (btop in ghostty) |

@@ -11,7 +11,7 @@ The flake is the single entry point for the entire config. It defines all extern
 | `nvf` | `notashelf/nvf` | Neovim configuration framework |
 | `disko` | `nix-community/disko` | Declarative disk partitioning |
 
-All inputs follow `nixpkgs` to avoid duplicate package sets.
+All inputs except `nvf` and `zen-browser` follow `nixpkgs` to avoid duplicate package sets.
 
 ## `mkSystem` Helper
 
@@ -35,7 +35,7 @@ Wraps `nixpkgs.lib.nixosSystem` with:
 
 | Host | System | Users |
 |------|--------|-------|
-| `pod042` | x86_64-linux | neburion, nululy |
+| `pod042` | x86_64-linux | neburion, nululy, qellyree |
 
 ## Rebuilding
 

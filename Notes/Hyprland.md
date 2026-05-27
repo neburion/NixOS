@@ -5,7 +5,7 @@ Hyprland is the Wayland compositor. Enabled system-wide in `modules/desktop/defa
 
 | File | Purpose |
 |------|---------|
-| `default.nix` | Enables Hyprland, installs hyprlock, imports all sub-modules |
+| `default.nix` | Enables Hyprland, imports all sub-modules |
 | `programs.nix` | Defines `$variable` aliases for every app/daemon |
 | `auto-exec.nix` | `exec-once` startup list |
 | `keybinds.nix` | All keybindings — see [[Keybinds]] |

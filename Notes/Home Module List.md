@@ -19,7 +19,9 @@ desktop/
 ```
 
 **Packages in `desktop/default.nix`:**
-blueman, networkmanagerapplet, loupe, celluloid, thunar, pavucontrol, keepassxc, solaar, razergenie, grim, slurp, wl-clipboard, ente-desktop, spotify, signal-desktop, vesktop, obsidian, obs-studio
+blueman, networkmanagerapplet, loupe, celluloid, nautilus, pavucontrol, keepassxc, solaar, razergenie, grim, slurp, wl-clipboard, ente-desktop, signal-desktop, obsidian
+
+(spotify, vesktop, obs-studio live in `desktop/gaming/apps.nix`.)
 
 ## `cli/`
 
@@ -29,7 +31,9 @@ blueman, networkmanagerapplet, loupe, celluloid, thunar, pavucontrol, keepassxc,
 | `git.nix` | Git config |
 | `superfile.nix` | Superfile TUI file manager |
 | `neovim/` | Neovim via nvf — see [[Neovim]] |
-| `backup.nix` | Backup script (currently broken) |
+| `dirs.nix` | Declarative XDG / project directories under `$HOME` |
+
+(The system backup script lives in `modules/core/backup.nix`, not here.)
 
 **Packages in `cli/default.nix`:**
 p7zip, unrar, unzip, btop, fastfetch, tree, appimage-run + Flatpak remote setup

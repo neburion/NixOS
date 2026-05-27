@@ -9,7 +9,7 @@ Configured in `home-modules/desktop/wm/wallpaper/`.
 3. Open waypaper with `SUPER + W` to pick a new wallpaper
 
 ## Waypaper Config
-File managed at `~/.config/waypaper/config.ini` with `force = true`.
+File initialised at `~/.config/waypaper/config.ini` by a home-manager activation script — created once if missing, never overwritten. Waypaper writes back to it when the user picks a wallpaper, and `wofi-theme-switcher` updates the folder line.
 
 | Setting | Value |
 |---------|-------|
@@ -23,6 +23,6 @@ File managed at `~/.config/waypaper/config.ini` with `force = true`.
 | Stylesheet | `~/.config/waypaper/style.css` |
 
 ## Notes
-- Wallpapers should be placed in `~/Media/Wallpapers/`
-- The `force = true` on the config file means home-manager overwrites it on every rebuild — manual changes to the config won't persist
+- Theme switching expects wallpapers organised into per-theme folders: `~/Media/Wallpapers/Catppuccin`, `Dark`, `Everforest`, `Gruvbox`, `Nord` (matching each theme's `wallpaperDir`).
+- The waypaper config is runtime-owned — manual changes via the GUI persist.
 - `waypaper` window opens as a centered float (800x540) via a Hyprland window rule

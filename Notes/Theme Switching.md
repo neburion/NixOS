@@ -44,39 +44,13 @@ Wofi and waybar CSS both `@import` their respective `active.css`, so they pick u
 | `home-modules/desktop/wm/mako/default.nix` | Generates mako config files per theme |
 | `home-modules/desktop/wm/gtk.nix` | GTK theme packages and default |
 
-## Known bugs
+## Persistence across rebuilds
 
-### 1. Mako dual service conflict
-**Files:** `mako/config.nix` + `mako/default.nix`
+The theme is persisted via the `~/.config/hypr/theme.conf` symlink (pointing into `~/.config/hypr/themes/`). The wofi-theme-switcher updates this symlink at runtime; on the next `home-manager switch`, the `syncGtkTheme` activation script in `gtk.nix` reads it back and re-applies the matching GTK theme, GTK4 CSS, and GTK3 CSS. The hypr symlink is the single source of truth for the active theme.
 
-`config.nix` enables `services.mako` (home-manager's built-in mako module, which creates its own systemd service). `default.nix` also defines `systemd.user.services.mako` manually. Two units trying to manage the same daemon will conflict — one will fail to start.
+## Nautilus
 
-**Fix:** Remove the custom `systemd.user.services.mako` block from `mako/default.nix`, since `services.mako.enable = true` already handles it.
+Libadwaita apps (Nautilus, Loupe, etc.) read `~/.config/gtk-4.0/gtk.css` once at startup and do not live-reload it. The theme switcher therefore runs `nautilus --quit` after writing the new CSS so the next `$mod+F` launch picks up the fresh palette.
 
-### 2. Stray `xdg.configFile."mako/config".force = true`
-**File:** `mako/config.nix` line 33
-
-This sets `.force = true` on the mako config path without providing any `text` or `source`. The `services.mako` module writes to this same path internally. This orphaned attribute may cause a home-manager evaluation conflict or silently override the managed config.
-
-**Fix:** Remove the standalone `xdg.configFile."mako/config".force = true` line — it conflicts with `services.mako`'s own file management.
-
-### 3. Waybar doesn't restart if it wasn't running
-**File:** `wofi-theme-switcher.nix` line 40
-
-```bash
-pkill waybar && waybar &
-```
-
-`&&` means waybar only relaunches if `pkill` succeeds. If waybar isn't currently running, `pkill` exits non-zero and waybar never starts.
-
-**Fix:** Use `;` instead of `&&`:
-```bash
-pkill waybar; waybar &
-```
-
-### 4. GTK theme reverts on rebuild
-**File:** `gtk.nix` line 30
-
-The `gtk.theme.name` is hardcoded to `"Adwaita-dark"`. The theme switcher changes the GTK theme at runtime via `gsettings`, but `home-manager switch` rewrites the GTK config and resets it back to `Adwaita-dark`.
-
-**Fix:** The GTK theme needs to be driven by a mutable value (e.g. a file read at activation time) or accepted as a limitation — GTK theme changes survive until the next rebuild.
+## Notes
+- The GTK CSS files for each theme are baked into the nix store via `gtk-css.nix` and consumed by both the activation script and the runtime switcher (so the two code paths can't drift).

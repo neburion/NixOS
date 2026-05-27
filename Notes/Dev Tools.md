@@ -30,6 +30,7 @@ Configured in `home-modules/dev/`. Imported by `users/neburion.nix`.
 | `newc` | Bootstrap a new C project |
 | `newcpp` | Bootstrap a new C++ project |
 | `newpy` | Bootstrap a new Python project |
+| `newrust` | Bootstrap a new Rust project |
 
 ## GitHub CLI
 `mkrepo` and `rmrepo` fish aliases (in [[CLI Tools]]) wrap `gh` for quick repo creation/deletion from the current directory.
