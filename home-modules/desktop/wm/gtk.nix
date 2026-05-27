@@ -78,13 +78,14 @@ in
       export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
       export XDG_RUNTIME_DIR="/run/user/$(id -u)"
       ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$theme" 2>/dev/null || true
+      # `install -m 644` overwrites read-only targets; plain `cp` fails because
+      # the source lives in the nix store (read-only) and a previous activation
+      # leaves the user's gtk.css with -r--r--r-- perms.
       if [ -n "$gtk4_css" ]; then
-        mkdir -p "$HOME/.config/gtk-4.0"
-        cp "$gtk4_css" "$HOME/.config/gtk-4.0/gtk.css"
+        install -D -m 644 "$gtk4_css" "$HOME/.config/gtk-4.0/gtk.css"
       fi
       if [ -n "$gtk3_css" ]; then
-        mkdir -p "$HOME/.config/gtk-3.0"
-        cp "$gtk3_css" "$HOME/.config/gtk-3.0/gtk.css"
+        install -D -m 644 "$gtk3_css" "$HOME/.config/gtk-3.0/gtk.css"
       fi
     fi
   '';

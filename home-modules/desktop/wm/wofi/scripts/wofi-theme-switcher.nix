@@ -78,9 +78,10 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   ${gtk4CssLines}
   declare -A GTK3_CSS
   ${gtk3CssLines}
-  mkdir -p "$HOME/.config/gtk-4.0" "$HOME/.config/gtk-3.0"
-  [[ -n "''${GTK4_CSS[$chosen]}" ]] && cp "''${GTK4_CSS[$chosen]}" "$HOME/.config/gtk-4.0/gtk.css"
-  [[ -n "''${GTK3_CSS[$chosen]}" ]] && cp "''${GTK3_CSS[$chosen]}" "$HOME/.config/gtk-3.0/gtk.css"
+  # install -D handles dir creation; -m 644 overwrites the read-only target
+  # left by previous runs (cp would fail with EACCES).
+  [[ -n "''${GTK4_CSS[$chosen]}" ]] && install -D -m 644 "''${GTK4_CSS[$chosen]}" "$HOME/.config/gtk-4.0/gtk.css"
+  [[ -n "''${GTK3_CSS[$chosen]}" ]] && install -D -m 644 "''${GTK3_CSS[$chosen]}" "$HOME/.config/gtk-3.0/gtk.css"
 
   # Fish prompt colors via universal variables (propagate instantly to all running sessions).
   declare -A FISH_PRIMARY
