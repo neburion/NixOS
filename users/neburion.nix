@@ -1,4 +1,4 @@
-{ zen-browser, pkgs, ... }:
+{ zen-browser, claude-desktop, pkgs, ... }:
 
 {
   imports = [
@@ -9,6 +9,7 @@
 
   home.packages = [
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+    claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop-with-fhs
     pkgs.sqlite
   ];
   programs.nvf.enable = true;
