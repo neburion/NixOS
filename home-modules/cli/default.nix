@@ -7,6 +7,7 @@
     ./git.nix
     ./neovim
     ./dirs.nix
+    ./claude
   ];
 
   home.packages = with pkgs; [
