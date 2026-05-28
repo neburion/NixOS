@@ -1,36 +1,18 @@
 { ... }:
 {
-  imports =
-    [
-      ./hardware-configuration.nix
-      ./users.nix
-      ../../modules/core/networking.nix
-      ../../modules/core/syncthing.nix
-      ../../modules/core/hardware.nix
-      ../../modules/core/audio.nix
-      ../../modules/core/locale.nix
-      ../../modules/core/boot.nix
-      ../../modules/core/backup.nix
-      ../../modules/desktop
-    ];
-
-  nixpkgs.config.allowUnfree = true;
-  nix.settings.experimental-features = [ "flakes" "nix-command" ];
-  nix.settings.auto-optimise-store = true;
-  nix.settings.max-jobs = "auto";
-  nix.settings.cores   = 0;
-  nix.gc = {
-    automatic = true;
-    dates     = "weekly";
-    options   = "--delete-older-than 14d";
-  };
-
-  security.sudo.wheelNeedsPassword = false;
-  system.stateVersion = "25.11"; # Initial nixos version on install no need to change
-
-  programs.fish.enable = true;
-  environment.sessionVariables = {
-    EDITOR = "nvim";
-    SUDO_EDITOR = "nvim";
-  };
+  imports = [
+    ./hardware-configuration.nix
+    ./users.nix
+    ../../modules/core/networking.nix
+    ../../modules/core/syncthing.nix
+    ../../modules/core/hardware.nix
+    ../../modules/core/audio.nix
+    ../../modules/core/locale.nix
+    ../../modules/core/boot.nix
+    ../../modules/core/backup.nix
+    ../../modules/core/nix.nix
+    ../../modules/core/shell.nix
+    ../../modules/core/security.nix
+    ../../modules/desktop
+  ];
 }

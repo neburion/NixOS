@@ -1,21 +1,12 @@
 {
-  users.users.nululy = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
-  };
+  imports = [
+    ../modules/users/nululy.nix
+  ];
 
-  home-manager.users.nululy = { pkgs, zen-browser, ... }: {
-    imports = [
-      ../home-modules/desktop
-      ../home-modules/cli
-      ../home-modules/dev
-    ];
-
-    home.packages = [
-      zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
-    ];
-
-    home.stateVersion = "25.11";
-    xdg.configFile."user-dirs.dirs".force = true;
-  };
+  home-manager.users.nululy.imports = [
+    ../home-modules/base.nix
+    ../home-modules/desktop
+    ../home-modules/cli
+    ../home-modules/dev
+  ];
 }

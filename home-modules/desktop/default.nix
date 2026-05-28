@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, config, zen-browser, ... }:
 
 {
   imports = [
@@ -26,7 +26,13 @@
     signal-desktop
     vesktop              # Discord client
     obsidian
+  ] ++ [
+    zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
+
+  # xdg.userDirs writes ~/.config/user-dirs.dirs, which would otherwise
+  # collide with the existing read-only home-manager symlink.
+  xdg.configFile."user-dirs.dirs".force = true;
 
   xdg.mimeApps = {
     enable = true;
