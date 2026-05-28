@@ -7,4 +7,5 @@
   gtkTheme       = "catppuccin-mocha-blue-standard";
   fishPrimary    = "#cba6f7";
   fishSecondary  = "#89b4fa";
+  superfileTheme = "catppuccin";
 }

@@ -17,6 +17,10 @@ let
     FISH_SECONDARY["${name}"]="${strip (t.fishSecondary or "aaaaaa")}"''
   ) themes);
 
+  superfileThemeLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
+    ''SUPERFILE_THEMES["${name}"]="${t.superfileTheme or name}"''
+  ) themes);
+
   # GTK CSS files baked in the nix store (paths are deterministic nix strings).
   css = import ../../gtk-css.nix { inherit pkgs lib themes; };
 
@@ -35,7 +39,11 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   MAKO_CONFIG="$HOME/.config/mako/config"
   HYPR_THEMES="$HOME/.config/hypr/themes"
   GHOSTTY_THEMES="$HOME/.config/ghostty/themes"
+  SUPERFILE_THEMES="$HOME/.config/superfile/theme"
   WAYPAPER_CONFIG="$HOME/.config/waypaper/config.ini"
+
+  declare -A SUPERFILE_THEMES_MAP
+  ${superfileThemeLines}
 
   # Initialize active files if missing
   [[ ! -f "$WOFI_THEMES/active.css" ]]        && ln -sf "$WOFI_THEMES/dark.css"   "$WOFI_THEMES/active.css"
@@ -43,6 +51,9 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   [[ ! -f "$MAKO_CONFIG" ]]                    && cp "$MAKO_THEMES/dark"           "$MAKO_CONFIG"
   [[ ! -e "$HOME/.config/hypr/theme.conf" ]]   && ln -sf "$HYPR_THEMES/dark.conf"  "$HOME/.config/hypr/theme.conf"
   [[ ! -f "$GHOSTTY_THEMES/active.conf" ]]     && echo "theme = dark" > "$GHOSTTY_THEMES/active.conf"
+  if [[ ! -e "$SUPERFILE_THEMES/active.toml" ]] && [[ -f "$SUPERFILE_THEMES/''${SUPERFILE_THEMES_MAP[dark]:-hacks}.toml" ]]; then
+    ln -sf "$SUPERFILE_THEMES/''${SUPERFILE_THEMES_MAP[dark]:-hacks}.toml" "$SUPERFILE_THEMES/active.toml"
+  fi
 
   chosen=$(ls "$WOFI_THEMES"/*.css 2>/dev/null \
     | grep -v active.css \
@@ -64,6 +75,12 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
 
   # Ghostty theme
   echo "theme = $chosen" > "$GHOSTTY_THEMES/active.conf"
+
+  # Superfile theme — symlink active.toml to the mapped palette
+  spf_theme="''${SUPERFILE_THEMES_MAP[$chosen]:-$chosen}"
+  if [[ -f "$SUPERFILE_THEMES/$spf_theme.toml" ]]; then
+    ln -sf "$SUPERFILE_THEMES/$spf_theme.toml" "$SUPERFILE_THEMES/active.toml"
+  fi
 
   # GTK theme
   declare -A GTK_THEMES

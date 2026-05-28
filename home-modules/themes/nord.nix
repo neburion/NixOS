@@ -7,4 +7,5 @@
   gtkTheme       = "Nordic-darker";
   fishPrimary    = "#88c0d0";
   fishSecondary  = "#81a1c1";
+  superfileTheme = "nord";
 }

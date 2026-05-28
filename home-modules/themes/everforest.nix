@@ -7,4 +7,5 @@
   gtkTheme       = "Everforest-Dark-B";
   fishPrimary    = "#a7c080";
   fishSecondary  = "#7fbbb3";
+  superfileTheme = "everforest-dark-medium";
 }

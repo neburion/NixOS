@@ -7,4 +7,5 @@
   gtkTheme       = "Adwaita-dark";
   fishPrimary    = "#aaaaaa";
   fishSecondary  = "#666666";
+  superfileTheme = "hacks";
 }

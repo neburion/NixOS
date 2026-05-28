@@ -7,4 +7,5 @@
   gtkTheme       = "gruvbox-dark";
   fishPrimary    = "#d79921";
   fishSecondary  = "#689d6a";
+  superfileTheme = "gruvbox-dark-hard";
 }
