@@ -1,4 +1,4 @@
-Triggered with `SUPER + SHIFT + Space`. Opens a wofi dmenu listing available themes. Selecting one applies the theme live to wofi, waybar, mako, and GTK.
+Triggered with `SUPER + SHIFT + Space`. Opens a wofi dmenu listing available themes. Selecting one applies the theme live to wofi, waybar, mako, GTK, ghostty, fish, swww/waypaper, and superfile.
 
 ## How it works
 
@@ -19,18 +19,19 @@ The script (`wofi-theme-switcher`) switches themes at runtime by:
 3. Copying the chosen mako theme over `~/.config/mako/config`
 4. Running `gsettings` to change the GTK theme
 5. Restarting waybar, reloading mako
+6. Symlinking `~/.config/superfile/theme/active.toml` to the mapped palette (new superfile sessions pick up the theme — running TUIs don't reload)
 
 Wofi and waybar CSS both `@import` their respective `active.css`, so they pick up the change on next launch / restart.
 
 ## Available themes
 
-| Name       | GTK theme                        |
-|------------|----------------------------------|
-| dark       | Adwaita-dark (default)           |
-| catppuccin | catppuccin-mocha-blue-standard   |
-| gruvbox    | gruvbox-dark                     |
-| nord       | Nordic-darker                    |
-| everforest | Everforest-Dark-B                |
+| Name       | GTK theme                        | Superfile theme         |
+|------------|----------------------------------|-------------------------|
+| dark       | Adwaita-dark (default)           | hacks                   |
+| catppuccin | catppuccin-mocha-blue-standard   | catppuccin              |
+| gruvbox    | gruvbox-dark                     | gruvbox-dark-hard       |
+| nord       | Nordic-darker                    | nord                    |
+| everforest | Everforest-Dark-B                | everforest-dark-medium  |
 
 ## Key files
 
@@ -43,10 +44,11 @@ Wofi and waybar CSS both `@import` their respective `active.css`, so they pick u
 | `home-modules/desktop/wm/waybar/default.nix` | Generates waybar CSS files per theme |
 | `home-modules/desktop/wm/mako/default.nix` | Generates mako config files per theme |
 | `home-modules/desktop/wm/gtk.nix` | GTK theme packages and default |
+| `home-modules/cli/superfile.nix` | Sets `theme = "active"` and the activation that syncs `active.toml` |
 
 ## Persistence across rebuilds
 
-The theme is persisted via the `~/.config/hypr/theme.conf` symlink (pointing into `~/.config/hypr/themes/`). The wofi-theme-switcher updates this symlink at runtime; on the next `home-manager switch`, the `syncGtkTheme` activation script in `gtk.nix` reads it back and re-applies the matching GTK theme, GTK4 CSS, and GTK3 CSS. The hypr symlink is the single source of truth for the active theme.
+The theme is persisted via the `~/.config/hypr/theme.conf` symlink (pointing into `~/.config/hypr/themes/`). The wofi-theme-switcher updates this symlink at runtime; on the next `home-manager switch`, the `syncGtkTheme` activation in `gtk.nix` and `syncSuperfileTheme` activation in `superfile.nix` read it back and re-apply the matching GTK theme, GTK4/3 CSS, and superfile `active.toml` symlink. The hypr symlink is the single source of truth for the active theme.
 
 ## Nautilus
 
