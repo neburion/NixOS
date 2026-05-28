@@ -21,16 +21,7 @@
   };
   outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
   let
-    sharedHMConfig = {
-      useGlobalPkgs = true;
-      useUserPackages = true;
-      backupFileExtension = "backup";
-      extraSpecialArgs = { inherit zen-browser; };
-      sharedModules = [
-        nvf.homeManagerModules.default
-      ];
-    };
-    mkSystem = { host, system ? "x86_64-linux", users }:
+    mkSystem = { host, system ? "x86_64-linux" }:
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { inherit zen-browser nvf inputs; };
@@ -40,23 +31,18 @@
           { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           home-manager.nixosModules.home-manager
           {
-            home-manager = sharedHMConfig // {
-              users = users;
-            };
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+            home-manager.extraSpecialArgs = { inherit zen-browser; };
+            home-manager.sharedModules = [ nvf.homeManagerModules.default ];
           }
         ];
       };
   in
   {
     nixosConfigurations = {
-      pod042 = mkSystem {
-        host = "pod042";
-        users = {
-          neburion = import ./users/neburion.nix;
-          nululy   = import ./users/nululy.nix;
-          qellyree = import ./users/qellyree.nix;
-        };
-      };
+      pod042 = mkSystem { host = "pod042"; };
 
       # Live USB installer — build with:
       #   nix build .#nixosConfigurations.installer.config.system.build.isoImage

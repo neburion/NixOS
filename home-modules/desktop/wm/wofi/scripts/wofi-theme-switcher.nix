@@ -18,7 +18,7 @@ let
   ) themes);
 
   superfileThemeLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
-    ''SUPERFILE_THEMES["${name}"]="${t.superfileTheme or name}"''
+    ''SUPERFILE_THEMES_MAP["${name}"]="${t.superfileTheme or name}"''
   ) themes);
 
   # GTK CSS files baked in the nix store (paths are deterministic nix strings).
