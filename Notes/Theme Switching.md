@@ -52,7 +52,7 @@ The theme is persisted via the `~/.config/hypr/theme.conf` symlink (pointing int
 
 ## Nautilus
 
-Libadwaita apps (Nautilus, Loupe, etc.) read `~/.config/gtk-4.0/gtk.css` once at startup and do not live-reload it. The theme switcher therefore runs `nautilus --quit` after writing the new CSS so the next `$mod+F` launch picks up the fresh palette.
+Libadwaita apps (Nautilus, Loupe, etc.) read `~/.config/gtk-4.0/gtk.css` once at startup and do not live-reload it. Nautilus is also a `GApplication` that stays running in the background after the window is closed, so manually close+reopen reuses the same cached style provider and shows the old theme. The switcher therefore calls `nautilus --quit` to fully terminate the process; the next `$mod+F` launch picks up the new palette. Nautilus's DBus interface doesn't expose the current window location, so the path can't be preserved across the restart.
 
 ## Notes
 - The GTK CSS files for each theme are baked into the nix store via `gtk-css.nix` and consumed by both the activation script and the runtime switcher (so the two code paths can't drift).

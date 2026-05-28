@@ -73,8 +73,10 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   ln -sf "$HYPR_THEMES/$chosen.conf" "$HOME/.config/hypr/theme.conf"
   hyprctl reload
 
-  # Ghostty theme
+  # Ghostty theme — write active.conf, then SIGUSR2 tells running
+  # instances to reload their config in place (Ghostty ≥1.2).
   echo "theme = $chosen" > "$GHOSTTY_THEMES/active.conf"
+  pkill -SIGUSR2 ghostty 2>/dev/null || true
 
   # Superfile theme — symlink active.toml to the mapped palette
   spf_theme="''${SUPERFILE_THEMES_MAP[$chosen]:-$chosen}"
@@ -133,10 +135,10 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   pkill waybar; waybar &
   makoctl reload
 
-  # Nautilus (and other libadwaita apps) only read ~/.config/gtk-4.0/gtk.css at
-  # startup, so a running instance keeps the old theme. Quit it gracefully so
-  # the next $mod+F launch picks up the new colors.
-  if pgrep -x nautilus >/dev/null; then
-    nautilus --quit 2>/dev/null || pkill nautilus 2>/dev/null || true
-  fi
+  # Nautilus (libadwaita) reads ~/.config/gtk-4.0/gtk.css once at startup and
+  # has no live-reload signal. Closing the window isn't enough either: nautilus
+  # is a GApplication and stays running in the background, so a fresh window
+  # reuses the same cached style provider. `nautilus --quit` is the only way
+  # to fully terminate the process so the next launch reads the new CSS.
+  nautilus --quit 2>/dev/null || true
 ''
