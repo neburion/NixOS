@@ -16,6 +16,7 @@
       "$mod,       B,      exec, $webBrowser"
       "$mod,       N,      exec, $notesApp"
       "$mod,       C,      exec, $messenger"
+      "$mod,       D,      exec, $discord"
       "$mod,       P,      exec, keepassxc"
       "$mod,       S,      exec, localsend"
 

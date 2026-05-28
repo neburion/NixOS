@@ -20,5 +20,6 @@
     "$webBrowser"       = "zen";
     "$notesApp"         = "obsidian";
     "$messenger"        = "signal";
+    "$discord"          = "vesktop";
   };
 }

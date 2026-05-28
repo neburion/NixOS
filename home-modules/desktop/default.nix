@@ -24,6 +24,7 @@
 
     # Apps
     signal-desktop
+    vesktop              # Discord client
     obsidian
   ];
 

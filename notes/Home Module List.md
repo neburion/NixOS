@@ -19,9 +19,9 @@ desktop/
 ```
 
 **Packages in `desktop/default.nix`:**
-blueman, networkmanagerapplet, loupe, celluloid, nautilus, pavucontrol, keepassxc, solaar, razergenie, grim, slurp, wl-clipboard, ente-desktop, signal-desktop, obsidian
+blueman, networkmanagerapplet, loupe, celluloid, nautilus, pavucontrol, keepassxc, solaar, razergenie, grim, slurp, wl-clipboard, ente-desktop, signal-desktop, vesktop, obsidian
 
-(spotify, vesktop, obs-studio live in `desktop/gaming/apps.nix`.)
+(spotify and obs-studio live in `desktop/gaming/apps.nix`.)
 
 ## `cli/`
 
