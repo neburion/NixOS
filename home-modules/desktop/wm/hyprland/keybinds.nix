@@ -17,6 +17,9 @@
       "$mod,       N,      exec, $notesApp"
       "$mod,       C,      exec, $messenger"
       "$mod,       D,      exec, $discord"
+      "$mod,       M,      exec, $musicPlayer"
+      "$mod,       G,      exec, $gameLauncher"
+      "$mod SHIFT, G,      exec, $steamLauncher"
       "$mod,       P,      exec, keepassxc"
       "$mod,       S,      exec, localsend"
 

@@ -3,7 +3,6 @@
 {
   imports = [
     ./apps.nix
-    ./hyprland.nix
   ];
 
   gamingLauncher.enable = true;

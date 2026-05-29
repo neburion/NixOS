@@ -21,5 +21,8 @@
     "$notesApp"         = "obsidian";
     "$messenger"        = "signal";
     "$discord"          = "vesktop";
+    "$musicPlayer"      = "spotify";
+    "$gameLauncher"     = "heroic";
+    "$steamLauncher"    = "steam";
   };
 }
