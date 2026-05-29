@@ -22,7 +22,7 @@ let
   ) themes);
 
   # GTK CSS files baked in the nix store (paths are deterministic nix strings).
-  css = import ../../gtk-css.nix { inherit pkgs lib themes; };
+  css = import ../../gtk/css.nix { inherit pkgs lib themes; };
 
   gtk4CssLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: f:
     ''GTK4_CSS["${name}"]="${f}"''

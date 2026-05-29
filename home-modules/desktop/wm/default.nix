@@ -8,6 +8,6 @@
     ./wofi
     ./mako
     ./wallpaper
-    ./gtk.nix
+    ./gtk
   ];
 }

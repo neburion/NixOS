@@ -8,5 +8,6 @@
     ../home-modules/desktop
     ../home-modules/desktop/gaming
     ../home-modules/cli
+    ../home-modules/cli/dirs/qellyree.nix
   ];
 }

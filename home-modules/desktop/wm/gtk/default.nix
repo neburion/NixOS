@@ -1,7 +1,7 @@
 { pkgs, lib, ... }:
 
 let
-  themes = import ../../themes;
+  themes = import ../../../themes;
 
   catppuccin-gtk = pkgs.catppuccin-gtk.override {
     accents = [ "blue" ];
@@ -24,7 +24,7 @@ Directories=
 EOF
   '';
 
-  css = import ./gtk-css.nix { inherit pkgs lib themes; };
+  css = import ./css.nix { inherit pkgs lib themes; };
 
   gtk4CaseLines = lib.concatStringsSep "\n        " (lib.mapAttrsToList (n: f:
     ''${n}) gtk4_css="${f}" ;;''
