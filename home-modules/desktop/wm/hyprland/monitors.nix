@@ -1,13 +1,15 @@
-{ ... }:
+{ hostConfig, lib, ... }:
 
+let
+  monitors = hostConfig.displays.monitors;
+
+  mkMonitorLine = m: "${m.name}, ${m.mode}, ${m.position}, ${m.scale}";
+in
 {
   wayland.windowManager.hyprland.settings = {
-    "$builtInMonitor" = "eDP-1";
-    "$externalMonitor" = "HDMI-A-1";
+    "$builtInMonitor"  = monitors.builtin.name;
+    "$externalMonitor" = monitors.external.name or monitors.builtin.name;
 
-    monitor = [
-      "$builtInMonitor, 1920x1080@120, 0x0, 1"
-      "$externalMonitor, 1920x1080@144, 1920x0, 1"
-    ];
+    monitor = lib.mapAttrsToList (_: mkMonitorLine) monitors;
   };
 }

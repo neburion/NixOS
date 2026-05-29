@@ -2,11 +2,12 @@
 
 {
   imports = [
-    ./sddm.nix
-    ./hyprland.nix
     ./fonts.nix
-    ./apps.nix
     ./gaming.nix
+    ./integrations
+    ./quirks
     ./remote-access.nix
+    ./tools
+    ./wm
   ];
 }

@@ -1,8 +1,6 @@
-{ lib, config, ... }:
+{ lib, config, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   mkWaybarTheme = c: ''
     @define-color background ${c.bg};
     @define-color capsule ${c.surface};

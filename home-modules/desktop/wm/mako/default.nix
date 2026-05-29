@@ -1,8 +1,6 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   baseConfig = ''
     font=FiraMono Nerd Font 11
     border-size=1

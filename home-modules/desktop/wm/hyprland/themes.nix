@@ -1,8 +1,6 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   # Shadow color derived from each theme's background
   mkHyprTheme = c: let
     hex = lib.removePrefix "#" c.bg;

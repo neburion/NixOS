@@ -1,8 +1,6 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   mkWofiTheme = c: ''
     #window { background-color: ${c.bg}; }
     #outer-box { padding: 10px; }

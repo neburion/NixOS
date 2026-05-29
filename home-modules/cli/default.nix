@@ -1,25 +1,19 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 
 {
   imports = [
+    ./appimage.nix
+    ./compression.nix
     ./fish.nix
-    ./superfile.nix
+    ./flatpak.nix
     ./git.nix
     ./neovim
+    ./superfile.nix
   ];
 
   home.packages = with pkgs; [
-    p7zip
-    unrar
-    unzip
     btop
     fastfetch
     tree
-    appimage-run
   ];
-
-  home.activation.flatpakSetup =
-    config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
-    '';
 }

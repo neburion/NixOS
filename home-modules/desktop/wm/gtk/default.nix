@@ -1,8 +1,6 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   catppuccin-gtk = pkgs.catppuccin-gtk.override {
     accents = [ "blue" ];
     size    = "standard";

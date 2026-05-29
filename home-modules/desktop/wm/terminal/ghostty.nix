@@ -1,8 +1,6 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, themes, ... }:
 
 let
-  themes = import ../../../themes;
-
   mkGhosttyTheme = c: ''
     background          = ${c.bg}
     foreground          = ${c.fg}

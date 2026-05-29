@@ -21,6 +21,8 @@
   };
   outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
   let
+    themes = import ./home-modules/themes;
+
     mkSystem = { host, system ? "x86_64-linux" }:
       nixpkgs.lib.nixosSystem {
         inherit system;
@@ -30,13 +32,21 @@
           ./hosts/${host}/configuration.nix
           { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.extraSpecialArgs = { inherit zen-browser; };
-            home-manager.sharedModules = [ nvf.homeManagerModules.default ];
-          }
+          ({ config, ... }: {
+            home-manager = {
+              useGlobalPkgs       = true;
+              useUserPackages     = true;
+              backupFileExtension = "backup";
+              extraSpecialArgs = {
+                inherit zen-browser;
+                hostConfig = config.local.host;
+              };
+              sharedModules = [
+                nvf.homeManagerModules.default
+                { _module.args.themes = themes; }
+              ];
+            };
+          })
         ];
       };
   in
@@ -50,18 +60,7 @@
       #   nixflash /dev/sdX
       installer = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [
-          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-          ({ pkgs, ... }: {
-            environment.systemPackages = with pkgs; [
-              git rclone p7zip jq
-              (pkgs.writeShellScriptBin "nixinstall"
-                (builtins.readFile ./installer/nixinstall.sh))
-            ];
-            environment.etc."nixinstall-disko.nix".source = ./installer/disko.nix;
-            nix.settings.experimental-features = [ "nix-command" "flakes" ];
-          })
-        ];
+        modules = [ ./hosts/installer/configuration.nix ];
       };
     };
   };

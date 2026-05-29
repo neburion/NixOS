@@ -1,8 +1,6 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
-  themes = import ../themes;
-
   superfileThemeMap = lib.mapAttrs (_: t: t.superfileTheme or "hacks") themes;
 
   caseLines = lib.concatStringsSep "\n        " (lib.mapAttrsToList (n: spf:
