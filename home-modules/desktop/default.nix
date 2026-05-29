@@ -26,6 +26,8 @@
     signal-desktop
     vesktop              # Discord client
     obsidian
+    spotify              # Music
+    obs-studio           # Recording/streaming
   ] ++ [
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
