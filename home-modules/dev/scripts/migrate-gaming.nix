@@ -18,7 +18,7 @@
       fi
 
       echo "==> Creating qellyree directory structure..."
-      mkdir -p "$QELLYREE"/{Gaming,.config,Docs/Passwords,Media,Downloads}
+      mkdir -p "$QELLYREE"/{Gaming,.config,Media,Downloads}
 
       echo "==> Moving Gaming directory..."
       if [ -d "$NEBURION/Gaming" ]; then
@@ -32,17 +32,6 @@
           mv "$NEBURION/.config/$cfg" "$QELLYREE/.config/"
         fi
       done
-
-      echo "==> Copying backup password for qellyree..."
-      if [ -f "$NEBURION/Docs/Passwords/backup-password" ]; then
-        cp "$NEBURION/Docs/Passwords/backup-password" "$QELLYREE/Docs/Passwords/backup-password"
-      fi
-
-      echo "==> Copying rclone config for qellyree..."
-      if [ -d "$NEBURION/.config/rclone" ]; then
-        mkdir -p "$QELLYREE/.config/rclone"
-        cp -r "$NEBURION/.config/rclone/." "$QELLYREE/.config/rclone/"
-      fi
 
       echo "==> Fixing ownership..."
       chown -R qellyree:users "$QELLYREE"

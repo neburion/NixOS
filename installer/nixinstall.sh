@@ -28,9 +28,4 @@ git clone https://github.com/neburion/NixOS /mnt/etc/nixos
 echo -e "\n${GRN}Installing NixOS...${NC}"
 nixos-install --flake /mnt/etc/nixos#pod042 --no-root-passwd
 
-echo -e "\n${GRN}Copying restore script to new system...${NC}"
-cp /etc/nixrestore.sh /mnt/home/neburion/nixrestore.sh
-chmod +x /mnt/home/neburion/nixrestore.sh
-
 echo -e "\n${GRN}Done.${NC}"
-echo "After reboot: log in as neburion and run ~/nixrestore.sh to restore your data."

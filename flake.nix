@@ -59,7 +59,6 @@
                 (builtins.readFile ./installer/nixinstall.sh))
             ];
             environment.etc."nixinstall-disko.nix".source = ./installer/disko.nix;
-            environment.etc."nixrestore.sh".source         = ./installer/nixrestore.sh;
             nix.settings.experimental-features = [ "nix-command" "flakes" ];
           })
         ];

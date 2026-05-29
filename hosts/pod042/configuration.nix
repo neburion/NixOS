@@ -9,7 +9,6 @@
     ../../modules/core/audio.nix
     ../../modules/core/locale.nix
     ../../modules/core/boot.nix
-    ../../modules/core/backup.nix
     ../../modules/core/nix.nix
     ../../modules/core/shell.nix
     ../../modules/core/security.nix
