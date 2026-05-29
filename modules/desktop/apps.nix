@@ -3,6 +3,7 @@
 {
   environment.systemPackages = with pkgs; [
     brightnessctl
+    p7zip
     xdg-user-dirs
   ];
 
