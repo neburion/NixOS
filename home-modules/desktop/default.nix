@@ -4,6 +4,7 @@
   imports = [
     ./wm
     ./art
+    ./steam-launcher.nix
   ];
 
   home.packages = with pkgs; [
