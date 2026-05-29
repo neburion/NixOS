@@ -1,7 +1,7 @@
 {
   imports = [
-    ../../users/neburion/modules.nix
-    ../../users/nululy/modules.nix
-    ../../users/qellyree/modules.nix
+    ../../users/neburion
+    ../../users/nululy
+    ../../users/qellyree
   ];
 }
