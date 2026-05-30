@@ -1,5 +1,8 @@
 { pkgs, lib, wofiArgs, themes, homeDir, ... }:
 
+# Note: nvim per-PID sockets live in $XDG_RUNTIME_DIR/nvim-theme/*.sock (set up
+# by home-modules/cli/neovim/theme.nix luaConfigPost).
+
 let
   strip = lib.removePrefix "#";
 
@@ -40,6 +43,7 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   HYPR_THEMES="$HOME/.config/hypr/themes"
   GHOSTTY_THEMES="$HOME/.config/ghostty/themes"
   SUPERFILE_THEMES="$HOME/.config/superfile/theme"
+  NVIM_THEMES="$HOME/.config/nvf/themes"
   WAYPAPER_CONFIG="$HOME/.config/waypaper/config.ini"
 
   declare -A SUPERFILE_THEMES_MAP
@@ -51,6 +55,7 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   [[ ! -f "$MAKO_CONFIG" ]]                    && cp "$MAKO_THEMES/dark"           "$MAKO_CONFIG"
   [[ ! -e "$HOME/.config/hypr/theme.conf" ]]   && ln -sf "$HYPR_THEMES/dark.conf"  "$HOME/.config/hypr/theme.conf"
   [[ ! -f "$GHOSTTY_THEMES/active.conf" ]]     && echo "theme = dark" > "$GHOSTTY_THEMES/active.conf"
+  [[ ! -e "$NVIM_THEMES/active.lua" ]] && [[ -f "$NVIM_THEMES/dark.lua" ]] && ln -sf "$NVIM_THEMES/dark.lua" "$NVIM_THEMES/active.lua"
   if [[ ! -e "$SUPERFILE_THEMES/active.toml" ]] && [[ -f "$SUPERFILE_THEMES/''${SUPERFILE_THEMES_MAP[dark]:-hacks}.toml" ]]; then
     ln -sf "$SUPERFILE_THEMES/''${SUPERFILE_THEMES_MAP[dark]:-hacks}.toml" "$SUPERFILE_THEMES/active.toml"
   fi
@@ -77,6 +82,18 @@ pkgs.writeShellScriptBin "wofi-theme-switcher" ''
   # instances to reload their config in place (Ghostty ≥1.2).
   echo "theme = $chosen" > "$GHOSTTY_THEMES/active.conf"
   pkill -SIGUSR2 ghostty 2>/dev/null || true
+
+  # Neovim theme — swap active.lua symlink, then ping any running nvim
+  # instance via its per-PID server socket. --remote-expr is async-safe
+  # and doesn't disturb the user's current mode.
+  if [[ -f "$NVIM_THEMES/$chosen.lua" ]]; then
+    ln -sf "$NVIM_THEMES/$chosen.lua" "$NVIM_THEMES/active.lua"
+    for sock in "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim-theme/*.sock; do
+      [[ -S "$sock" ]] || continue
+      nvim --server "$sock" --remote-expr 'execute("ThemeReload")' \
+        >/dev/null 2>&1 || true
+    done
+  fi
 
   # Superfile theme — symlink active.toml to the mapped palette
   spf_theme="''${SUPERFILE_THEMES_MAP[$chosen]:-$chosen}"

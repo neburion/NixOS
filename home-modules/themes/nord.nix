@@ -8,4 +8,5 @@
   fishPrimary    = "#88c0d0";
   fishSecondary  = "#81a1c1";
   superfileTheme = "nord";
+  nvimTheme      = "nord";
 }
