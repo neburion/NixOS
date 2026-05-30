@@ -22,7 +22,7 @@
       sspf = "sudo superfile";
 
       # Dev
-      cd-dev = "cd ~/Projects/Dev";
+      cddev = "cd ~/Projects/Dev";
       mkrepo = "gh repo create (basename $PWD) --public --source=. --remote=origin --push";
       rmrepo = "git remote remove origin && gh repo delete neburion/(basename $PWD)";
     };
