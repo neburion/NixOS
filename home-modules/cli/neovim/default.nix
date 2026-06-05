@@ -9,4 +9,6 @@
     ./debugger.nix
     ./keybinds.nix
   ];
+
+  programs.nvf.enable = true;
 }

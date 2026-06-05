@@ -9,6 +9,5 @@
     ../../home-modules/cli
     ./dirs.nix
     ../../home-modules/dev
-    ../../home-modules/dev/nvf.nix
   ];
 }

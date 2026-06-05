@@ -1,29 +1,19 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   imports = [
-    ./scripts
     ./ai
+    ./scripts
+    ./c.nix
+    ./cmake.nix
+    ./direnv.nix
+    ./gdb.nix
+    ./godot.nix
+    ./make.nix
+    ./nix.nix
+    ./odin.nix
+    ./python.nix
+    ./rust.nix
+    ./zig.nix
   ];
-
-  home.packages = with pkgs; [
-    # Compilers & Interpreters
-    gcc
-    python3
-
-    # Build Tools
-    gnumake
-    cmake
-
-    # Debuggers
-    gdb
-    
-    # Game Engine
-    godot
-  ];
-
-  programs.direnv = {
-    enable = true;
-    nix-direnv.enable = true;
-  };
 }
