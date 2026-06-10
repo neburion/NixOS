@@ -19,5 +19,6 @@
     "d %h/Projects/Dev                      0755 - - -"
     "d %h/Projects/Art                      0755 - - -"
     "d %h/Projects/Tower                    0755 - - -"
+    "d %h/Gaming                            0755 - - -"
   ];
 }

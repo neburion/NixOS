@@ -37,6 +37,7 @@ home-modules/dev/nvf.nix    ← neburion-only
   ├── Dev
   ├── Art
   └── Tower
+~/Gaming
 ```
 
 The `Wallpapers/<Theme>` subdirs are required by [[Home modules/Desktop/WM/Wallpaper]]'s waypaper config and by `wofi-theme-switcher` (which picks random files from the matching directory on theme change — see [[Concepts/Theme switching]]).
