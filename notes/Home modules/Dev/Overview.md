@@ -33,7 +33,7 @@ Enables `programs.direnv` with `nix-direnv`. Every `cd` into a dir with `.envrc`
 programs.nvf.enable = true;
 ```
 
-Separate file because only neburion uses it ([[Users/Overview]]). Nululy and qellyree do NOT import this.
+Separate file because only neburion uses it ([[Users/Overview]]). Nululy does NOT import this.
 
 The actual nvf config lives in [[Home modules/CLI/Neovim]] — that's imported by everyone via `cli/`, but it's inert until `programs.nvf.enable = true` is set.
 

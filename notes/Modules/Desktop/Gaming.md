@@ -25,11 +25,11 @@ home-manager.sharedModules = [
 
 Default: every user gets a shadowed (`noDisplay = true`) Steam entry. Users that want it visible set `gamingLauncher.enable = true` in their home-modules.
 
-Currently only [[Users/qellyree]] enables it (via `home-modules/desktop/gaming/default.nix` which `qellyree` imports — see [[Home modules/Overview]] notes on gaming).
+Currently only [[Users/neburion]] enables it (via `home-modules/desktop/gaming/default.nix` which `neburion` imports — see [[Home modules/Overview]] notes on gaming).
 
 More detail in [[Concepts/Gaming launcher gating]].
 
 ## See also
 
-- [[Users/qellyree]] — the gaming user
+- [[Users/neburion]] — the gaming user
 - [[Home modules/Desktop/WM/Hyprland]] — keybind `SUPER+G` → heroic, `SUPER+SHIFT+G` → steam

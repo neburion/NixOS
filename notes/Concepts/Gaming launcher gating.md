@@ -1,6 +1,6 @@
 # Gaming launcher gating
 
-System-wide Steam install would put `steam.desktop` in EVERY user's app launcher. Only qellyree wants it. The gating mechanism is in `modules/desktop/gaming.nix`.
+System-wide Steam install would put `steam.desktop` in EVERY user's app launcher. Only neburion wants it. The gating mechanism is in `modules/desktop/gaming.nix`.
 
 ## The custom option
 
@@ -24,7 +24,7 @@ home-manager.sharedModules = [
 
 ## Opting in
 
-[[Users/qellyree]] imports `home-modules/desktop/gaming/default.nix` which sets:
+[[Users/neburion]] imports `home-modules/desktop/gaming/default.nix` which sets:
 
 ```nix
 gamingLauncher.enable = true;
@@ -39,4 +39,4 @@ That's the entire opt-in. The other users don't import gaming, so their `enable`
 ## See also
 
 - [[Modules/Desktop/Gaming]]
-- [[Users/qellyree]]
+- [[Users/neburion]]

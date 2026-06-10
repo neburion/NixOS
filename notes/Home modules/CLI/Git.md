@@ -8,7 +8,7 @@
 - `init.defaultBranch = "master"` (note: not "main")
 - `pull.rebase = false` — default merge on pull
 
-Identity is hardcoded — every user imports the same config. If nululy/qellyree start authoring commits as themselves, this needs to move per-user (in `users/<name>/`).
+Identity is hardcoded — every user imports the same config. If nululy starts authoring commits as themselves, this needs to move per-user (in `users/<name>/`).
 
 ## gh
 

@@ -56,7 +56,7 @@ For desktop apps, CLI tools — the usual case.
 3. `rebuild` will create the user account
 4. `sudo passwd <name>` to set the initial password
 
-For reference shapes: [[Users/neburion]] (full stack), [[Users/qellyree]] (gaming opt-in), [[Users/nululy]] (minimal).
+For reference shapes: [[Users/neburion]] (full stack), [[Users/nululy]] (minimal).
 
 ---
 

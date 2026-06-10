@@ -56,7 +56,7 @@ See [[Principles]] for the full reasoning, [[Architecture]] for the directory la
 ## Map — Hosts & Users
 
 - [[Hosts/Overview]] — [[Hosts/pod042]], [[Hosts/installer]]
-- [[Users/Overview]] — [[Users/neburion]], [[Users/nululy]], [[Users/qellyree]]
+- [[Users/Overview]] — [[Users/neburion]], [[Users/nululy]]
 
 ## Map — Concepts (cross-module)
 
