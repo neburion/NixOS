@@ -21,7 +21,7 @@
       };
       external = {
         name     = "HDMI-A-1";
-        mode     = "1920x1080@144";
+        mode     = "2560x1440@144";
         position = "1920x0";
       };
     };

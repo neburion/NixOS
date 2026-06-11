@@ -22,7 +22,7 @@
     "$cursorTheme" = "Adwaita";
     cursor = {
       inactive_timeout    = "$cursorTime";
-      no_hardware_cursors = true;
+      no_hardware_cursors = false;
     };
 
     # Windows Looks
