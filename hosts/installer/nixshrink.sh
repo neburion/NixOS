@@ -60,17 +60,28 @@ resize2fs "$ROOT_PART" "${NEW_ROOT_GIB}G"
 NEW_ROOT_END_GIB=$((1 + NEW_ROOT_GIB))
 
 echo -e "\n${GRN}3/5  Shrinking partition $ROOT_PART to ${NEW_ROOT_END_GIB}GiB...${NC}"
-parted -s "$DISK" resizepart 2 "${NEW_ROOT_END_GIB}GiB"
+# parted's `resizepart` prints "Warning: Shrinking a partition can cause
+# data loss" and defaults to CANCEL in -s mode (exits 1, no resize). Even
+# ---pretend-input-tty doesn't bypass it reliably. sgdisk does the same
+# thing without prompts: delete partition 2, recreate at the same start
+# sector with the new smaller end. Data blocks are not touched.
+ROOT_START=$(sgdisk -i 2 "$DISK" | awk '/First sector/{print $3}')
+ROOT_TYPE=$(sgdisk -i 2 "$DISK" | awk '/Partition GUID code/{print $4}')
+ROOT_NAME=$(sgdisk -i 2 "$DISK" | sed -n "s/^Partition name: '\(.*\)'/\1/p")
+sgdisk -d 2 "$DISK" >/dev/null
+sgdisk -n "2:${ROOT_START}:+${NEW_ROOT_GIB}G" "$DISK" >/dev/null
+[ -n "$ROOT_TYPE" ] && sgdisk -t "2:${ROOT_TYPE}" "$DISK" >/dev/null
+[ -n "$ROOT_NAME" ] && sgdisk -c "2:${ROOT_NAME}" "$DISK" >/dev/null
+echo "  -> partition 2 recreated: start=${ROOT_START}, size=${NEW_ROOT_GIB}GiB, type=${ROOT_TYPE}, name=${ROOT_NAME}"
 
 # Windows partition lives in the freed space between the new p2 end and p3.
 WIN_START_GIB="$NEW_ROOT_END_GIB"
 WIN_END_GIB=$((WIN_START_GIB + WIN_GIB))
 
-echo -e "\n${GRN}4/5  Creating ${WIN_GIB}G partition for Windows at ${WIN_START_GIB}-${WIN_END_GIB}GiB...${NC}"
-parted -s "$DISK" mkpart windows "${WIN_START_GIB}GiB" "${WIN_END_GIB}GiB"
-# Set the type to Microsoft basic data so the Windows installer recognises it.
-parted -s "$DISK" type 4 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 2>/dev/null \
-  || sgdisk -t 4:0700 "$DISK"
+echo -e "\n${GRN}4/5  Creating ${WIN_GIB}G partition for Windows...${NC}"
+# Use sgdisk to add at the next free slot (-n 0:...) with absolute sector
+# math. Microsoft basic data type code = 0700.
+sgdisk -n "0:${WIN_START_GIB}GiB:${WIN_END_GIB}GiB" -t "0:0700" -c "0:windows" "$DISK" >/dev/null
 
 echo -e "\n${GRN}5/5  Re-reading partition table...${NC}"
 partprobe "$DISK" || true
