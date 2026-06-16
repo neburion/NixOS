@@ -73,6 +73,7 @@ echo -e "\n${GRN}Partitioning $DISK with disko...${NC}"
 nix --extra-experimental-features "nix-command flakes" run \
   github:nix-community/disko/latest -- \
   --mode destroy,format,mount \
+  --yes-wipe-all-disks \
   "$DISKO_NIX" \
   --arg disk "\"$DISK\""
 
