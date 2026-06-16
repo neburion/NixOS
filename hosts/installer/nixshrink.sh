@@ -74,14 +74,14 @@ sgdisk -n "2:${ROOT_START}:+${NEW_ROOT_GIB}G" "$DISK" >/dev/null
 [ -n "$ROOT_NAME" ] && sgdisk -c "2:${ROOT_NAME}" "$DISK" >/dev/null
 echo "  -> partition 2 recreated: start=${ROOT_START}, size=${NEW_ROOT_GIB}GiB, type=${ROOT_TYPE}, name=${ROOT_NAME}"
 
-# Windows partition lives in the freed space between the new p2 end and p3.
-WIN_START_GIB="$NEW_ROOT_END_GIB"
-WIN_END_GIB=$((WIN_START_GIB + WIN_GIB))
-
 echo -e "\n${GRN}4/5  Creating ${WIN_GIB}G partition for Windows...${NC}"
-# Use sgdisk to add at the next free slot (-n 0:...) with absolute sector
-# math. Microsoft basic data type code = 0700.
-sgdisk -n "0:${WIN_START_GIB}GiB:${WIN_END_GIB}GiB" -t "0:0700" -c "0:windows" "$DISK" >/dev/null
+# Let sgdisk pick the start sector automatically (start=0 → first aligned
+# sector in the largest free block). Hardcoding a GiB position fails when
+# the existing partitions aren't on exact GiB boundaries (root may start
+# at sector 2101248 = 1.001 GiB, not 2097152 = 1.000 GiB), which made
+# the hardcoded Windows start overlap the recreated root by a few sectors.
+# 0:0:+200G = next partition number, sgdisk picks start, size 200 GiB.
+sgdisk -n "0:0:+${WIN_GIB}G" -t "0:0700" -c "0:windows" "$DISK" >/dev/null
 
 echo -e "\n${GRN}5/5  Re-reading partition table...${NC}"
 partprobe "$DISK" || true
