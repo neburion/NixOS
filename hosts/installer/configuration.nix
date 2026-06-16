@@ -10,8 +10,13 @@
     rclone
     p7zip
     jq
+    parted
+    gptfdisk
+    e2fsprogs
     (pkgs.writeShellScriptBin "nixinstall"
       (builtins.readFile ./nixinstall.sh))
+    (pkgs.writeShellScriptBin "nixshrink"
+      (builtins.readFile ./nixshrink.sh))
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
