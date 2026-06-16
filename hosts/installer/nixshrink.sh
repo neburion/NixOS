@@ -53,8 +53,19 @@ read -rp "Proceed? [y/N] " confirm
 [[ "$confirm" != "y" && "$confirm" != "Y" ]] && { echo "Aborted."; exit 0; }
 
 # ---- 1. fsck root ----------------------------------------------------------
+# e2fsck exit codes: 0=clean, 1=errors corrected, 2=errors corrected + reboot
+# recommended (we power off anyway), >=4=uncorrected/fatal. set -e would kill
+# us on a benign exit 1 (e.g. dirty journal recovered), so accept 0-2.
 echo -e "\n${GRN}1/6  fsck on $ROOT_PART...${NC}"
+set +e
 e2fsck -f -y "$ROOT_PART"
+FSCK_RC=$?
+set -e
+if [ "$FSCK_RC" -gt 2 ]; then
+  echo -e "${RED}fsck failed (exit $FSCK_RC); refusing to proceed.${NC}"
+  exit "$FSCK_RC"
+fi
+[ "$FSCK_RC" -gt 0 ] && echo "  -> fsck corrected errors (exit $FSCK_RC), continuing"
 
 # ---- 2. shrink the ext4 filesystem -----------------------------------------
 echo -e "\n${GRN}2/6  Shrinking ext4 filesystem to ${NEW_ROOT_GIB}G...${NC}"
