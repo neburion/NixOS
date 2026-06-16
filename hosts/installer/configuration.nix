@@ -14,7 +14,5 @@
       (builtins.readFile ./nixinstall.sh))
   ];
 
-  environment.etc."nixinstall-disko.nix".source = ./disko.nix;
-
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 }
