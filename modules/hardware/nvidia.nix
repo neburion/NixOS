@@ -6,6 +6,8 @@
   hardware.nvidia = {
     modesetting.enable     = true;
     powerManagement.enable = false;
+    # Open kernel module — Turing (RTX 20xx) and newer only. Flip to false
+    # if this config ever lands on a Pascal-or-older card.
     open                   = true;
     nvidiaSettings         = true;
   };

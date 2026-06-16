@@ -30,7 +30,6 @@
         modules = [
           disko.nixosModules.disko
           ./hosts/${host}/configuration.nix
-          { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           home-manager.nixosModules.home-manager
           ({ config, ... }: {
             home-manager = {

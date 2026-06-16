@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 
 {
   nixpkgs.config.allowUnfree = true;
@@ -6,6 +6,9 @@
   nix.settings.auto-optimise-store = true;
   nix.settings.max-jobs = "auto";
   nix.settings.cores   = 0;
+  # Pin the system `nixpkgs` channel to the flake's locked input so
+  # imperative `nix-shell -p ...` matches what the flake builds against.
+  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
   nix.gc = {
     automatic = true;
     dates     = "weekly";
