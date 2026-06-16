@@ -26,6 +26,15 @@
           size    = "17G";
           content = { type = "swap"; };
         };
+        # Reserved space for a future Windows install (League / Valorant —
+        # Vanguard rules out Wine/Proton). Disko creates the partition but
+        # leaves it unformatted; the Windows installer can format/replace it.
+        # Declared BEFORE root so root's `size = "100%"` consumes only the
+        # remaining space, not the disk's tail.
+        windows = {
+          size = "200G";
+          type = "0700"; # Microsoft basic data
+        };
         root = {
           size    = "100%";
           content = { type = "filesystem"; format = "ext4"; mountpoint = "/"; };
