@@ -2,6 +2,6 @@
 
 {
   imports = [
-    ./grub-efi.nix
+    ./lanzaboote.nix
   ];
 }
