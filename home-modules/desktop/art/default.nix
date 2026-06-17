@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
-  home.packages = with pkgs; [
-    aseprite
-    blender
+  imports = [
+    ./aseprite.nix
+    ./blender.nix
   ];
 }

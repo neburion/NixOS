@@ -84,29 +84,30 @@
       ];
     };
 
-    dwindle  = {pseudotile = true; preserve_split = true;};
+    dwindle  = {preserve_split = true;};
     master   = {new_status = "master";};
     misc     = {disable_hyprland_logo = true;};
     xwayland = {force_zero_scaling = true;};
 
-    # `windowrulev2` was deprecated in Hyprland 0.42 and fails silently in 0.53+.
-    # The v2 body syntax (class:/title:) is still accepted under the `windowrule`
-    # keyword as of 0.52, so renaming is sufficient.
+    # Hyprland 0.55: windowrule syntax is space-separated between rule and
+    # selectors; the legacy comma form ("float, title:...") errors as
+    # "invalid field float: missing a value", and `windowrulev2` is gone.
     windowrule = [
       # Picture in Picture
-      "float,           title:(Picture-in-Picture)"
-      "pin,             title:(Picture-in-Picture)"
-      "move 73% 72%,    title:(Picture-in-Picture)"
-      "keepaspectratio, title:(Picture-in-Picture)"
-      "size 426 240,    title:(Picture-in-Picture)"
+      "float            title:^(Picture-in-Picture)$"
+      "pin              title:^(Picture-in-Picture)$"
+      "move 73% 72%     title:^(Picture-in-Picture)$"
+      # `keepaspectratio` was removed in Hyprland 0.55; manual resize no longer
+      # locks aspect ratio. The size rule below still sets the initial dimensions.
+      "size 426 240     title:^(Picture-in-Picture)$"
 
       # Waypaper
-      "float,        class:(waypaper)"
-      "size 800 540, class:(waypaper)"
-      "center,       class:(waypaper)"
+      "float            class:^(waypaper)$"
+      "size 800 540     class:^(waypaper)$"
+      "center           class:^(waypaper)$"
 
       # Steam
-      "tile, title:(Steam)"
+      "tile             title:^(Steam)$"
     ];
   };
 }

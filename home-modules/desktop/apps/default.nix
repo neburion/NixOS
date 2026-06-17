@@ -3,9 +3,14 @@
 {
   imports = [
     ./browser.nix
-    ./comms.nix
+    ./celluloid.nix
     ./files.nix
-    ./media.nix
-    ./productivity.nix
+    ./keepassxc.nix
+    ./loupe.nix
+    ./obs-studio.nix
+    ./obsidian.nix
+    ./signal.nix
+    ./spotify.nix
+    ./vesktop.nix
   ];
 }

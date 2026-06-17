@@ -1,19 +1,16 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   imports = [
-    ./appimage.nix
-    ./compression.nix
-    ./fish.nix
-    ./flatpak.nix
+    ./btop.nix
+    ./compression
+    ./dev
+    ./fastfetch.nix
     ./git.nix
     ./neovim
+    ./packager
+    ./shell
     ./superfile.nix
-  ];
-
-  home.packages = with pkgs; [
-    btop
-    fastfetch
-    tree
+    ./tree.nix
   ];
 }

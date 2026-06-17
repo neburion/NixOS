@@ -2,13 +2,12 @@
 
 {
   imports = [
-    ./options.nix
-    ./theme.nix
-    ./plugins.nix
-    ./languages.nix
     ./debugger.nix
+    ./enable.nix
     ./keybinds.nix
+    ./languages.nix
+    ./options.nix
+    ./plugins.nix
+    ./theme.nix
   ];
-
-  programs.nvf.enable = true;
 }

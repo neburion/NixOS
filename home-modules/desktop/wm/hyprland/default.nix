@@ -1,16 +1,15 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   imports = [
-    ./programs.nix
     ./auto-exec.nix
-    ./keybinds.nix
-    ./monitors.nix
-    ./looks.nix
+    ./enable.nix
     ./env.nix
-    ./themes.nix
+    ./keybinds.nix
+    ./looks.nix
+    ./monitors.nix
+    ./programs.nix
     ./session.nix
+    ./themes.nix
   ];
-
-  wayland.windowManager.hyprland.enable = true;
 }

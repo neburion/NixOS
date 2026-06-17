@@ -25,7 +25,7 @@
 
       # Windows
       "$mod,       Backspace, killactive"
-      "$mod SHIFT, S,         togglesplit"
+      "$mod SHIFT, S,         layoutmsg, togglesplit"
       "$mod,       T,         togglefloating"
       "$mod,       H,         movefocus, l"
       "$mod,       L,         movefocus, r"

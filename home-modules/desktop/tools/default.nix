@@ -2,6 +2,6 @@
 
 {
   imports = [
-    ./screenshot.nix
+    ./screenshot
   ];
 }

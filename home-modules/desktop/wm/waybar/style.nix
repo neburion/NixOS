@@ -1,60 +1,66 @@
-''
-  @define-color warning #dc381f;
+{ config, ... }:
 
-  * {
-      font-family: "FiraMono Nerd Font";
-      font-weight: 800;
-      font-size: 19px;
-  }
+{
+  programs.waybar.style =
+    ''@import "${config.home.homeDirectory}/.config/waybar/themes/active.css";''
+    + ''
+      @define-color warning #dc381f;
 
-  window#waybar {
-      background: @background;
-  }
+      * {
+          font-family: "FiraMono Nerd Font";
+          font-weight: 800;
+          font-size: 19px;
+      }
 
-  /*Capsules*/
-  #clock,
-  #custom-power-toggle,
-  .modules-center,
-  #hardware,
-  #tray {
-      background: @capsule;
-      border-radius: 5px;
-  }
+      window#waybar {
+          background: @background;
+      }
 
-  #clock,
-  #custom-power-toggle { margin: 5px 0px 5px 5px; }
+      /*Capsules*/
+      #clock,
+      #custom-power-toggle,
+      .modules-center,
+      #hardware,
+      #tray {
+          background: @capsule;
+          border-radius: 5px;
+      }
 
-  .modules-center { margin: 5px 15px 5px 15px; }
+      #clock,
+      #custom-power-toggle { margin: 5px 0px 5px 5px; }
 
-  #hardware { margin: 5px 5px 5px 5px; }
+      .modules-center { margin: 5px 15px 5px 15px; }
 
-  #tray { margin: 5px 0px 5px 5px; }
+      #hardware { margin: 5px 5px 5px 5px; }
 
-  #workspaces button,
-  #clock,
-  #custom-power-toggle,
-  #hardware { color: @text; }
+      #tray { margin: 5px 0px 5px 5px; }
 
-  #battery.warning,
-  #battery.critical,
-  #battery.urgent,
-  #cpu.critical,
-  #memory.critical { color: @warning; }
+      #workspaces button,
+      #clock,
+      #custom-power-toggle,
+      #hardware { color: @text; }
 
-  #battery,
-  #cpu,
-  #memory,
-  #custom-gpu,
-  #pulseaudio,
-  #tray { padding: 0px 7px; }
+      #battery.warning,
+      #battery.critical,
+      #battery.urgent,
+      #cpu.critical,
+      #memory.critical { color: @warning; }
 
-  #tray menu {
-      color: @text;
-      background: @capsule;
-  }
+      #battery,
+      #cpu,
+      #memory,
+      #custom-gpu,
+      #pulseaudio,
+      #tray { padding: 0px 7px; }
 
-  #workspaces button { padding: 0px 7px 0px 3px; }
+      #tray menu {
+          color: @text;
+          background: @capsule;
+      }
 
-  #custom-power-toggle,
-  #clock { padding: 0px 5px; }
-''
+      #workspaces button { padding: 0px 7px 0px 3px; }
+
+      #custom-power-toggle,
+      #clock { padding: 0px 5px; }
+    '';
+}

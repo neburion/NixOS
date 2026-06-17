@@ -2,11 +2,11 @@
 
 {
   imports = [
+    ./displays.nix
     ./fonts.nix
-    ./gaming.nix
+    ./gaming
     ./integrations
     ./quirks
-    ./remote-access.nix
     ./tools
     ./wm
   ];

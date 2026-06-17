@@ -1,6 +1,10 @@
-{ lib, ... }:
+{ pkgs, lib, ... }:
 
 {
+  home.packages = with pkgs; [
+    waypaper
+  ];
+
   # waypaper config is runtime-owned: waypaper writes back to it when the user
   # picks a wallpaper, and wofi-theme-switcher updates the folder line.
   # Created here on first activation only — never overwritten by HM.
@@ -15,7 +19,7 @@ folder = ~/Media/Wallpapers/Gruvbox
 monitors = All
 wallpaper = ~/Media/Wallpapers/Gruvbox/Gruvbox-Face.png
 show_path_in_tooltip = True
-backend = swww
+backend = awww
 fill = fill
 sort = name
 color = #ffffff

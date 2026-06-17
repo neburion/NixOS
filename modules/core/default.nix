@@ -2,9 +2,11 @@
 
 {
   imports = [
+    ./declarative-users.nix
     ./locale.nix
     ./nix.nix
-    ./security.nix
+    ./root.nix
     ./shell.nix
+    ./sudo.nix
   ];
 }

@@ -1,6 +1,6 @@
 {
   imports = [
-    ./modules.nix
+    ./user.nix
   ];
 
   home-manager.users.neburion.imports = [
@@ -9,6 +9,5 @@
     ../../home-modules/desktop/gaming
     ../../home-modules/cli
     ./dirs.nix
-    ../../home-modules/dev
   ];
 }

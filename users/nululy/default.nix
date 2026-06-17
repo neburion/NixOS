@@ -1,6 +1,6 @@
 {
   imports = [
-    ./modules.nix
+    ./user.nix
   ];
 
   home-manager.users.nululy.imports = [
@@ -8,6 +8,5 @@
     ../../home-modules/desktop
     ../../home-modules/cli
     ./dirs.nix
-    ../../home-modules/dev
   ];
 }
