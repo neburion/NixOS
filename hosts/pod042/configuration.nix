@@ -22,5 +22,9 @@
     ../../users/neburion
   ];
 
+  #temp
+  programs.fish.enable = true;
+  xdg.portal.enable = true;
+
   networking.hostName = "pod042";
 }
