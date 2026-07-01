@@ -25,7 +25,7 @@
   };
   outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
   let
-    themes = import ./home-modules/themes;
+    themes = import ./modules/home/themes;
 
     mkSystem = { host, system ? "x86_64-linux" }:
       nixpkgs.lib.nixosSystem {
