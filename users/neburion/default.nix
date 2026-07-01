@@ -6,41 +6,41 @@
   ];
 
   home-manager.users.neburion.imports = [
-    ../../modules/base.nix
-    ../../modules/shells/fish.nix
-    ../../modules/cli/neovim
-    ../../modules/cli/sperfile.nix
-    ../../modules/cli/compression.nix
-    ../../modules/cli/fastfetch.nix
-    ../../modules/cli/btop.nix
-    ../../modules/cli/packagers/flatpak.nix
-    ../../modules/cli/packagers/appimage.nix
-    ../../modules/cli/tree.nix
+    ../../modules/home/base.nix
+    ../../modules/home/shells/fish.nix
+    ../../modules/home/cli/neovim
+    ../../modules/home/cli/sperfile.nix
+    ../../modules/home/cli/compression.nix
+    ../../modules/home/cli/fastfetch.nix
+    ../../modules/home/cli/btop.nix
+    ../../modules/home/cli/packagers/flatpak.nix
+    ../../modules/home/cli/packagers/appimage.nix
+    ../../modules/home/cli/tree.nix
 
-    ../../modules/desktop/wm/hyprland
-    ../../modules/desktop/terminal/ghostty.nix
-    ../../modules/desktop/terminal/notifications/mako
-    ../../modules/desktop/terminal/launcher/wofi
-    ../../modules/desktop/terminal/wallpaper/awww.nix
-    ../../modules/desktop/clipboard/wl-clipboard.nix
-    ../../modules/desktop/theming/gtk
-    ../../modules/desktop/utils/nautilus.nix
-    ../../modules/desktop/utils/loup.nix
-    ../../modules/desktop/utils/celluloid.nix
-    ../../modules/desktop/utils/pavucontrol.nix
-    ../../modules/desktop/utils/libre-office.nix
-    ../../modules/desktop/utils/peripherals/razer-genie.nix
-    ../../modules/desktop/utils/peripherals/solaar.nix
+    ../../modules/home/desktop/wm/hyprland
+    ../../modules/home/desktop/terminal/ghostty.nix
+    ../../modules/home/desktop/terminal/notifications/mako
+    ../../modules/home/desktop/terminal/launcher/wofi
+    ../../modules/home/desktop/terminal/wallpaper/awww.nix
+    ../../modules/home/desktop/clipboard/wl-clipboard.nix
+    ../../modules/home/desktop/theming/gtk
+    ../../modules/home/desktop/utils/nautilus.nix
+    ../../modules/home/desktop/utils/loup.nix
+    ../../modules/home/desktop/utils/celluloid.nix
+    ../../modules/home/desktop/utils/pavucontrol.nix
+    ../../modules/home/desktop/utils/libre-office.nix
+    ../../modules/home/desktop/utils/peripherals/razer-genie.nix
+    ../../modules/home/desktop/utils/peripherals/solaar.nix
 
-    ../../modules/dev
-    ../../modules/gaming
-    ../../modules/art
+    ../../modules/home/dev
+    ../../modules/home/gaming
+    ../../modules/home/art
 
-    ../../modules/apps/zen-browser.nix
-    ../../modules/apps/keepassxc.nix
-    ../../modules/apps/spotify.nix
-    ../../modules/apps/obsidian.nix
-    ../../modules/apps/vesktop.nix
+    ../../modules/home/apps/zen-browser.nix
+    ../../modules/home/apps/keepassxc.nix
+    ../../modules/home/apps/spotify.nix
+    ../../modules/home/apps/obsidian.nix
+    ../../modules/home/apps/vesktop.nix
   ];
 
   users.users.neburion = {
