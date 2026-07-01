@@ -18,6 +18,7 @@
     ../../modules/home/cli/tree.nix
 
     ../../modules/home/desktop/wm/hyprland
+    ../../modules/home/desktop/bar/waybar
     ../../modules/home/desktop/terminal/ghostty.nix
     ../../modules/home/desktop/notifications/mako
     ../../modules/home/desktop/launcher/wofi

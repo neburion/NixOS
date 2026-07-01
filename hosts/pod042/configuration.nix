@@ -18,6 +18,7 @@
     ../../modules/system/flatpak.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/xdg-user-dirs.nix
+    ../../modules/system/desktop
 
     ../../users/neburion
   ];
