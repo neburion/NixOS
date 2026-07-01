@@ -6,8 +6,6 @@
   ];
 
   home-manager.users.neburion.imports = [
-    ./dirs.nix
-
     ../../home-modules/base.nix
     ../../home-modules/shells/fish.nix
     ../../home-modules/cli/neovim
