@@ -13,8 +13,8 @@
     ../../modules/home/cli/compression.nix
     ../../modules/home/cli/fastfetch.nix
     ../../modules/home/cli/btop.nix
-    ../../modules/home/cli/packagers/flatpak.nix
-    ../../modules/home/cli/packagers/appimage.nix
+    ../../modules/home/cli/packager/flatpak.nix
+    ../../modules/home/cli/packager/appimage.nix
     ../../modules/home/cli/tree.nix
 
     ../../modules/home/desktop/wm/hyprland
