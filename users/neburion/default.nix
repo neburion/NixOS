@@ -21,7 +21,7 @@
     ../../modules/home/desktop/terminal/ghostty.nix
     ../../modules/home/desktop/notifications/mako
     ../../modules/home/desktop/launcher/wofi
-    ../../modules/home/desktop/wallpaper/awww.nix
+    ../../modules/home/desktop/wallpaper/awww
     ../../modules/home/desktop/clipboard/wl-clipboard.nix
     ../../modules/home/desktop/theming/gtk
     ../../modules/home/desktop/utils/nautilus.nix
