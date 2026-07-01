@@ -25,7 +25,7 @@
     ../../modules/home/desktop/clipboard/wl-clipboard.nix
     ../../modules/home/desktop/theming/gtk
     ../../modules/home/desktop/utils/nautilus.nix
-    ../../modules/home/desktop/utils/loup.nix
+    ../../modules/home/desktop/utils/loupe.nix
     ../../modules/home/desktop/utils/celluloid.nix
     ../../modules/home/desktop/utils/pavucontrol.nix
     ../../modules/home/desktop/utils/libre-office.nix
