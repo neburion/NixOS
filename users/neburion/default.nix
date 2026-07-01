@@ -7,7 +7,7 @@
 
   home-manager.users.neburion.imports = [
     ../../modules/home/base.nix
-    ../../modules/home/shells/fish.nix
+    ../../modules/home/shell/fish.nix
     ../../modules/home/cli/neovim
     ../../modules/home/cli/sperfile.nix
     ../../modules/home/cli/compression.nix
