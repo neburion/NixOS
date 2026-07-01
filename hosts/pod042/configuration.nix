@@ -24,7 +24,14 @@
 
   #temp
   programs.fish.enable = true;
-  xdg.portal.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+  environment.pathsToLink = [ 
+    "/share/applications" 
+    "/share/xdg-desktop-portal" 
+  ];
 
   networking.hostName = "pod042";
 }
