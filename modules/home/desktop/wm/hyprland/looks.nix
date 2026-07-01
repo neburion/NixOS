@@ -88,26 +88,33 @@
     master   = {new_status = "master";};
     misc     = {disable_hyprland_logo = true;};
     xwayland = {force_zero_scaling = true;};
-
-    # Hyprland 0.55: windowrule syntax is space-separated between rule and
-    # selectors; the legacy comma form ("float, title:...") errors as
-    # "invalid field float: missing a value", and `windowrulev2` is gone.
-    windowrule = [
-      # Picture in Picture
-      "float            title:^(Picture-in-Picture)$"
-      "pin              title:^(Picture-in-Picture)$"
-      "move 73% 72%     title:^(Picture-in-Picture)$"
-      # `keepaspectratio` was removed in Hyprland 0.55; manual resize no longer
-      # locks aspect ratio. The size rule below still sets the initial dimensions.
-      "size 426 240     title:^(Picture-in-Picture)$"
-
-      # Waypaper
-      "float            class:^(waypaper)$"
-      "size 800 540     class:^(waypaper)$"
-      "center           class:^(waypaper)$"
-
-      # Steam
-      "tile             title:^(Steam)$"
-    ];
   };
+
+  # Hyprland 0.55 dropped the old flat windowrule syntax; rules now use blocks
+  # with a mandatory `name` key. The settings.windowrule list generates the old
+  # format which is silently ignored, so these live in extraConfig instead.
+  wayland.windowManager.hyprland.extraConfig = ''
+    windowrule {
+      name  = pip
+      float = true
+      pin   = true
+      move  = 73% 72%
+      size  = 426 240
+      match:title = ^(Picture-in-Picture)$
+    }
+
+    windowrule {
+      name   = waypaper
+      float  = true
+      size   = 800 540
+      center = true
+      match:class = ^(waypaper)$
+    }
+
+    windowrule {
+      name = steam
+      tile = true
+      match:title = ^(Steam)$
+    }
+  '';
 }
