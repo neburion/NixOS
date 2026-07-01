@@ -7,6 +7,7 @@
 
   home-manager.users.neburion.imports = [
     ../../modules/home/base.nix
+    ../../modules/home/cli/fonts.nix
     ../../modules/home/cli/shell/fish.nix
     ../../modules/home/cli/neovim
     ../../modules/home/cli/superfile.nix
