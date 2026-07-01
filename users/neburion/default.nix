@@ -19,9 +19,9 @@
 
     ../../modules/home/desktop/wm/hyprland
     ../../modules/home/desktop/terminal/ghostty.nix
-    ../../modules/home/desktop/terminal/notifications/mako
-    ../../modules/home/desktop/terminal/launcher/wofi
-    ../../modules/home/desktop/terminal/wallpaper/awww.nix
+    ../../modules/home/desktop/notifications/mako
+    ../../modules/home/desktop/launcher/wofi
+    ../../modules/home/desktop/wallpaper/awww.nix
     ../../modules/home/desktop/clipboard/wl-clipboard.nix
     ../../modules/home/desktop/theming/gtk
     ../../modules/home/desktop/utils/nautilus.nix
