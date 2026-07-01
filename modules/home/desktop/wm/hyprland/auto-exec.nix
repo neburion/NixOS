@@ -14,7 +14,7 @@
       # this, Proton/Wine games (Steam, Heroic) only see the internal panel's
       # 1080p modes and miss the external monitor's 1440p. Mark the external
       # as primary so its mode list reaches the games.
-      "${pkgs.xorg.xrandr}/bin/xrandr --output ${hostConfig.displays.monitors.external.name} --primary"
+      "${pkgs.xrandr}/bin/xrandr --output ${hostConfig.displays.monitors.external.name} --primary"
     ];
   };
 }
