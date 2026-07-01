@@ -1,0 +1,8 @@
+{ ... }:
+
+{
+  imports = [
+    ./heroic.nix
+    ./minecraft
+  ];
+}

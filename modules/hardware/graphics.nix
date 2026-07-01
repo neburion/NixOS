@@ -1,5 +1,0 @@
-{ ... }:
-
-{
-  hardware.graphics.enable = true;
-}

@@ -1,5 +1,0 @@
-{ ... }:
-
-{
-  gamingLauncher.enable = true;
-}

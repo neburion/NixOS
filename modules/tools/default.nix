@@ -1,7 +1,0 @@
-{ ... }:
-
-{
-  imports = [
-    ./nixflash.nix
-  ];
-}
