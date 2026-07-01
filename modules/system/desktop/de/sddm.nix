@@ -1,5 +1,10 @@
 { pkgs, ... }:
 {
+  services.displayManager.autoLogin = {
+    enable = true;
+    user   = "neburion";
+  };
+
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
