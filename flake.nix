@@ -42,7 +42,11 @@
               backupFileExtension = "backup";
               extraSpecialArgs = {
                 inherit zen-browser;
-                hostConfig = { name = host; };
+                hostConfig = {
+                  displays = {
+                    monitors = config.displays.monitors;
+                  };
+                };
               };
               sharedModules = [
                 nvf.homeManagerModules.default
