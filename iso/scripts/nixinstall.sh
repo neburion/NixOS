@@ -22,13 +22,19 @@ if ! curl -fsS --max-time 5 https://cache.nixos.org/ -o /dev/null; then
 fi
 
 STAGE=$(mktemp -d)
-trap 'rm -rf "$STAGE"' EXIT
+DISKO_TEMP=""
+cleanup() { rm -rf "$STAGE"; [[ -n "$DISKO_TEMP" ]] && rm -f "$DISKO_TEMP"; }
+trap cleanup EXIT
 
 printf "\n${GRN}Fetching config from GitHub...${NC}\n"
 git clone --depth 1 "$REPO_URL" "$STAGE/repo"
 
 mapfile -t HOSTS < <(ls "$STAGE/repo/hosts" | sort)
-mapfile -t USERS < <(ls "$STAGE/repo/users" 2>/dev/null | sort)
+if [[ -d "$STAGE/repo/users" ]]; then
+  mapfile -t USERS < <(ls "$STAGE/repo/users" | sort)
+else
+  USERS=()
+fi
 
 # ── HOST SELECTION ────────────────────────────────────────────────────────────
 printf "\n${YLW}Select host:${NC}\n"
@@ -150,7 +156,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Generate a temporary disko layout for partitioning
-DISKO_TEMP=$(mktemp /tmp/disk-layout.XXXXXX.nix)
+DISKO_TEMP=$(mktemp /tmp/disk-layout.XXXXXX.nix)  # cleanup registered in trap above
 
 cat > "$DISKO_TEMP" <<'NEOF'
 { disk ? "/dev/nvme0n1", ... }:
