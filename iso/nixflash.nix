@@ -9,7 +9,7 @@
       [[ ! -b "$DEVICE" ]] && { printf 'Error: %s is not a block device\n' "$DEVICE"; exit 1; }
 
       printf 'Building NixOS installer ISO (this may take a while)...\n'
-      ISO_DIR=$(nix build "$HOME/NixOS#nixosConfigurations.installer.config.system.build.isoImage" \
+      ISO_DIR=$(nix build "github:neburion/NixOS#nixosConfigurations.installer.config.system.build.isoImage" \
         --no-link --print-out-paths)
       ISO="$ISO_DIR/iso/$(ls "$ISO_DIR/iso/")"
       printf 'Built: %s\n\n' "$ISO"
