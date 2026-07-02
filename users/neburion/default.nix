@@ -43,6 +43,7 @@
     ../../modules/home/apps/spotify.nix
     ../../modules/home/apps/obsidian.nix
     ../../modules/home/apps/vesktop.nix
+    ../../modules/home/apps/signal.nix
   ];
 
   users.users.neburion = {
