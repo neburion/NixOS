@@ -117,7 +117,7 @@ in
       zed_theme="''${ZED_THEMES[$chosen]:-One Dark}"
       if [[ -f "$zed_settings" ]]; then
         tmp=$(mktemp)
-        ${pkgs.jq}/bin/jq --arg t "$zed_theme" '.theme.dark = $t' "$zed_settings" > "$tmp" && mv "$tmp" "$zed_settings"
+        ${pkgs.jq}/bin/jq --arg t "$zed_theme" '.theme.dark = $t | .theme.mode = "dark"' "$zed_settings" > "$tmp" && mv "$tmp" "$zed_settings"
       fi
 
       # GTK theme
