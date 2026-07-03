@@ -44,6 +44,7 @@
     ../../modules/home/apps/obsidian.nix
     ../../modules/home/apps/vesktop.nix
     ../../modules/home/apps/signal.nix
+    ../../modules/home/apps/localsend.nix
   ];
 
   users.users.neburion = {
