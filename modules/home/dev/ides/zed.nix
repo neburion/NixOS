@@ -8,6 +8,9 @@
       "toml"
       "zig"
       "odin"
+      "nord"
+      "everforest"
+      "catppuccin"
     ];
     extraPackages = with pkgs; [
       clang-tools  # clangd for C/C++

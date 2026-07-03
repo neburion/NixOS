@@ -9,4 +9,5 @@
   fishSecondary  = "#689d6a";
   superfileTheme = "gruvbox-dark-hard";
   nvimTheme      = "gruvbox";
+  zedTheme       = "Gruvbox Dark";
 }

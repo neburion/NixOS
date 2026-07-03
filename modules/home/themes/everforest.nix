@@ -9,4 +9,5 @@
   fishSecondary  = "#7fbbb3";
   superfileTheme = "everforest-dark-medium";
   nvimTheme      = "everforest";
+  zedTheme       = "Everforest Dark Medium (regular)";
 }

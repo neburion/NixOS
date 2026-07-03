@@ -9,4 +9,5 @@
   fishSecondary  = "#666666";
   superfileTheme = "onedark";
   nvimTheme      = "default";
+  zedTheme       = "One Dark";
 }

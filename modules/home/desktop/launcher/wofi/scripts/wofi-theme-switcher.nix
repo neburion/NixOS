@@ -26,6 +26,10 @@ let
     ''SUPERFILE_THEMES_MAP["${name}"]="${t.superfileTheme or name}"''
   ) themes);
 
+  zedThemeLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t:
+    ''ZED_THEMES["${name}"]="${t.zedTheme or "One Dark"}"''
+  ) themes);
+
   # GTK CSS files baked in the nix store (paths are deterministic nix strings).
   css = import ../../../theming/gtk/css.nix { inherit pkgs lib themes; };
 
@@ -52,6 +56,9 @@ in
 
       declare -A SUPERFILE_THEMES_MAP
       ${superfileThemeLines}
+
+      declare -A ZED_THEMES
+      ${zedThemeLines}
 
       # Initialize active files if missing
       [[ ! -f "$WOFI_THEMES/active.css" ]]        && ln -sf "$WOFI_THEMES/dark.css"   "$WOFI_THEMES/active.css"
@@ -103,6 +110,14 @@ in
       spf_theme="''${SUPERFILE_THEMES_MAP[$chosen]:-$chosen}"
       if [[ -f "$SUPERFILE_THEMES/$spf_theme.toml" ]]; then
         ln -sf "$SUPERFILE_THEMES/$spf_theme.toml" "$SUPERFILE_THEMES/active.toml"
+      fi
+
+      # Zed theme — patch .theme.dark in settings.json via jq
+      zed_settings="$HOME/.config/zed/settings.json"
+      zed_theme="''${ZED_THEMES[$chosen]:-One Dark}"
+      if [[ -f "$zed_settings" ]]; then
+        tmp=$(mktemp)
+        ${pkgs.jq}/bin/jq --arg t "$zed_theme" '.theme.dark = $t' "$zed_settings" > "$tmp" && mv "$tmp" "$zed_settings"
       fi
 
       # GTK theme
