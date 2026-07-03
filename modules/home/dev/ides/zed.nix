@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   programs.zed-editor = {
@@ -8,6 +8,14 @@
       "toml"
       "zig"
       "odin"
+    ];
+    extraPackages = with pkgs; [
+      clang-tools  # clangd for C/C++
+      rust-analyzer
+      zls
+      ols
+      nil          # nix LSP
+      pyright
     ];
     userSettings = {
       ui_font_size = 16;

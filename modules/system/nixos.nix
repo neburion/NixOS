@@ -15,6 +15,8 @@
     options   = "--delete-older-than 14d";
   };
 
+  programs.nix-ld.enable = true;
+
   # Initial nixos version on install — do not change.
   system.stateVersion = "25.11";
 }
