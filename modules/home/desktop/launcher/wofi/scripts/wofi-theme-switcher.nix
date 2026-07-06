@@ -49,6 +49,7 @@ in
       MAKO_THEMES="$HOME/.config/mako/themes"
       MAKO_CONFIG="$HOME/.config/mako/config"
       HYPR_THEMES="$HOME/.config/hypr/themes"
+      HYPRLOCK_THEMES="$HOME/.config/hypr/hyprlock-themes"
       GHOSTTY_THEMES="$HOME/.config/ghostty/themes"
       SUPERFILE_THEMES="$HOME/.config/superfile/theme"
       NVIM_THEMES="$HOME/.config/nvf/themes"
@@ -88,6 +89,9 @@ in
       # Hyprland shadow theme
       ln -sf "$HYPR_THEMES/$chosen.conf" "$HOME/.config/hypr/theme.conf"
       hyprctl reload
+
+      # Hyprlock theme
+      ln -sf "$HYPRLOCK_THEMES/$chosen.conf" "$HOME/.config/hypr/hyprlock-theme.conf"
 
       # Ghostty theme — write active.conf, then SIGUSR2 tells running
       # instances to reload their config in place (Ghostty ≥1.2).

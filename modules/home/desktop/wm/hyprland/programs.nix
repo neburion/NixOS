@@ -24,5 +24,7 @@
     "$musicPlayer"      = "spotify";
     "$gameLauncher"     = "heroic";
     "$steamLauncher"    = "steam";
+    "$locker"           = "hyprlock";
+    "$localSend"        = "localsend_app";
   };
 }

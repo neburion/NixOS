@@ -20,10 +20,7 @@ in
         "$shutdown") hypr-session-save; systemctl poweroff ;;
         "$reboot")   hypr-session-save; systemctl reboot ;;
         "$suspend")  systemctl suspend ;;
-        "$lock")     busctl call org.freedesktop.DisplayManager \
-                       /org/freedesktop/DisplayManager/Seat0 \
-                       org.freedesktop.DisplayManager.Seat \
-                       SwitchToGreeter ;;
+        "$lock")     hyprlock ;;
         "$logout")   hypr-session-save; hyprctl dispatch exit ;;
       esac
     '')

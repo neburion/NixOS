@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   services.displayManager.autoLogin = {
-    enable = true;
+    enable = false;
     user   = "neburion";
   };
 

@@ -12,5 +12,6 @@
     ./session.nix
     ./themes.nix
     ./screenshot-tools.nix
+    ./hyprlock.nix
   ];
 }
