@@ -11,6 +11,7 @@
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/touchpad.nix
     ../../modules/system/hardware/brightness.nix
+    ../../modules/system/hardware/logitech.nix
     ../../modules/system/locale.nix
     ../../modules/system/networking
     ../../modules/system/bluetooth.nix
