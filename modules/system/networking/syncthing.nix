@@ -13,7 +13,7 @@
         name = "gPhone";
       };
       devices.iPhone = {
-        id   = "UEQQRPE-PZV40AG-753CGEL-3Y3GCHX-YIBJ0EX-AULCQFG-AAKE523-KBJAGA0";
+        id   = "UEQQRPE-PZV4OAG-753CGEL-3Y3GCHX-YIBJOEX-AULCQFG-AAKE523-KBJAGAO";
         name = "iPhone";
       };
       folders."Sync" = {
