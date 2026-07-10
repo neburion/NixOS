@@ -5,6 +5,7 @@
     ./auto-exec.nix
     ./enable.nix
     ./env.nix
+    ./input.nix
     ./keybinds.nix
     ./looks.nix
     ./monitors.nix
