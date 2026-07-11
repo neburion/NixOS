@@ -20,6 +20,7 @@
     ../../modules/system/power-profiles.nix
     ../../modules/system/xdg-user-dirs.nix
     ../../modules/system/desktop
+    ../../modules/system/printing.nix
 
     ../../users/neburion
   ];
