@@ -66,7 +66,7 @@
       pod042 = mkSystem { host = "pod042"; };
 
       # Headless family print server (old i5 laptop).
-      print-server = mkSystem { host = "print-server"; withHomeManager = false; };
+      print-server = mkSystem { host = "print-server"; };
 
       # Live USB installer — build with:
       #   nix build .#nixosConfigurations.installer.config.system.build.isoImage

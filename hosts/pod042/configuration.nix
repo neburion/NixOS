@@ -14,13 +14,14 @@
     ../../modules/system/hardware/logitech.nix
     ../../modules/system/locale.nix
     ../../modules/system/networking
+    ../../modules/system/networking/localsend.nix
+    ../../modules/system/networking/syncthing.nix
     ../../modules/system/bluetooth.nix
     ../../modules/system/audio.nix
     ../../modules/system/flatpak.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/xdg-user-dirs.nix
     ../../modules/system/desktop
-    ../../modules/system/printing
 
     ../../users/neburion
   ];

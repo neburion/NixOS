@@ -4,6 +4,5 @@
   imports = [
     ./displays-layout.nix
     ./wifi-layout.nix
-    #./disk-layout.nix
   ];
 }

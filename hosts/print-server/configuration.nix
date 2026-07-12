@@ -3,43 +3,27 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./hardware-layout
 
     ../../modules/system/nixos.nix
     ../../modules/system/locale.nix
+    ../../modules/system/networking
     ../../modules/system/printing
+
+    ../../users/printer
   ];
 
   networking.hostName = "print-server";
-  networking.networkmanager.enable = true;
-  networking.networkmanager.ensureProfiles.profiles.home = {
-    connection = { id = "BELL096"; type = "wifi"; };
-    wifi = { mode = "infrastructure"; ssid = "BELL096"; };
-    wifi-security = { key-mgmt = "wpa-psk"; psk = "9FCC749DC624"; };
-    ipv4.method = "auto";
-    ipv6.method = "auto";
-  };
 
-  # UEFI + systemd-boot. Older BIOS-only laptops will need a GRUB switch.
   boot.loader = {
     systemd-boot.enable      = true;
     efi.canTouchEfiVariables = true;
   };
 
-  # SSH with password auth on for first login. Disable once keys are added.
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin        = "no";
-      PasswordAuthentication = true;
-    };
-  };
+  # networking/ssh.nix disables password auth; override until SSH keys are set up.
+  services.openssh.settings.PasswordAuthentication = lib.mkForce true;
 
   users.mutableUsers = false;
-  users.users.admin = {
-    isNormalUser    = true;
-    extraGroups     = [ "wheel" "networkmanager" ];
-    initialPassword = "1234";
-  };
   security.sudo.wheelNeedsPassword = true;
 
   # Always-on server: don't sleep or react to a closed lid.
@@ -62,5 +46,5 @@
     allowReboot = false;
   };
 
-  environment.systemPackages = with pkgs; [ vim htop ];
+  environment.systemPackages = with pkgs; [ htop ];
 }
