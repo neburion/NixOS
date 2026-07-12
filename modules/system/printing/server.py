@@ -15,7 +15,6 @@ STRINGS = {
         'copies': 'Copies',
         'paper': 'Paper size',
         'send': 'Send to printer',
-        'note': 'Canon MF3010 is a monochrome laser — everything prints black &amp; white.',
         'no_file': 'No file selected.',
         'bad_ext': 'Unsupported format: {ext}. Use PDF or an image.',
         'sent_one': 'Sent 1 copy to the printer.',
@@ -30,7 +29,6 @@ STRINGS = {
         'copies': 'Copies',
         'paper': 'Format papier',
         'send': 'Envoyer à l\'imprimante',
-        'note': 'Canon MF3010 est une imprimante laser monochrome — tout s\'imprime en noir et blanc.',
         'no_file': 'Aucun fichier sélectionné.',
         'bad_ext': 'Format non pris en charge : {ext}. Utilisez un PDF ou une image.',
         'sent_one': '1 copie envoyée à l\'imprimante.',
@@ -130,11 +128,6 @@ PAGE_TMPL = """<!DOCTYPE html>
   }}
   button:hover {{ background: var(--btn-bg-hover); }}
   button:active {{ transform: scale(.98); }}
-  .note {{
-    font-size: .85em;
-    color: var(--muted);
-    margin-top: -.75rem;
-  }}
   .msg {{
     padding: .75rem 1rem;
     border-radius: .5rem;
@@ -164,7 +157,6 @@ PAGE_TMPL = """<!DOCTYPE html>
       </select>
     </label>
     <button type=submit>{send}</button>
-    <p class=note>{note}</p>
   </form>
   {msg}
 </main>
