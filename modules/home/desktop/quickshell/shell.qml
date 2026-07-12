@@ -10,5 +10,4 @@ PanelWindow{
     anchors.right: true
     implicitHeight: 30
     color: "#000000"
-
 }

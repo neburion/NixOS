@@ -95,15 +95,24 @@ in
     drivers = [ pkgs.canon-cups-ufr2 ];
   };
 
-  # Canon UFR2 libraries hardcode /usr/share/{cnpkbidir,caepcm,ufr2filterr}.
-  # CUPS strips LD_PRELOAD from filter processes, so NIX_REDIRECTS won't work.
-  # Create real symlinks instead so the paths resolve unconditionally.
+  # Canon UFR2 libraries hardcode /usr/share/{cnpkbidir,caepcm,ufr2filterr,cngplp2}
+  # and /usr/bin/{cnpkmoduleufr2r,cnjbigufr2}. cnrsdrvufr2 has an LD_PRELOAD
+  # libredirect wrapper that would remap these paths, but it fails for cnjbigufr2
+  # (spawned with empty argv) — that child dies with ENOENT, closes its pipe, and
+  # SIGPIPEs cnrsdrvufr2, leaving cnpkmoduleufr2r orphaned in a busy read loop.
+  # Real symlinks make the redirect unnecessary and work regardless of libredirect.
   systemd.tmpfiles.rules = [
     "d /usr/share 0755 root root - -"
+    "d /usr/bin 0755 root root - -"
     "L+ /usr/share/cnpkbidir - - - - ${pkgs.canon-cups-ufr2}/share/cnpkbidir"
     "L+ /usr/share/caepcm - - - - ${pkgs.canon-cups-ufr2}/share/caepcm"
     "L+ /usr/share/ufr2filterr - - - - ${pkgs.canon-cups-ufr2}/share/ufr2filterr"
+    "L+ /usr/share/cngplp2 - - - - ${pkgs.canon-cups-ufr2}/share/cngplp2"
+    "L+ /usr/bin/cnjbigufr2 - - - - ${pkgs.canon-cups-ufr2}/bin/cnjbigufr2"
+    "L+ /usr/bin/cnpkmoduleufr2r - - - - ${pkgs.canon-cups-ufr2}/bin/cnpkmoduleufr2r"
   ];
+
+  environment.etc."cngplp2/options/options.conf".text = "";
 
   users.users.print-server = {
     isSystemUser = true;
