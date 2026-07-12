@@ -21,6 +21,9 @@
       spf  = "superfile";
       sspf = "sudo superfile";
 
+      # Quickshell
+      qs = "quickshell --path $HOME/NixOS/modules/home/desktop/quickshell";
+
       # Dev
       cddev = "cd ~/Projects/Dev";
       mkrepo = "gh repo create (basename $PWD) --public --source=. --remote=origin --push";
