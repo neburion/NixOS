@@ -7,7 +7,7 @@
     ./hardware-layout
 
     ../../modules/system/nixos.nix
-    ../../modules/system/boot
+    ../../modules/system/boot/lanzaboote.nix
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/touchpad.nix
     ../../modules/system/hardware/brightness.nix
