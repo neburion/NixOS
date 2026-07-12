@@ -34,8 +34,8 @@
     };
   };
 
-  users.mutableUsers = true;
-  users.users.neburion = {
+  users.mutableUsers = false;
+  users.users.admin = {
     isNormalUser    = true;
     extraGroups     = [ "wheel" "networkmanager" ];
     initialPassword = "printer";
