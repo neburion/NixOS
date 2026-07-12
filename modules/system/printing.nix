@@ -64,21 +64,14 @@ let
     text = "exec python3 ${serverPy}";
   };
 
-  # Run once after deploy to register the Canon MF3010 via USB
   nixprinter = pkgs.writeShellApplication {
     name = "nixprinter";
     runtimeInputs = [ pkgs.cups ];
     text = ''
-      if lpstat -p MF3010 &>/dev/null; then
-        echo "Printer MF3010 already configured."
-        exit 0
-      fi
+      URI="cnusbufr2:/dev/usb/lp0"
 
-      echo "Scanning for USB printers..."
-      URI=$(lpinfo -v 2>/dev/null | awk '/[Cc]anon|MF3010/{print $2; exit}')
-
-      if [[ -z "$URI" ]]; then
-        echo "Canon MF3010 not found. Make sure it is powered on and connected via USB."
+      if [[ ! -c /dev/usb/lp0 ]]; then
+        echo "Error: /dev/usb/lp0 not found. Is the printer powered on and usblp loaded?"
         exit 1
       fi
 
@@ -90,15 +83,27 @@ let
 
       lpadmin -p MF3010 -E -v "$URI" -m "$PPD" -D "Canon MF3010" -L "USB"
       lpoptions -d MF3010
-      echo "Done — MF3010 set as default printer."
+      echo "Done — MF3010 configured at $URI."
     '';
   };
 in
 {
+  boot.kernelModules = [ "usblp" ];
+
   services.printing = {
     enable = true;
     drivers = [ pkgs.canon-cups-ufr2 ];
   };
+
+  # Canon UFR2 libraries hardcode /usr/share/{cnpkbidir,caepcm,ufr2filterr}.
+  # CUPS strips LD_PRELOAD from filter processes, so NIX_REDIRECTS won't work.
+  # Create real symlinks instead so the paths resolve unconditionally.
+  systemd.tmpfiles.rules = [
+    "d /usr/share 0755 root root - -"
+    "L+ /usr/share/cnpkbidir - - - - ${pkgs.canon-cups-ufr2}/share/cnpkbidir"
+    "L+ /usr/share/caepcm - - - - ${pkgs.canon-cups-ufr2}/share/caepcm"
+    "L+ /usr/share/ufr2filterr - - - - ${pkgs.canon-cups-ufr2}/share/ufr2filterr"
+  ];
 
   users.users.print-server = {
     isSystemUser = true;

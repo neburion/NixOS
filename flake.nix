@@ -33,6 +33,9 @@
         specialArgs = { inherit zen-browser nvf inputs; };
         modules = [
           disko.nixosModules.disko
+          { nixpkgs.overlays = [(final: prev: {
+              canon-cups-ufr2 = final.callPackage ./modules/system/canon-cups-ufr2/package.nix {};
+            })]; }
           ./hosts/${host}/configuration.nix
           home-manager.nixosModules.home-manager
           ({ config, ... }: {
