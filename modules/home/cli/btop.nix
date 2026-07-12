@@ -1,8 +1,5 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    btop
-    claude-code
-  ];
+  home.packages = [ pkgs.btop ];
 }
