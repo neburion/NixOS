@@ -7,7 +7,8 @@
 
     ../../modules/system/nixos.nix
     ../../modules/system/locale.nix
-    ../../modules/system/networking
+    ../../modules/system/networking/networkmanager.nix
+    ../../modules/system/networking/ssh.nix
     ../../modules/system/printing
 
     ../../users/printer

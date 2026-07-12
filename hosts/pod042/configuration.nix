@@ -13,7 +13,8 @@
     ../../modules/system/hardware/brightness.nix
     ../../modules/system/hardware/logitech.nix
     ../../modules/system/locale.nix
-    ../../modules/system/networking
+    ../../modules/system/networking/networkmanager.nix
+    ../../modules/system/networking/ssh.nix
     ../../modules/system/networking/localsend.nix
     ../../modules/system/networking/syncthing.nix
     ../../modules/system/bluetooth.nix
