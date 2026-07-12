@@ -5,10 +5,11 @@ let
     name = "nixprinter";
     runtimeInputs = [ pkgs.cups ];
     text = ''
-      URI="cnusbufr2:/dev/usb/lp0"
-
-      if [[ ! -c /dev/usb/lp0 ]]; then
-        echo "Error: /dev/usb/lp0 not found. Is the printer powered on and usblp loaded?"
+      # Dynamically find the USB URI from CUPS
+      URI=$(lpinfo -v | grep -o 'usb://Canon/MF3010[^ ]*')
+      
+      if [[ -z "$URI" ]]; then
+        echo "Error: Canon MF3010 not found by CUPS via USB."
         exit 1
       fi
 
@@ -18,6 +19,7 @@ let
         exit 1
       fi
 
+      # Add the printer using the dynamic URI
       lpadmin -p MF3010 -E -v "$URI" -m "$PPD" -D "Canon MF3010" -L "USB"
       lpoptions -d MF3010
       echo "Done — MF3010 configured at $URI."
