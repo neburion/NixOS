@@ -15,8 +15,8 @@
     type           = "Application";
     categories     = [ "Graphics" "3DGraphics" ];
     mimeType       = [ "application/x-blender" ];
-    startupWMClass = "Blender";
     settings = {
+      StartupWMClass = "Blender";
       Keywords           = "3d;cg;modeling;animation;painting;sculpting;texturing;video editing;video tracking;rendering;render engine;cycles;python;";
       PrefersNonDefaultGPU = "false";
     };
