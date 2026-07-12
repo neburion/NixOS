@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./hardware-configuration.nix
     ./hardware-layout
 
     ../../modules/system/nixos.nix
@@ -17,12 +16,16 @@
     ../../modules/system/printing
 
     ../../users/printer
-  ];
+  ] ++ (if builtins.pathExists ./hardware-configuration.nix
+        then [ ./hardware-configuration.nix ]
+        else [ ]);
 
   networking.hostName = "print-server";
 
-  system.autoUpgrade = {
-    enable = true;
-    flake  = "github:neburion/NixOS#print-server";
-  };
+  # Auto-upgrade disabled: hosts/*/hardware-configuration.nix is now
+  # gitignored, so a github flake fetch would be missing it and boot
+  # into initrd emergency after activation. Re-enable once a wrapper
+  # is in place that git-pulls /etc/nixos and rebuilds against
+  # `path:/etc/nixos#print-server` (bypasses git-tracked-only filter).
+  system.autoUpgrade.enable = false;
 }

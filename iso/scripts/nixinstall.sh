@@ -137,15 +137,24 @@ if ! $NEW_HOST; then
     --arg disk "\"$DISK\""
 
   printf "\n${GRN}Placing config at %s...${NC}\n" "$TARGET"
-  mkdir -p "$(dirname "$TARGET")"
-  cp -r "$STAGE/repo" "$TARGET"
+  # -T so a pre-existing $TARGET dir is treated as the destination
+  # itself, not a parent to nest under (which would create
+  # $TARGET/repo/ on re-runs and leave the real config stale).
+  mkdir -p "$TARGET"
+  cp -rT "$STAGE/repo" "$TARGET"
 
   printf "\n${GRN}Generating hardware-configuration.nix...${NC}\n"
+  # Written to hosts/$HOST/ which is gitignored — the flake imports
+  # it via `builtins.pathExists ./hardware-configuration.nix` in the
+  # host's configuration.nix, so a github flake fetch (which lacks
+  # this file) won't clobber it.
   nixos-generate-config --root /mnt --show-hardware-config \
     > "$TARGET/hosts/$HOST/hardware-configuration.nix"
 
   printf "\n${GRN}Installing NixOS...${NC}\n"
-  nixos-install --flake "$TARGET#$HOST" --no-root-passwd
+  # `path:` scheme bypasses git-tracked-only filtering so the freshly
+  # generated (gitignored) hardware-configuration.nix is included.
+  nixos-install --flake "path:$TARGET#$HOST" --no-root-passwd
 
   printf "\n${GRN}Done. Reboot when ready.${NC}\n"
   exit 0

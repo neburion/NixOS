@@ -13,9 +13,9 @@
     shellAliases = {
       # NixOS
       cdnixos  = "cd $HOME/NixOS";
-      rebuild  = "sudo nixos-rebuild switch --flake $HOME/NixOS#(hostname -s)";
-      trebuild = "sudo nixos-rebuild test --flake $HOME/NixOS#(hostname -s)";
-      update   = "sudo nix flake update --flake $HOME/NixOS && sudo nixos-rebuild switch --flake $HOME/NixOS#(hostname -s)";
+      rebuild  = "sudo nixos-rebuild switch --flake path:$HOME/NixOS#(hostname -s)";
+      trebuild = "sudo nixos-rebuild test --flake path:$HOME/NixOS#(hostname -s)";
+      update   = "sudo nix flake update --flake $HOME/NixOS && sudo nixos-rebuild switch --flake path:$HOME/NixOS#(hostname -s)";
 
       # Superfile
       spf  = "superfile";

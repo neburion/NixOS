@@ -2,8 +2,6 @@
 
 {
   imports = [
-    ./hardware-configuration.nix
-
     ./hardware-layout
 
     ../../modules/system/nixos.nix
@@ -25,7 +23,9 @@
     ../../modules/system/desktop
 
     ../../users/neburion
-  ];
+  ] ++ (if builtins.pathExists ./hardware-configuration.nix
+        then [ ./hardware-configuration.nix ]
+        else [ ]);
 
   #temp
   programs.fish.enable = true;
