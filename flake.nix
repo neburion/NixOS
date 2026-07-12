@@ -27,7 +27,7 @@
   let
     themes = import ./modules/home/themes;
 
-    mkSystem = { host, system ? "x86_64-linux" }:
+    mkSystem = { host, system ? "x86_64-linux", withHomeManager ? true }:
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { inherit zen-browser nvf inputs; };
@@ -37,6 +37,7 @@
               canon-cups-ufr2 = final.callPackage ./modules/system/canon-cups-ufr2/package.nix {};
             })]; }
           ./hosts/${host}/configuration.nix
+        ] ++ nixpkgs.lib.optionals withHomeManager [
           home-manager.nixosModules.home-manager
           ({ config, ... }: {
             home-manager = {
@@ -63,6 +64,9 @@
   {
     nixosConfigurations = {
       pod042 = mkSystem { host = "pod042"; };
+
+      # Headless family print server (old i5 laptop).
+      print-server = mkSystem { host = "print-server"; withHomeManager = false; };
 
       # Live USB installer — build with:
       #   nix build .#nixosConfigurations.installer.config.system.build.isoImage
