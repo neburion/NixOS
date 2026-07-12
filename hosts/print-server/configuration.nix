@@ -11,6 +11,13 @@
 
   networking.hostName = "print-server";
   networking.networkmanager.enable = true;
+  networking.networkmanager.ensureProfiles.profiles.home = {
+    connection = { id = "BELL096"; type = "wifi"; };
+    wifi = { mode = "infrastructure"; ssid = "BELL096"; };
+    wifi-security = { key-mgmt = "wpa-psk"; psk = "9FCC749DC624"; };
+    ipv4.method = "auto";
+    ipv6.method = "auto";
+  };
 
   # UEFI + systemd-boot. Older BIOS-only laptops will need a GRUB switch.
   boot.loader = {
@@ -36,9 +43,11 @@
   security.sudo.wheelNeedsPassword = true;
 
   # Always-on server: don't sleep or react to a closed lid.
-  services.logind.lidSwitch              = "ignore";
-  services.logind.lidSwitchDocked        = "ignore";
-  services.logind.lidSwitchExternalPower = "ignore";
+  services.logind.settings.Login = {
+    HandleLidSwitch              = "ignore";
+    HandleLidSwitchDocked        = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+  };
   systemd.targets.sleep.enable        = false;
   systemd.targets.suspend.enable      = false;
   systemd.targets.hibernate.enable    = false;
