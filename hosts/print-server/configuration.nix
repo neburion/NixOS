@@ -11,7 +11,8 @@
     ../../modules/system/networking/networkmanager.nix
     ../../modules/system/networking/ssh.nix
     ../../modules/system/networking/ssh-password-auth.nix
-    ../../modules/system/server.nix
+    ../../modules/system/headless.nix
+    ../../modules/system/power-profiles.nix
     ../../modules/system/auto-upgrade.nix
     ../../modules/system/printing
 
