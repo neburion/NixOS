@@ -38,7 +38,7 @@
   users.users.admin = {
     isNormalUser    = true;
     extraGroups     = [ "wheel" "networkmanager" ];
-    initialPassword = "printer";
+    initialPassword = "1234";
   };
   security.sudo.wheelNeedsPassword = true;
 
