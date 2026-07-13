@@ -30,8 +30,10 @@ in
     isSystemUser = true;
     group = "print-server";
     extraGroups = [ "lp" ];
+    # Pinned so systemd's RuntimeDirectory=user/996 stays in sync.
+    uid = 996;
   };
-  users.groups.print-server = { };
+  users.groups.print-server = { gid = 996; };
 
   systemd.services.print-server = {
     description = "Web print server for Canon MF3010";
@@ -47,6 +49,11 @@ in
       # Let the non-root user bind port 80.
       AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
       CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+      # NixOS' soffice wrapper hardcodes `mkdir -p /run/user/$(id -u)/
+      # libreoffice-dbus` before consulting XDG_RUNTIME_DIR. Without a
+      # session, /run/user/996 doesn't exist and doc conversion fails.
+      RuntimeDirectory = "user/996";
+      RuntimeDirectoryMode = "0700";
     };
   };
 
