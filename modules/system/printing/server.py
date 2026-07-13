@@ -233,7 +233,7 @@ def print_file():
                  '--headless', '--convert-to', 'pdf',
                  '--outdir', tmpdir, upload],
                 capture_output=True, text=True, timeout=120,
-                env={**os.environ, 'HOME': tmpdir},
+                env={**os.environ, 'HOME': tmpdir, 'XDG_RUNTIME_DIR': tmpdir},
             )
             print_path = os.path.join(tmpdir, 'upload.pdf')
             if r.returncode != 0 or not os.path.exists(print_path):
