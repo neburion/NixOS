@@ -1,10 +1,13 @@
 from flask import Flask, request
-import subprocess, tempfile, os
+import subprocess, tempfile, os, shutil
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
-ALLOWED = {'.pdf', '.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp'}
+# Doc formats need LibreOffice to convert to PDF before CUPS can print them.
+DOC_EXTS = {'.docx', '.odt', '.doc', '.rtf'}
+IMG_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp'}
+ALLOWED = {'.pdf', '.txt'} | IMG_EXTS | DOC_EXTS
 PAGE_SIZES = ['A4', 'Letter', 'Legal', 'A5', 'Executive']
 
 STRINGS = {
@@ -144,7 +147,7 @@ PAGE_TMPL = """<!DOCTYPE html>
   <form method=post enctype=multipart/form-data action="/print?lang={lang}">
     <label>
       {file}
-      <input type=file name=file required accept=".pdf,.jpg,.jpeg,.png,.gif,.tiff,.bmp">
+      <input type=file name=file required accept=".pdf,.txt,.docx,.odt,.doc,.rtf,.jpg,.jpeg,.png,.gif,.tiff,.bmp">
     </label>
     <label>
       {copies}
@@ -216,19 +219,37 @@ def print_file():
     if media not in PAGE_SIZES:
         media = 'A4'
 
-    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
-        f.save(tmp.name)
-        path = tmp.name
-
+    tmpdir = tempfile.mkdtemp()
     try:
-        cmd = ['lp', '-n', str(copies), '-o', f'media={media}', path]
+        upload = os.path.join(tmpdir, 'upload' + ext)
+        f.save(upload)
+
+        if ext in DOC_EXTS:
+            # LibreOffice needs a writable user profile; scope it to tmpdir
+            # so we don't need HOME set for the print-server system user.
+            r = subprocess.run(
+                ['soffice',
+                 f'-env:UserInstallation=file://{tmpdir}/lo-profile',
+                 '--headless', '--convert-to', 'pdf',
+                 '--outdir', tmpdir, upload],
+                capture_output=True, text=True, timeout=120,
+                env={**os.environ, 'HOME': tmpdir},
+            )
+            print_path = os.path.join(tmpdir, 'upload.pdf')
+            if r.returncode != 0 or not os.path.exists(print_path):
+                err = (r.stderr or r.stdout).strip() or 'conversion failed'
+                return render(msg('err', 'error', err=err))
+        else:
+            print_path = upload
+
+        cmd = ['lp', '-n', str(copies), '-o', f'media={media}', print_path]
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode == 0:
             key = 'sent_one' if copies == 1 else 'sent_many'
             return render(msg('ok', key, n=copies))
         return render(msg('err', 'error', err=r.stderr.strip() or r.stdout.strip()))
     finally:
-        os.unlink(path)
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 if __name__ == '__main__':

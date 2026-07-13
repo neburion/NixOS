@@ -5,7 +5,8 @@ let
 
   printServer = pkgs.writeShellApplication {
     name = "print-server";
-    runtimeInputs = [ pythonEnv pkgs.cups ];
+    # libreoffice-still for .docx/.odt/.doc/.rtf → PDF conversion.
+    runtimeInputs = [ pythonEnv pkgs.cups pkgs.libreoffice-still ];
     text = "exec python3 ${./server.py}";
   };
 
