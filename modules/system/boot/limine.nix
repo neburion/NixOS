@@ -15,6 +15,19 @@
     secureBoot.enable = true;
     maxGenerations    = 10;
 
+    style = {
+      wallpapers     = [ ./limine-wallpaper.png ];
+      wallpaperStyle = "stretched";
+
+      interface = {
+        resolution   = "1920x1080";
+        branding     = "pod042";
+        brandingColor     = "CBA6F7";  # Catppuccin Mocha mauve
+        helpColor         = "89B4FA";  # Catppuccin Mocha blue
+        helpColorBright   = "B4BEFE";  # Catppuccin Mocha lavender
+      };
+    };
+
     # Chainload Windows Boot Manager. Limine doesn't auto-detect other OSes.
     extraEntries = ''
       /Windows
