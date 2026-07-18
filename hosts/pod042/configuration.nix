@@ -5,7 +5,8 @@
     ./hardware-layout
 
     ../../modules/system/nixos.nix
-    ../../modules/system/boot/lanzaboote.nix
+    #../../modules/system/boot/lanzaboote.nix  # kept as fallback; swap back if limine misbehaves
+    ../../modules/system/boot/limine.nix
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/touchpad.nix
     ../../modules/system/hardware/brightness.nix
