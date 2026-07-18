@@ -11,7 +11,7 @@
   boot.lanzaboote = {
     enable = true;
     pkiBundle = "/var/lib/sbctl";
-    configurationLimit = 1;  # only the latest NixOS generation shows in the boot menu
+    configurationLimit = 5;  # keep the last 5 generations for fallback
   };
 
   # sbctl: generates Secure Boot keys, enrolls them, verifies signatures.
