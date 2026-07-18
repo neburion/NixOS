@@ -13,7 +13,7 @@
     ../wallpaper/quickshell-nier
     ../tray-apps
     ../clipboard/wl-clipboard.nix
-    ../terminal/kitty-unit3.nix
+    ../terminal/ghostty-nier.nix
     ../theming/gtk
   ];
 

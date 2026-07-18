@@ -2,9 +2,8 @@
 
 {
   wayland.windowManager.hyprland = {
-    enable         = true;
-    configType     = "hyprlang";
-    systemd.enable = false;  # uwsm manages the session; home-manager's dbus exec-once conflicts
+    enable     = true;
+    configType = "hyprlang";
   };
 
   # Reload hyprland config (keybinds, looks, window-rules) after every rebuild.
