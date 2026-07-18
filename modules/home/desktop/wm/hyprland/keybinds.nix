@@ -10,7 +10,6 @@
       "$mod SHIFT, Space,  exec, $themeSwitcher"
       "$mod ALT,   Space,  exec, $powerMenu"
       "$mod,       F,      exec, $fileManager"
-      "$mod,       W,      exec, $wallpaperManager"
       "$mod,       A,      exec, $audioManager"
       "$mod SHIFT, Escape, exec, $taskManager"
       "$mod,       B,      exec, $webBrowser"
@@ -21,11 +20,10 @@
       "$mod,       G,      exec, $gameLauncher"
       "$mod SHIFT, G,      exec, $steamLauncher"
       "$mod,       P,      exec, keepassxc"
-      "$mod,       S,      exec, $localSend"
+      "$mod,       W,      exec, $wallpaperManager"
 
       # Windows
       "$mod,       Backspace, killactive"
-      "$mod SHIFT, S,         layoutmsg, togglesplit"
       "$mod,       T,         togglefloating"
       "$mod,       H,         movefocus, l"
       "$mod,       L,         movefocus, r"
@@ -61,8 +59,8 @@
       "$mod, Escape, exec, $locker"
 
       # Screenshot
-      ", Print, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
-      "SHIFT, Print, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
+      "$mod,       S, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
+      "$mod SHIFT, S, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
 
       # Audio
       "$mod, equal, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"

@@ -40,6 +40,7 @@ let
   gtk3CssLines = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: f:
     ''GTK3_CSS["${name}"]="${f}"''
   ) css.gtk3Files);
+
 in
 {
   home.packages = [
@@ -148,6 +149,12 @@ in
       ${fishColorLines}
       ${pkgs.fish}/bin/fish -c "set -U fish_theme_primary ''${FISH_PRIMARY[$chosen]}; set -U fish_theme_secondary ''${FISH_SECONDARY[$chosen]}" 2>/dev/null || true
 
+      # Spotify — switch spicetify color scheme and re-patch (restarts Spotify).
+      if command -v spicetify >/dev/null 2>&1; then
+        spicetify config colorscheme "$chosen" >/dev/null 2>&1 || true
+        spicetify apply >/dev/null 2>&1 || true
+      fi
+
       # Wallpaper pool: switch to this theme's dedicated folder and pick a random wallpaper.
       declare -A WALLPAPER_DIRS
       ${wallpaperDirLines}
@@ -174,13 +181,6 @@ in
       # Restart waybar, reload mako
       pkill waybar; waybar &
       makoctl reload
-
-      # Nautilus (libadwaita) reads ~/.config/gtk-4.0/gtk.css once at startup and
-      # has no live-reload signal. Closing the window isn't enough either: nautilus
-      # is a GApplication and stays running in the background, so a fresh window
-      # reuses the same cached style provider. `nautilus --quit` is the only way
-      # to fully terminate the process so the next launch reads the new CSS.
-      nautilus --quit 2>/dev/null || true
     '')
   ];
 }

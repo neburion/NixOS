@@ -1,5 +1,9 @@
-# THIS WILL ONLY WORK FOR POD042 DO NOT USE IN AN OTHER HOST
-{ ... }:
+{ config, lib, ... }:
+
+# Behavior module. Physical facts (bus IDs, external-display-on-dGPU flag,
+# open-vs-legacy kernel module) come from the host's environment layer at
+# hosts/<host>/hardware-layout/gpu-layout.nix. Import this module only on
+# hosts with an NVIDIA card.
 
 {
   hardware.graphics.enable = true;
@@ -9,25 +13,23 @@
   hardware.nvidia = {
     modesetting.enable     = true;
     powerManagement.enable = false;
-    # Open kernel module — Turing (RTX 20xx) and newer only. Flip to false
-    # if this config ever lands on a Pascal-or-older card.
-    open                   = true;
+    open                   = config.gpu.openKernelModule;
     nvidiaSettings         = true;
-  };
-  
-  hardware.nvidia.prime = {
-    offload = {
-      enable           = true;
-      enableOffloadCmd = true;
+
+    prime = {
+      offload = {
+        enable           = true;
+        enableOffloadCmd = true;
+      };
+      intelBusId  = config.gpu.prime.intelBusId;
+      nvidiaBusId = config.gpu.prime.nvidiaBusId;
     };
-    intelBusId  = "PCI:0:2:0";
-    nvidiaBusId = "PCI:1:0:0";
   };
 
-  # External monitor (HDMI) is on the dGPU; without this the driver scales the
-  # dGPU down to P8/~210MHz on idle, giving visible "wake-up" lag on the first
-  # input after a pause. 0x00 disables fine-grained runtime PM entirely.
-  boot.extraModprobeConfig = ''
+  # Without this, the driver scales the dGPU down to P8/~210MHz on idle,
+  # giving visible "wake-up" lag on the first input after a pause. Only
+  # applies when an external monitor is wired to the discrete GPU.
+  boot.extraModprobeConfig = lib.mkIf config.gpu.externalMonitorOnDgpu ''
     options nvidia NVreg_DynamicPowerManagement=0x00
   '';
 }

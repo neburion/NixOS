@@ -1,0 +1,7 @@
+module Modules
+Menu 1.0 Menu.qml
+Player 1.0 Player.qml
+Notifications 1.0 Notifications.qml
+VolumeBar 1.0 VolumeBar.qml
+ControlCenter 1.0 ControlCenter.qml
+WallpaperPicker 1.0 WallpaperPicker.qml

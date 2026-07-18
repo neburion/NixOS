@@ -22,8 +22,12 @@
       url = "github:nix-community/lanzaboote/001e560fffc8f0235e9db20ebeb4ccde0ade1caf";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, ... }@inputs:
+  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, ... }@inputs:
   let
     themes = import ./modules/home/themes;
 
@@ -33,6 +37,7 @@
         specialArgs = { inherit zen-browser nvf inputs; };
         modules = [
           disko.nixosModules.disko
+          { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
               canon-cups-ufr2 = final.callPackage ./modules/system/canon-cups-ufr2/package.nix {};
             })]; }
@@ -47,13 +52,13 @@
               extraSpecialArgs = {
                 inherit zen-browser;
                 hostConfig = {
-                  displays = {
-                    monitors = config.displays.monitors;
-                  };
+                  displays  = { monitors = config.displays.monitors; };
+                  backlight = config.backlight;
                 };
               };
               sharedModules = [
                 nvf.homeManagerModules.default
+                spicetify-nix.homeManagerModules.default
                 { _module.args.themes = themes; }
               ];
             };
