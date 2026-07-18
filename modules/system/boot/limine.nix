@@ -53,16 +53,18 @@ in
     maxGenerations    = 10;
 
     style = {
-      wallpapers     = [ ./limine-wallpaper.png ];
+      # No custom wallpaper → nixpkgs default dark-gray NixOS background applies.
       wallpaperStyle = "stretched";
 
       interface = {
         resolution        = "1920x1080";
         branding          = "pod042";
-        brandingColor     = "CBA6F7";
-        helpColor         = "89B4FA";
-        helpColorBright   = "B4BEFE";
+        brandingColor     = "FFFFFF";  # white
+        helpColor         = "777777";  # mid gray
+        helpColorBright   = "AAAAAA";  # light gray
       };
+
+      graphicalTerminal.font.scale = "2x2";
     };
 
     # Chainload Windows Boot Manager. Limine doesn't auto-detect other OSes.
