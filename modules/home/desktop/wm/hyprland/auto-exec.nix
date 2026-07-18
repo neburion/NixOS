@@ -4,7 +4,6 @@
     exec-once = [
       "$statusBar"
       "bt-agent"
-      "hypr-session-restore"
       "awww-daemon"
       "sleep 2; f=\"$HOME/.local/state/quickshell/wallpaper\"; [ -f \"$f\" ] && awww img \"$(cat \"$f\")\" --transition-type none || true"
 

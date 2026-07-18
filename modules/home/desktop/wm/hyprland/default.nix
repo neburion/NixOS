@@ -12,7 +12,6 @@
     ./monitors.nix
     ./programs.nix
     ./screenshot-tools.nix
-    ./session.nix
     ./themes.nix
     ./window-rules.nix
   ];
