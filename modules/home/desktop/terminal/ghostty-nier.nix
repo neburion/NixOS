@@ -4,6 +4,7 @@ let
   mkGhosttyTheme = c: ''
     background          = ${c.bg}
     foreground          = ${c.fg}
+    cursor-color        = ${c.fg}
     selection-background = ${c.selection}
     selection-foreground = ${c.fg}
   '';
@@ -12,17 +13,12 @@ in
   programs.ghostty = {
     enable = true;
     settings = {
-      font-family                = "Share Tech Mono";
-      font-size                  = 12;
-
-      # Unit-3 cursor: block, dark red, blinking
-      cursor-style               = "block";
-      cursor-color               = "#6e2a2a";
-      cursor-style-blink         = true;
-
+      font-family               = "FiraMono Nerd Font";
+      font-size                 = 11;
+      cursor-style              = "block";
       shell-integration-features = "no-cursor";
       # Points to the runtime-managed active theme file (owned by wofi-theme-switcher)
-      "config-file"              = "${config.home.homeDirectory}/.config/ghostty/themes/active.conf";
+      "config-file"             = "${config.home.homeDirectory}/.config/ghostty/themes/active.conf";
     };
   };
 
