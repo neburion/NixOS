@@ -24,6 +24,8 @@ STRINGS = {
         'sent_many': 'Sent {n} copies to the printer.',
         'error': 'Print error: {err}',
         'switch_to': 'FR',
+        'theme_to_light': 'LIGHT',
+        'theme_to_dark': 'DARK',
     },
     'fr': {
         'title': 'Imprimer',
@@ -38,22 +40,39 @@ STRINGS = {
         'sent_many': '{n} copies envoyées à l\'imprimante.',
         'error': 'Erreur d\'impression : {err}',
         'switch_to': 'EN',
+        'theme_to_light': 'CLAIR',
+        'theme_to_dark': 'SOMBRE',
     },
 }
 
 PAGE_TMPL = """<!DOCTYPE html>
-<html lang="{lang}">
+<html lang="{lang}" class="{theme_class}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <style>
+  /* Dark theme = default. Light theme applied via <html class="light">. */
   :root {{
     --fs: clamp(1rem, 0.9rem + 0.6vw, 1.25rem);
+    --bg: #1a1a1a;
+    --fg: #e5e5e5;
+    --muted: #999;
+    --border: #333;
+    --input-bg: #232323;
+    --btn-bg: #2a2a2a;
+    --btn-bg-hover: #3a3a3a;
+    --ok-bg: #14532d;
+    --ok-fg: #86efac;
+    --err-bg: #7f1d1d;
+    --err-fg: #fca5a5;
+  }}
+  :root.light {{
     --bg: #fafafa;
     --fg: #1a1a1a;
     --muted: #666;
     --border: #d0d0d0;
+    --input-bg: #ffffff;
     --btn-bg: #e5e7eb;
     --btn-bg-hover: #d1d5db;
     --ok-bg: #dcfce7;
@@ -79,10 +98,14 @@ PAGE_TMPL = """<!DOCTYPE html>
     max-width: 32rem;
     position: relative;
   }}
-  .lang {{
+  .toggles {{
     position: absolute;
     top: 0;
     right: 0;
+    display: flex;
+    gap: .35rem;
+  }}
+  .toggle {{
     font-size: .85em;
     font-weight: 600;
     text-decoration: none;
@@ -90,13 +113,13 @@ PAGE_TMPL = """<!DOCTYPE html>
     padding: .4rem .7rem;
     border: 1px solid var(--border);
     border-radius: .4rem;
-    background: white;
+    background: var(--input-bg);
   }}
-  .lang:hover {{ background: var(--btn-bg); }}
+  .toggle:hover {{ background: var(--btn-bg); }}
   h1 {{
     font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
     margin: 0 0 1.5rem;
-    padding-right: 3rem;
+    padding-right: 6.5rem;
   }}
   form {{
     display: flex;
@@ -114,7 +137,8 @@ PAGE_TMPL = """<!DOCTYPE html>
     padding: .6rem .75rem;
     border: 1px solid var(--border);
     border-radius: .5rem;
-    background: white;
+    background: var(--input-bg);
+    color: var(--fg);
     width: 100%;
   }}
   input[type=file] {{ padding: .5rem; }}
@@ -142,9 +166,12 @@ PAGE_TMPL = """<!DOCTYPE html>
 </head>
 <body>
 <main>
-  <a class=lang href="?lang={other_lang}">{switch_to}</a>
+  <div class=toggles>
+    <a class=toggle href="?lang={other_lang}&theme={theme}">{switch_to}</a>
+    <a class=toggle href="?lang={lang}&theme={other_theme}">{theme_label}</a>
+  </div>
   <h1>{heading}</h1>
-  <form method=post enctype=multipart/form-data action="/print?lang={lang}">
+  <form method=post enctype=multipart/form-data action="/print?lang={lang}&theme={theme}">
     <label>
       {file}
       <input type=file name=file required accept=".pdf,.txt,.docx,.odt,.doc,.rtf,.jpg,.jpeg,.png,.gif,.tiff,.bmp">
@@ -172,17 +199,29 @@ def pick_lang():
     return lang if lang in STRINGS else 'en'
 
 
+def pick_theme():
+    theme = request.args.get('theme', 'dark')
+    return theme if theme in ('dark', 'light') else 'dark'
+
+
 def render(msg=''):
     lang = pick_lang()
+    theme = pick_theme()
     s = STRINGS[lang]
-    other = 'fr' if lang == 'en' else 'en'
+    other_lang = 'fr' if lang == 'en' else 'en'
+    other_theme = 'light' if theme == 'dark' else 'dark'
+    theme_label = s['theme_to_light'] if theme == 'dark' else s['theme_to_dark']
     size_options = ''.join(
         f'<option value="{sz}"{" selected" if sz == "A4" else ""}>{sz}</option>'
         for sz in PAGE_SIZES
     )
     return PAGE_TMPL.format(
         lang=lang,
-        other_lang=other,
+        other_lang=other_lang,
+        theme=theme,
+        other_theme=other_theme,
+        theme_class='light' if theme == 'light' else '',
+        theme_label=theme_label,
         size_options=size_options,
         msg=msg,
         **s,
