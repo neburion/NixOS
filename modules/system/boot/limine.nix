@@ -1,11 +1,7 @@
 { config, pkgs, lib, ... }:
 
-# Limine bootloader with sbctl-signed Secure Boot. Reuses the sbctl keys
-# already generated for lanzaboote at /var/lib/sbctl — no re-enrollment
-# needed at the firmware level.
-#
-# Do NOT import this alongside lanzaboote — they both install a bootloader
-# to /boot, only one can be active. Swap imports in the host manifest.
+# Limine bootloader with sbctl-signed Secure Boot. Uses sbctl keys stored
+# at /var/lib/sbctl (enrolled once at the firmware level).
 
 let
   cfg = config.boot.loader.limine;

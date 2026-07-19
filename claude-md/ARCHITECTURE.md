@@ -44,7 +44,7 @@ Three layers, no leakage. Importing is enabling.
 
 | Host          | Purpose                       | Boot            | User(s)             |
 |---------------|-------------------------------|-----------------|---------------------|
-| `pod042`      | Main laptop                   | `lanzaboote`    | `neburion`          |
+| `pod042`      | Main laptop                   | `limine`        | `neburion`          |
 | `print-server`| Headless family print server  | `systemd-boot`  | `printer`           |
 | `installer`   | Live USB ISO                  | isoImage output | (built via `iso/`)  |
 
@@ -59,16 +59,15 @@ audio.nix                pipewire
 bluetooth.nix
 flatpak.nix
 power-profiles.nix
-xdg-user-dirs.nix
-auto-upgrade.nix         importing = enabling; opt-in per host
-headless.nix             enable for headless hosts
+always-on.nix            keep host awake: no lid handling, no sleep targets
 
-boot/                    grub, systemd-boot, lanzaboote (pick one)
-networking/              networkmanager, ssh, ssh-password-auth, syncthing, localsend
+boot/                    grub, systemd-boot, limine (pick one)
+networking/              networkmanager, ssh, syncthing, localsend
 hardware/                nvidia (reads config.gpu.*), touchpad, brightness, logitech
 shell/                   fish (system-level enable for user login shells)
-printing/                aggregator → canon.nix (CUPS + tmpfiles), web-server.nix
-                         (canon-cups-ufr2 overlay in ../canon-cups-ufr2/)
+printing/                aggregator → canon.nix (CUPS + tmpfiles), web-server.nix,
+                         canon-cups-ufr2/ (local overlay package: v6.00 driver
+                         + int→char patch, wired via flake overlay)
 desktop/                 aggregator → de/, fonts.nix, gaming/
 desktop/de/              dconf, hyprland (system-level), sddm, wayland-env, xdg-portal
 desktop/gaming/          steam
@@ -91,8 +90,9 @@ desktop/theming/gtk/     per-theme GTK packages + config/dconf/glib/css
 desktop/clipboard/       wl-clipboard
 desktop/terminal/        ghostty
 desktop/tray-apps/       libnotify (nm-applet/blueman replaced by native quickshell widgets)
-desktop/presets/         aggregator presets — hyprland-quickshell.nix (full stack),
-                         hyprland-waybar.nix (legacy/fallback)
+desktop/presets/         aggregator presets — hyprland-tmp.nix (NieR sepia
+                         rice), hyprland-minimal-qs.nix (plain quickshell),
+                         hyprland-minimal.nix (waybar legacy/fallback)
 desktop/bar/quickshell/  Bar, BarClock, BarWorkspaces, BarBattery, BarHardwareGroup,
                          BarTray, BarPowerToggle, BarWifi, BarBluetooth, Capsule widget
                          (each .nix owns its service singleton + widget; self-contained)
@@ -100,7 +100,7 @@ desktop/launcher/quickshell/  AppLauncher, ThemeSwitcher, PowerMenu
 desktop/notifications/quickshell/  NotificationCenter
 desktop/osd/quickshell/  OsdVolume, OsdBrightness (+ BrightnessState service)
 desktop/wallpaper/quickshell/  WallpaperPicker (+ WallpaperState service)
-desktop/quickshell/      shared core (imported by every component's default.nix;
+desktop/quickshell-shared/  shared core (imported by every component's default.nix;
                          NixOS module system deduplicates the import automatically)
                            core.nix — aggregator for shared infrastructure
                            package.nix — install quickshell + state dir activation
@@ -143,8 +143,8 @@ Each theme file is pure data — a palette + wallpaper dir + per-tool theme name
 `flake.nix` injects `themes` into every home-manager module via `_module.args.themes`.
 
 Consumers **generate their own artifacts** from `themes`. Examples:
-- `quickshell/themes.nix` — writes `Common/Theme.qml` with all palettes baked in.
-- `quickshell/theme-sync.nix` — writes `quickshell-theme-sync` script (GTK CSS paths baked in).
+- `quickshell-shared/themes.nix` — writes `Common/Theme.qml` with all palettes baked in.
+- `quickshell-shared/theme-sync.nix` — writes `quickshell-theme-sync` script (GTK CSS paths baked in).
 - `hyprland/themes.nix` — writes `xdg.configFile."hypr/themes/<name>.conf"` per palette.
 
 The **active** theme is owned by `Services/ThemeState.qml` (source of truth). Persisted to `~/.local/state/quickshell/active-theme`. On change: QML re-renders reactively, then `quickshell-theme-sync <name>` propagates to GTK, fish, ghostty, nvim, zed, superfile, SDDM, and wallpaper. Boot default is `dark`.
@@ -160,7 +160,7 @@ Declared and set per host under `hosts/<host>/hardware-layout/`:
 - `gpu.externalMonitorOnDgpu` : bool (disables fine-grained runtime PM if true)
 - `backlight.sysfsBrightnessPath` / `backlight.sysfsMaxBrightnessPath` : str (sysfs paths)
 
-Displays and backlight are surfaced to home-manager via `flake.nix` (`hostConfig.displays.monitors`, `hostConfig.backlight`). GPU options are read by `modules/system/hardware/nvidia.nix`. Backlight options are read by `quickshell/services/brightness-state.nix` (baked into QML at build time).
+Displays and backlight are surfaced to home-manager via `flake.nix` (`hostConfig.displays.monitors`, `hostConfig.backlight`). GPU options are read by `modules/system/hardware/nvidia.nix`. Backlight options are read by `quickshell-shared/services/brightness-state.nix` (baked into QML at build time).
 
 ## Conventions cheat sheet
 
@@ -186,7 +186,7 @@ Each quickshell component `default.nix` contributes its own variable(s):
 | `$powerMenu`        | `qs ipc call powerMenu toggle`           | `launcher/quickshell/default.nix`   |
 | `$wallpaperManager` | `qs ipc call wallpaperPicker toggle`     | `wallpaper/quickshell/default.nix`  |
 
-**Consequence:** importing `presets/hyprland-quickshell.nix` in `users/*/home.nix` automatically wires exec-once (starts the bar), all keybinds (launcher, theme, power, wallpaper) — without touching `keybinds.nix`, `auto-exec.nix`, or `programs.nix`.
+**Consequence:** importing `presets/hyprland-minimal-qs.nix` in `users/*/home.nix` automatically wires exec-once (starts the bar), all keybinds (launcher, theme, power, wallpaper) — without touching `keybinds.nix`, `auto-exec.nix`, or `programs.nix`.
 
 **Swap rule:** to replace quickshell with another shell, remove the quickshell import and add a new module that provides the same variables. `keybinds.nix` and `auto-exec.nix` update with zero changes.
 

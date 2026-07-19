@@ -1,4 +1,4 @@
-{ lib, themes, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
   # Lua snippet per nvimTheme name. Each must call any required setup() and
@@ -83,6 +83,20 @@ in
     if [ ! -e "$ACTIVE" ]; then
       mkdir -p "$(dirname "$ACTIVE")"
       ln -sf "$HOME/.config/nvf/themes/dark.lua" "$ACTIVE"
+    fi
+  '';
+
+  themeHooks.neovim = pkgs.writeShellScript "theme-hook-neovim" ''
+    theme="$1"
+    NVIM_THEMES="$HOME/.config/nvf/themes"
+    if [ -f "$NVIM_THEMES/$theme.lua" ]; then
+      ln -sf "$NVIM_THEMES/$theme.lua" "$NVIM_THEMES/active.lua"
+      runtime="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
+      for sock in "$runtime"/nvim-theme/*.sock; do
+        [ -S "$sock" ] || continue
+        ${pkgs.neovim-unwrapped}/bin/nvim --server "$sock" \
+          --remote-expr 'execute("ThemeReload")' >/dev/null 2>&1 || true
+      done
     fi
   '';
 }

@@ -5,6 +5,7 @@
     ../../modules/home/base.nix
     ../../modules/home/cli/fonts.nix
     ../../modules/home/cli/shell/fish.nix
+    ../../modules/home/cli/nixos-scripts.nix
     ../../modules/home/cli/neovim
     ../../modules/home/cli/superfile.nix
     ../../modules/home/cli/compression.nix
@@ -15,7 +16,7 @@
     ../../modules/home/cli/packager/appimage.nix
     ../../modules/home/cli/tree.nix
 
-    ../../modules/home/desktop/presets/hyprland-nier.nix
+    ../../modules/home/desktop/presets/hyprland-tmp.nix
     ../../modules/home/desktop/utils/nautilus.nix
     ../../modules/home/desktop/utils/loupe.nix
     ../../modules/home/desktop/utils/celluloid.nix

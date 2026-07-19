@@ -44,4 +44,12 @@ in
     };
     colorScheme = "dark";
   };
+
+  themeHooks.spotify = pkgs.writeShellScript "theme-hook-spotify" ''
+    theme="$1"
+    if command -v spicetify >/dev/null 2>&1; then
+      spicetify config colorscheme "$theme" >/dev/null 2>&1 || true
+      spicetify apply >/dev/null 2>&1 || true
+    fi
+  '';
 }

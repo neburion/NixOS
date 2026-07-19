@@ -1,3 +1,0 @@
-module Common
-singleton Theme 1.0 Theme.qml
-singleton Settings 1.0 Settings.qml

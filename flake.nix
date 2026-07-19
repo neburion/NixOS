@@ -18,10 +18,6 @@
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    lanzaboote = {
-      url = "github:nix-community/lanzaboote/001e560fffc8f0235e9db20ebeb4ccde0ade1caf";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,7 +35,7 @@
           disko.nixosModules.disko
           { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
-              canon-cups-ufr2 = final.callPackage ./modules/system/canon-cups-ufr2/package.nix {};
+              canon-cups-ufr2 = final.callPackage ./modules/system/printing/canon-cups-ufr2/package.nix {};
             })]; }
           ./hosts/${host}/configuration.nix
         ] ++ nixpkgs.lib.optionals withHomeManager [

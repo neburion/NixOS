@@ -1,5 +1,16 @@
-{ ... }:
+{ pkgs, lib, themes, ... }:
 
+let
+  strip = lib.removePrefix "#";
+  fishColorMap = lib.mapAttrs (_: t: {
+    primary   = strip (t.fishPrimary   or "#ffffff");
+    secondary = strip (t.fishSecondary or "#aaaaaa");
+  }) themes;
+
+  caseLines = lib.concatStringsSep "\n      " (lib.mapAttrsToList (n: c:
+    ''${n}) primary="${c.primary}"; secondary="${c.secondary}" ;;''
+  ) fishColorMap);
+in
 {
   programs.fish = {
     enable = true;
@@ -12,17 +23,16 @@
 
     shellAliases = {
       # NixOS
-      cdnixos  = "cd $HOME/NixOS";
-      rebuild  = "sudo nixos-rebuild switch --flake path:$HOME/NixOS#(hostname -s)";
-      trebuild = "sudo nixos-rebuild test --flake path:$HOME/NixOS#(hostname -s)";
-      update   = "sudo nix flake update --flake $HOME/NixOS && sudo nixos-rebuild switch --flake path:$HOME/NixOS#(hostname -s)";
+      cdnixos = "cd $HOME/NixOS";
+      # rebuild / trebuild / update: shell-agnostic scripts, see
+      # modules/home/cli/nixos-scripts.nix
 
       # Superfile
       spf  = "superfile";
       sspf = "sudo superfile";
 
       # Quickshell
-      qs = "quickshell --path $HOME/NixOS/modules/home/desktop/quickshell";
+      qs = "quickshell --path $HOME/NixOS/modules/home/desktop/quickshell-shared";
 
       # Dev
       cddev = "cd ~/Projects/Dev";
@@ -31,7 +41,7 @@
     };
 
     # Defaults match the `dark` theme (themes/dark.nix). Switching themes via
-    # wofi-theme-switcher overwrites these as universal variables.
+    # theme-set overwrites these as universal variables.
     interactiveShellInit = ''
       set -q fish_theme_primary;   or set -U fish_theme_primary   aaaaaa
       set -q fish_theme_secondary; or set -U fish_theme_secondary 666666
@@ -67,4 +77,17 @@
       };
     };
   };
+
+  themeHooks.fish = pkgs.writeShellScript "theme-hook-fish" ''
+    theme="$1"
+    primary="aaaaaa"
+    secondary="666666"
+    case "$theme" in
+      ${caseLines}
+      *) ;;
+    esac
+    ${pkgs.fish}/bin/fish -c \
+      "set -U fish_theme_primary $primary; set -U fish_theme_secondary $secondary" \
+      2>/dev/null || true
+  '';
 }

@@ -1,11 +1,10 @@
 { ... }:
 
-# Auto-upgrade intentionally NOT imported on this host.
-# hosts/*/hardware-configuration.nix is gitignored, so a github flake
-# fetch would be missing it and boot into initrd emergency after
-# activation. Re-import ../../modules/system/auto-upgrade.nix once a
-# wrapper is in place that git-pulls /etc/nixos and rebuilds against
-# `path:/etc/nixos#print-server` (bypasses git-tracked-only filter).
+# TODO: commit hosts/print-server/hardware-configuration.nix next time
+# work is done on the print-server itself. Until then, the conditional
+# import below tolerates its absence from this checkout — but any
+# rebuild MUST run on the print-server against a checkout that has the
+# real file, otherwise the build boots into initrd emergency.
 
 {
   imports = [
@@ -16,8 +15,7 @@
     ../../modules/system/boot/systemd-boot.nix
     ../../modules/system/networking/networkmanager.nix
     ../../modules/system/networking/ssh.nix
-    ../../modules/system/networking/ssh-password-auth.nix
-    ../../modules/system/headless.nix
+    ../../modules/system/always-on.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/printing
 

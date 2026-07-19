@@ -1,4 +1,4 @@
-{ lib, themes, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
   strip = lib.removePrefix "#";
@@ -87,6 +87,14 @@ in
       else
         ln -sf "$THEMES/dark.conf" "$LINK"
       fi
+    fi
+  '';
+
+  themeHooks.hyprlock = pkgs.writeShellScript "theme-hook-hyprlock" ''
+    theme="$1"
+    HYPRLOCK_THEMES="$HOME/.config/hypr/hyprlock-themes"
+    if [ -f "$HYPRLOCK_THEMES/$theme.conf" ]; then
+      ln -sf "$HYPRLOCK_THEMES/$theme.conf" "$HOME/.config/hypr/hyprlock-theme.conf"
     fi
   '';
 }

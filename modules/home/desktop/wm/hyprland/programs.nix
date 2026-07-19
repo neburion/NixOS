@@ -2,7 +2,7 @@
 
 # Stable app/util bindings. Shell-level vars ($statusBar, $appLauncher,
 # $themeSwitcher, $powerMenu) are declared by whichever shell module is
-# imported (e.g. modules/home/desktop/quickshell/hyprland.nix), not here.
+# imported (e.g. modules/home/desktop/quickshell-shared/hyprland.nix), not here.
 
 {
   wayland.windowManager.hyprland.settings = {

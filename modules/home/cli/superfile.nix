@@ -37,4 +37,17 @@ in
       fi
     fi
   '';
+
+  themeHooks.superfile = pkgs.writeShellScript "theme-hook-superfile" ''
+    theme="$1"
+    SPF_THEMES="$HOME/.config/superfile/theme"
+    spf_theme="hacks"
+    case "$theme" in
+      ${caseLines}
+      *) ;;
+    esac
+    if [ -f "$SPF_THEMES/$spf_theme.toml" ]; then
+      ln -sf "$SPF_THEMES/$spf_theme.toml" "$SPF_THEMES/active.toml"
+    fi
+  '';
 }

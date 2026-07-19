@@ -18,7 +18,7 @@ in
     lib.nameValuePair "hypr/themes/${name}.conf" { text = mkHyprTheme colors; }
   ) themes;
 
-  # Source the runtime-managed active theme (owned by wofi-theme-switcher)
+  # Source the runtime-managed active theme (owned by theme-set)
   wayland.windowManager.hyprland.extraConfig = ''
     source = ${config.home.homeDirectory}/.config/hypr/theme.conf
   '';
@@ -29,6 +29,15 @@ in
     if [ ! -e "$THEME" ]; then
       mkdir -p "$(dirname "$THEME")"
       ln -sf "$HOME/.config/hypr/themes/dark.conf" "$THEME"
+    fi
+  '';
+
+  themeHooks.hyprland = pkgs.writeShellScript "theme-hook-hyprland" ''
+    theme="$1"
+    HYPR_THEMES="$HOME/.config/hypr/themes"
+    if [ -f "$HYPR_THEMES/$theme.conf" ]; then
+      ln -sf "$HYPR_THEMES/$theme.conf" "$HOME/.config/hypr/theme.conf"
+      ${pkgs.hyprland}/bin/hyprctl reload >/dev/null 2>&1 || true
     fi
   '';
 }

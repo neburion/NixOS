@@ -16,6 +16,10 @@ let
   gtkCaseLines = lib.concatStringsSep "\n        " (lib.mapAttrsToList (n: gtk:
     ''${n}) theme="${gtk}" ;;''
   ) gtkThemeMap);
+
+  gtkHookCaseLines = lib.concatStringsSep "\n      " (lib.mapAttrsToList (n: gtk:
+    ''${n}) gtk_theme="${gtk}" ;;''
+  ) gtkThemeMap);
 in
 {
   # Depends on initHyprTheme so the hypr/theme.conf symlink exists on first run.
@@ -50,6 +54,35 @@ in
       if [ -n "$gtk3_css" ]; then
         install -D -m 644 "$gtk3_css" "$HOME/.config/gtk-3.0/gtk.css"
       fi
+    fi
+  '';
+
+  themeHooks.gtk = pkgs.writeShellScript "theme-hook-gtk" ''
+    theme="$1"
+    gtk4_css=""
+    gtk3_css=""
+    gtk_theme="Adwaita-dark"
+    case "$theme" in
+      ${gtk4CaseLines}
+      *) ;;
+    esac
+    case "$theme" in
+      ${gtk3CaseLines}
+      *) ;;
+    esac
+    case "$theme" in
+      ${gtkHookCaseLines}
+      *) ;;
+    esac
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(${pkgs.coreutils}/bin/id -u)/bus"
+    export XDG_RUNTIME_DIR="/run/user/$(${pkgs.coreutils}/bin/id -u)"
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" 2>/dev/null || true
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
+    if [ -n "$gtk4_css" ]; then
+      ${pkgs.coreutils}/bin/install -D -m 644 "$gtk4_css" "$HOME/.config/gtk-4.0/gtk.css"
+    fi
+    if [ -n "$gtk3_css" ]; then
+      ${pkgs.coreutils}/bin/install -D -m 644 "$gtk3_css" "$HOME/.config/gtk-3.0/gtk.css"
     fi
   '';
 }
