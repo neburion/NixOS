@@ -29,7 +29,7 @@ Three layers, no leakage. Importing is enabling.
 
 - **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts.nix`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
-- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. For pod042 the hardware-config is committed as of 2026-07-19; for print-server it still lives only on the host itself and MUST be rebuilt against its own `/etc/nixos`. Never `github:...` for print-server.
+- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and print-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
 
 ## Entry points
 
