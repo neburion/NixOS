@@ -18,6 +18,7 @@ Three layers, no leakage. Importing is enabling.
 
 1. **Manifests contain only imports.** No inline `programs.X.enable`, no `home.packages`, no `xdg.portal`. If it isn't an import, it belongs in a module.
 2. **Behavior modules never expose user-facing options.** Importing IS enabling. Variants become separate files, not `mkOption` toggles.
+   - *Documented exception:* `modules/home/desktop/quickshell-shared/registry.nix` declares `options.quickshell.{services, commons, modules, widgets, moduleInstantiations, shellExtraImports}`. These are **internal registration hooks** — each quickshell component contributes entries so `shell.nix` can materialize them into `~/.config/quickshell/main/`. Not user-facing knobs; they're the mechanism that lets a self-contained bar/launcher/OSD component register with the single quickshell process. Same latitude granted to Environment options.
 3. **Environment modules MAY declare options.** That's the layer's job — publish per-host facts (displays, disks, wifi, GPU bus IDs) that behavior modules read.
 4. **Cross-cutting data flows as module arguments,** not options. See `themes` injected in `flake.nix:55-58`.
 5. **`default.nix` is pure aggregation.** `imports = [ ... ]` and nothing else.
@@ -26,9 +27,9 @@ Three layers, no leakage. Importing is enabling.
 
 ### Operating rules (for me, Claude)
 
-- **Test every change.** After editing anything under this tree, run `sudo nixos-rebuild switch --flake path:$HOME/NixOS#pod042`. Don't hand off untested work.
+- **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts.nix`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
-- **Never rebuild from the github flake URL.** `hosts/*/hardware-configuration.nix` is gitignored — a `github:...` fetch would boot into initrd emergency. Always `path:$HOME/NixOS` or `path:/etc/nixos`.
+- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. For pod042 the hardware-config is committed as of 2026-07-19; for print-server it still lives only on the host itself and MUST be rebuilt against its own `/etc/nixos`. Never `github:...` for print-server.
 
 ## Entry points
 
@@ -148,6 +149,8 @@ Consumers **generate their own artifacts** from `themes`. Examples:
 - `hyprland/themes.nix` — writes `xdg.configFile."hypr/themes/<name>.conf"` per palette.
 
 The **active** theme is owned by `Services/ThemeState.qml` (source of truth). Persisted to `~/.local/state/quickshell/active-theme`. On change: QML re-renders reactively, then `quickshell-theme-sync <name>` propagates to GTK, fish, ghostty, nvim, zed, superfile, SDDM, and wallpaper. Boot default is `dark`.
+
+The **active wallpaper** follows the same pattern in `Services/WallpaperState.qml`: persisted to `~/.local/state/quickshell/wallpaper` (written by `quickshell-theme-sync` when the theme changes, or by the wallpaper picker directly). `WallpaperBackground.qml` watches this file and reacts with an 800ms crossfade. Same "singleton owns state, external consumers subscribe" pattern as the theme system.
 
 ## Environment options currently declared
 

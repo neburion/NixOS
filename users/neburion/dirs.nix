@@ -37,8 +37,9 @@ in
   systemd.user.tmpfiles.rules = map (d: "d %h/${d} 0755 - - -") dirs;
 
   home-manager.users.neburion.xdg.userDirs = {
-    enable            = true;
-    createDirectories = false;
+    enable               = true;
+    createDirectories    = false;
+    setSessionVariables  = true;
 
     documents   = "${home}/Docs";
     download    = "${home}/Downloads";

@@ -13,7 +13,6 @@
     ../../modules/home/cli/btop.nix
     ../../modules/home/cli/ai/claude-code.nix
     ../../modules/home/cli/packager/flatpak.nix
-    ../../modules/home/cli/packager/appimage.nix
     ../../modules/home/cli/tree.nix
 
     ../../modules/home/desktop/presets/hyprland-tmp.nix
