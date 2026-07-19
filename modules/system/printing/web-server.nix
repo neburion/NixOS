@@ -30,10 +30,14 @@ in
     isSystemUser = true;
     group = "print-server";
     extraGroups = [ "lp" ];
-    # Pinned so systemd's RuntimeDirectory=user/996 stays in sync.
+    # UID pinned so `RuntimeDirectory = "user/996"` below (which mirrors
+    # /run/user/$UID for LibreOffice's soffice wrapper) always matches
+    # this user's actual UID. GID is intentionally NOT pinned — RuntimeDirectory
+    # cares about UID only, and pinning GID 996 collided with polkituser
+    # (auto-created at 996 by the polkit module).
     uid = 996;
   };
-  users.groups.print-server = { gid = 996; };
+  users.groups.print-server = { };
 
   systemd.services.print-server = {
     description = "Web print server for Canon MF3010";
