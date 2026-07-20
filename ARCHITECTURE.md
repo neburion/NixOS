@@ -29,7 +29,8 @@ Three layers, no leakage. Importing is enabling.
 
 - **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts.nix`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
-- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and print-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
+- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and home-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
+- **Remote deploys to home-server.** From pod042: rsync `~/NixOS` to `home-admin@home-server.local:/home/home-admin/NixOS/`, then `ssh home-admin@home-server.local 'sudo nixos-rebuild switch --flake path:./NixOS#home-server'`. Sudo password on home-server = `1234` (matches `initialPassword`), pipe via `sudo -S`.
 
 ## Entry points
 
@@ -43,11 +44,11 @@ Three layers, no leakage. Importing is enabling.
 
 ## Hosts
 
-| Host          | Purpose                       | Boot            | User(s)             |
-|---------------|-------------------------------|-----------------|---------------------|
-| `pod042`      | Main laptop                   | `limine`        | `neburion`          |
-| `print-server`| Headless family print server  | `systemd-boot`  | `printer`           |
-| `installer`   | Live USB ISO                  | isoImage output | (built via `iso/`)  |
+| Host          | Purpose                                                | Boot            | User(s)             |
+|---------------|--------------------------------------------------------|-----------------|---------------------|
+| `pod042`      | Main laptop                                            | `limine`        | `neburion`          |
+| `home-server` | Headless family server: print/scan web UI + AdGuard    | `systemd-boot`  | `home-admin`        |
+| `installer`   | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
 
 ## Module tree (behavior layer)
 
@@ -66,9 +67,14 @@ boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend
 hardware/                nvidia (reads config.gpu.*), touchpad, brightness, logitech
 shell/                   fish (system-level enable for user login shells)
-printing/                aggregator → canon.nix (CUPS + tmpfiles), web-server.nix,
-                         canon-cups-ufr2/ (local overlay package: v6.00 driver
-                         + int→char patch, wired via flake overlay)
+printing/                aggregator → canon.nix (CUPS + tmpfiles), web-server.nix
+                         (Flask print/scan web UI on :80, PRG + multi-page SANE
+                         scan → PDF via img2pdf), canon-cups-ufr2/ (local overlay
+                         package: v6.00 driver + int→char patch, wired via flake
+                         overlay)
+adguard.nix              AdGuard Home DNS ad blocker on :53, admin UI on :3000,
+                         Quad9 DoH upstream, declarative filters + user_rules
+                         (mutableSettings=false, edit-and-rebuild for whitelist)
 desktop/                 aggregator → de/, fonts.nix, gaming/
 desktop/de/              dconf, hyprland (system-level), sddm, wayland-env, xdg-portal
 desktop/gaming/          steam
@@ -202,4 +208,5 @@ This mirrors how `hardware-layout/` auto-configures monitors: the per-host envir
 ## Known security debt
 
 - `hosts/*/hardware-layout/wifi-layout.nix` — wifi PSK in plaintext. Legitimate under Environment layer (per-host physical fact), but sensitive if the repo goes public. Migration path: `sops-nix` with SSH-host-key-derived age recipients.
-- `users/printer/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for a LAN-only family kiosk; not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.
+- `users/home-admin/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for a LAN-only family kiosk; not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.
+- `modules/system/adguard.nix` — bcrypt hash of `"1234"` for the AdGuard Home admin UI, inline in the module. Same trust boundary as the account password; both would be rotated together if this box ever left the LAN.

@@ -12,6 +12,7 @@
     ../../modules/system/always-on.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/printing
+    ../../modules/system/adguard.nix
 
     ../../users/home-admin
 
