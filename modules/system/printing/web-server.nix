@@ -5,8 +5,16 @@ let
 
   printServer = pkgs.writeShellApplication {
     name = "print-server";
-    # libreoffice-still for .docx/.odt/.doc/.rtf → PDF conversion.
-    runtimeInputs = [ pythonEnv pkgs.cups pkgs.libreoffice-still ];
+    # libreoffice-still: .docx/.odt/.doc/.rtf → PDF for printing.
+    # sane-backends: scanimage for the Canon MF3010 scanner (pixma backend).
+    # img2pdf: stitches per-page PNGs into a single multi-page PDF.
+    runtimeInputs = [
+      pythonEnv
+      pkgs.cups
+      pkgs.libreoffice-still
+      pkgs.sane-backends
+      pkgs.img2pdf
+    ];
     text = "exec python3 ${./server.py}";
   };
 
@@ -26,10 +34,15 @@ let
   };
 in
 {
+  # SANE for the MF3010 scanner side of the MFP. hardware.sane.enable also
+  # creates the "scanner" group and installs udev rules so the print-server
+  # user can access the USB scanner device without root.
+  hardware.sane.enable = true;
+
   users.users.print-server = {
     isSystemUser = true;
     group = "print-server";
-    extraGroups = [ "lp" ];
+    extraGroups = [ "lp" "scanner" ];
     # UID pinned so `RuntimeDirectory = "user/996"` below (which mirrors
     # /run/user/$UID for LibreOffice's soffice wrapper) always matches
     # this user's actual UID. GID is intentionally NOT pinned — RuntimeDirectory
