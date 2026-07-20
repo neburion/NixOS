@@ -66,8 +66,9 @@
     nixosConfigurations = {
       pod042 = mkSystem { host = "pod042"; };
 
-      # Headless family print server (old i5 laptop).
-      print-server = mkSystem { host = "print-server"; };
+      # Headless home server (old i5 laptop). Currently: family print/scan
+      # web UI. Planned: network-wide DNS ad blocker and other LAN services.
+      home-server = mkSystem { host = "home-server"; };
 
       # Live USB installer — build with:
       #   nix build .#nixosConfigurations.installer.config.system.build.isoImage

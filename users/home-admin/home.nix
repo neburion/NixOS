@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  home-manager.users.printer.imports = [
+  home-manager.users.home-admin.imports = [
     ../../modules/home/base.nix
     ../../modules/home/cli/shell/fish.nix
     ../../modules/home/cli/nixos-scripts.nix

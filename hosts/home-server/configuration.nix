@@ -13,7 +13,7 @@
     ../../modules/system/power-profiles.nix
     ../../modules/system/printing
 
-    ../../users/printer
+    ../../users/home-admin
 
     ./hardware-configuration.nix
   ];

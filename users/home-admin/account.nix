@@ -5,7 +5,7 @@
 # after first login is a no-op because /etc/shadow is on the writable rootfs.
 
 {
-  users.users.printer = {
+  users.users.home-admin = {
     isNormalUser    = true;
     extraGroups     = [ "wheel" "networkmanager" ];
     shell           = pkgs.fish;
