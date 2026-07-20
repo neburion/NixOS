@@ -1,16 +1,20 @@
 { pkgs, lib, ... }:
 
-# Network-wide DNS ad blocker (AdGuard Home).
+# Network-wide DNS ad blocker (AdGuard Home) + LAN DHCP server.
 #
-# Bell HH3000 acts as a DNS forwarder: every client on the LAN queries the
-# router (192.168.2.1), which in turn forwards to whatever is configured
-# under Modem → DNS on the router UI. Point that at this box (192.168.2.164)
-# and every DNS lookup on the network runs through AdGuard — no per-device
-# config, no DHCP option changes.
+# Setup constraint: Bell HH3000 doesn't forward client DNS through its
+# "Modem→DNS" setting (well-documented community finding), so pointing
+# the router at us doesn't achieve network-wide blocking. The working
+# pattern for HH3000 is: turn OFF Bell's DHCP, run DHCP here, advertise
+# ourselves as DNS via DHCP option 6. Clients then query AdGuard the
+# "correct" way — DHCP-issued DNS server.
 #
 # Fully declarative — mutableSettings = false. Whitelisting a domain means
 # editing this file (add to user_rules) and running `rebuild`, not clicking
-# in the web UI. That's intentional: laptop-loss doesn't erase state.
+# in the web UI. That's intentional: laptop-loss doesn't erase state. The
+# DHCP LEASE TABLE (which device has which IP) is by nature runtime state
+# and lives under /var/lib/AdGuardHome; that's fine, it's operational data
+# not configuration.
 #
 # Admin UI:  http://home-server.local:3000   user: home-admin  pw: 1234
 # LAN-only trust boundary (same as the print/scan UI); if this ever leaves
@@ -92,9 +96,17 @@ in
       user_rules = [
       ];
 
-      # We are NOT running DHCP here — Bell's router keeps that job.
-      # Turning this on would compete with the router's DHCP and break
-      # the LAN.
+      # DHCP server: disabled. We attempted the community-standard "turn
+      # off Bell DHCP, let AdGuard hand out leases" pattern (see
+      # https://discourse.pi-hole.net/t/bell-home-hub-3000-setup-problems/1012),
+      # but hit a Bell HH3000 quirk where a device with a static IP and
+      # no active DHCP lease gets its outbound-to-WAN traffic blocked
+      # (ARP INCOMPLETE / silent drops). Documented in [[project-bell-hh3000]].
+      #
+      # Falling back to: Bell keeps DHCP, AdGuard is DNS-only. Devices
+      # that want ad blocking need to point their DNS at this box
+      # manually (see admin UI clients page, or per-device wifi settings).
+      # Not network-wide, but doesn't fight Bell.
       dhcp = { enabled = false; };
 
       schema_version = 27;
@@ -109,8 +121,8 @@ in
     RestartSec = lib.mkForce 5;
   };
 
-  # openFirewall above only opens the admin UI port (3000). Port 53 is the
-  # entire point of this module — open it explicitly for both protocols.
+  # openFirewall above only opens the admin UI port (3000). Open :53 (DNS)
+  # and :67 (DHCP server) explicitly. DHCP uses UDP only.
   networking.firewall.allowedTCPPorts = [ 53 ];
-  networking.firewall.allowedUDPPorts = [ 53 ];
+  networking.firewall.allowedUDPPorts = [ 53 67 ];
 }
