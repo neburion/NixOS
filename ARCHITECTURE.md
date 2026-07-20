@@ -47,7 +47,7 @@ Three layers, no leakage. Importing is enabling.
 | Host          | Purpose                                                | Boot            | User(s)             |
 |---------------|--------------------------------------------------------|-----------------|---------------------|
 | `pod042`      | Main laptop                                            | `limine`        | `neburion`          |
-| `home-server` | Headless family server: print/scan web UI + AdGuard    | `systemd-boot`  | `home-admin`        |
+| `home-server` | Headless family server: print/scan web UI              | `systemd-boot`  | `home-admin`        |
 | `installer`   | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
 
 ## Module tree (behavior layer)
@@ -72,9 +72,6 @@ printing/                aggregator → canon.nix (CUPS + tmpfiles), web-server.
                          scan → PDF via img2pdf), canon-cups-ufr2/ (local overlay
                          package: v6.00 driver + int→char patch, wired via flake
                          overlay)
-adguard.nix              AdGuard Home DNS ad blocker on :53, admin UI on :3000,
-                         Quad9 DoH upstream, declarative filters + user_rules
-                         (mutableSettings=false, edit-and-rebuild for whitelist)
 desktop/                 aggregator → de/, fonts.nix, gaming/
 desktop/de/              dconf, hyprland (system-level), sddm, wayland-env, xdg-portal
 desktop/gaming/          steam
@@ -209,4 +206,3 @@ This mirrors how `hardware-layout/` auto-configures monitors: the per-host envir
 
 - `hosts/*/hardware-layout/wifi-layout.nix` — wifi PSK in plaintext. Legitimate under Environment layer (per-host physical fact), but sensitive if the repo goes public. Migration path: `sops-nix` with SSH-host-key-derived age recipients.
 - `users/home-admin/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for a LAN-only family kiosk; not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.
-- `modules/system/adguard.nix` — bcrypt hash of `"1234"` for the AdGuard Home admin UI, inline in the module. Same trust boundary as the account password; both would be rotated together if this box ever left the LAN.
