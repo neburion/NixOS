@@ -32,8 +32,10 @@
     ../../modules/home/apps/keepassxc.nix
     ../../modules/home/apps/spotify.nix
     ../../modules/home/apps/obsidian.nix
+    ../../modules/home/apps/marktext.nix
     ../../modules/home/apps/vesktop.nix
     ../../modules/home/apps/signal.nix
     ../../modules/home/apps/localsend.nix
+    ../../modules/home/apps/thunderbird.nix
   ];
 }

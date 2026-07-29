@@ -12,5 +12,6 @@
     ./themes.nix
     ./services/theme-state.nix
     ./services/audio.nix
+    ./services/monitor-rotation.nix
   ];
 }

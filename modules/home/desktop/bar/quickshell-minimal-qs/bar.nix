@@ -28,6 +28,7 @@
                 spacing: 6
                 BarClock { }
                 BarPowerToggle { }
+                BarMonitorToggle { }
             }
 
             BarWorkspaces {

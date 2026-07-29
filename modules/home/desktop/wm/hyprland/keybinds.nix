@@ -73,6 +73,14 @@
       "$mod, mouse:273, resizewindow"
     ];
 
+    # Resize active window: SUPER+CTRL+hjkl, 40px steps, hold-to-repeat.
+    binde = [
+      "$mod CTRL, H, resizeactive, -40 0"
+      "$mod CTRL, L, resizeactive,  40 0"
+      "$mod CTRL, K, resizeactive,  0 -40"
+      "$mod CTRL, J, resizeactive,  0  40"
+    ];
+
     bindel = [
       # Laptop keys
       ",XF86AudioRaiseVolume,  exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"

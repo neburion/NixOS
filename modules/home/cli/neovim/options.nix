@@ -8,6 +8,7 @@
       tabstop = 4;
       shiftwidth = 4;
       expandtab = true;
+      clipboard = "unnamedplus";
     };
 
     luaConfigRC.nix-indentation = ''

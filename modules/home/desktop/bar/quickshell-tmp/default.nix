@@ -13,10 +13,10 @@
     ./clock.nix
     ./hardware.nix
     ./power-toggle.nix
+    ./monitor-toggle.nix
     ./tray.nix
     ./wifi.nix
     ./workspaces.nix
-    ./window-title.nix
     ./ticker.nix
     ./bar.nix
     ./scripts

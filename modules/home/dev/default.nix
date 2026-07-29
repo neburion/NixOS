@@ -8,5 +8,6 @@
     ./git.nix
     ./gcloud.nix
     ./direnv.nix
+    ./tokei.nix
   ];
 }

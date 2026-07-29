@@ -3,7 +3,11 @@
 let
   monitors = hostConfig.displays.monitors;
 
-  mkMonitorLine = m: "${m.name}, ${m.mode}, ${m.position}, ${m.scale}";
+  mkMonitorLine = m:
+    let
+      base = "${m.name}, ${m.mode}, ${m.position}, ${m.scale}";
+    in
+    if m ? transform then "${base}, transform, ${toString m.transform}" else base;
 in
 {
   wayland.windowManager.hyprland.settings = {

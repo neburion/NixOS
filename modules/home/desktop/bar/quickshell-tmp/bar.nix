@@ -31,7 +31,7 @@
                 color:  Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.3)
             }
 
-            // Left: workspaces + active window title
+            // Left: workspaces | tray | quick-action toggles
             Row {
                 anchors.left:           parent.left
                 anchors.leftMargin:     12
@@ -45,13 +45,21 @@
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                BarWindowTitle { }
+                BarTray { }
+
+                Rectangle {
+                    width: 1; height: 14; color: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.3)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                BarPowerToggle { }
+                BarMonitorToggle { }
             }
 
             // Center: katakana ticker
             BarTicker { anchors.centerIn: parent }
 
-            // Right: hardware | wifi | bluetooth | clock | power
+            // Right: hardware | wifi | bluetooth
             Row {
                 anchors.right:          parent.right
                 anchors.rightMargin:    12
@@ -64,10 +72,6 @@
 
                 BarWifi { }
                 BarBluetooth { }
-
-                Rectangle { width: 1; height: 14; color: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.3); anchors.verticalCenter: parent.verticalCenter }
-
-                BarPowerToggle { }
             }
         }
     }
