@@ -12,6 +12,7 @@
     ./looks.nix
     ./monitors.nix
     ./programs.nix
+    ./rotation.nix
     ./screenshot-tools.nix
     ./themes.nix
     ./window-rules.nix

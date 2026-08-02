@@ -14,6 +14,7 @@
     ../hyprland/lid.nix
     ../hyprland/monitors.nix
     ../hyprland/programs.nix
+    ../hyprland/rotation.nix
     ../hyprland/screenshot-tools.nix
     ../hyprland/session.nix
     ../hyprland/themes.nix

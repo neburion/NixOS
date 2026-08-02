@@ -23,7 +23,7 @@ in
         readonly property string monMode:  "${ext.mode}"
         readonly property string monPos:   "${ext.position}"
         readonly property string monScale: "${ext.scale}"
-        readonly property string statePath: Quickshell.env("HOME") + "/.local/state/monitor-external-transform"
+        readonly property string statePath: Quickshell.env("HOME") + "/.local/state/monitor-transforms/" + monName
 
         property int transform: 0
         property bool loaded: false
@@ -61,6 +61,21 @@ in
                 "sh", statePath, String(root.transform)
             ];
             persister.running = true;
+        }
+
+        // Migrate legacy single-file state to the per-monitor path (one-shot).
+        Process {
+            id: migrator
+            command: [
+                "sh", "-c",
+                "old=\"$HOME/.local/state/monitor-external-transform\"; " +
+                "new=\"$1\"; " +
+                "if [ -f \"$old\" ] && [ ! -f \"$new\" ]; then " +
+                "  mkdir -p \"$(dirname \"$new\")\" && mv \"$old\" \"$new\"; " +
+                "fi",
+                "sh", statePath
+            ]
+            running: true
         }
 
         function toggle() {
