@@ -11,6 +11,7 @@
     ./hyprlock.nix
     ../hyprland/input.nix
     ../hyprland/keybinds.nix
+    ../hyprland/lid.nix
     ../hyprland/monitors.nix
     ../hyprland/programs.nix
     ../hyprland/screenshot-tools.nix

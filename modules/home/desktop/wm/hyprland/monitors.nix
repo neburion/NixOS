@@ -13,6 +13,7 @@ in
   wayland.windowManager.hyprland.settings = {
     "$builtInMonitor"  = monitors.builtin.name;
     "$externalMonitor" = monitors.external.name or monitors.builtin.name;
+    "$secondaryMonitor" = monitors.secondary.name or monitors.builtin.name;
 
     monitor = lib.mapAttrsToList (_: mkMonitorLine) monitors;
   };

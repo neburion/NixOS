@@ -8,6 +8,7 @@
     ./hyprlock.nix
     ./input.nix
     ./keybinds.nix
+    ./lid.nix
     ./looks.nix
     ./monitors.nix
     ./programs.nix
