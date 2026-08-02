@@ -13,6 +13,7 @@
     ../hyprland/keybinds.nix
     ../hyprland/lid.nix
     ../hyprland/monitors.nix
+    ../hyprland/movement.nix
     ../hyprland/programs.nix
     ../hyprland/rotation.nix
     ../hyprland/screenshot-tools.nix

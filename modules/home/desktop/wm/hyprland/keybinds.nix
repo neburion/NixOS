@@ -22,17 +22,9 @@
       "$mod,       P,      exec, keepassxc"
       "$mod,       W,      exec, $wallpaperManager"
 
-      # Windows
+      # Windows (H/J/K/L focus + Shift-move: see movement.nix for cross-monitor)
       "$mod,       Backspace, killactive"
       "$mod,       T,         togglefloating"
-      "$mod,       H,         movefocus, l"
-      "$mod,       L,         movefocus, r"
-      "$mod,       K,         movefocus, u"
-      "$mod,       J,         movefocus, d"
-      "$mod SHIFT, H,         movewindow, l"
-      "$mod SHIFT, L,         movewindow, r"
-      "$mod SHIFT, K,         movewindow, u"
-      "$mod SHIFT, J,         movewindow, d"
 
       # Workspaces
       "$mod, 1, workspace, 1"

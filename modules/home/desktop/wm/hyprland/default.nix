@@ -11,6 +11,7 @@
     ./lid.nix
     ./looks.nix
     ./monitors.nix
+    ./movement.nix
     ./programs.nix
     ./rotation.nix
     ./screenshot-tools.nix
