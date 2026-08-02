@@ -16,14 +16,14 @@
       builtin = {
         name     = "eDP-1";
         mode     = "1920x1080@144";
-        position = "3840x0";
+        position = "4480x0";
         scale    = "1";
       };
       external = {
         name     = "HDMI-A-1";
-        mode     = "1920x1080@60";
+        mode     = "3840x2160@144";
         position = "1920x0";
-        scale    = "1";
+        scale    = "1.5";
       };
       secondary = {
         name     = "DP-1";
