@@ -4,13 +4,50 @@
 # (transform 3) on the focused monitor (or a monitor named as arg 1).
 # State persists to ~/.local/state/monitor-transforms/<monitor-name>.
 #
+# After rotating, monitors are reflowed left-to-right (in current x order)
+# so no gap opens up when a landscape monitor becomes portrait — otherwise
+# the cursor can't cross the dead zone between mismatched-width monitors.
+#
 # On Hyprland startup (exec-once) and on `configreloaded` events (systemd
-# watcher), the restore script re-applies every persisted transform.
+# watcher), the restore script re-applies every persisted transform and
+# then reflows.
 
 let
+  # Reads current monitors, sorts by declared x, lays them out horizontally
+  # starting at x=0. Each monitor keeps its declared y. Effective width is
+  # (transform in {1,3,5,7} ? height : width) / scale.
+  reflow-monitors = pkgs.writeShellApplication {
+    name = "reflow-monitors";
+    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk ];
+    text = ''
+      set -euo pipefail
+
+      x=0
+      hyprctl -j monitors | jq -c 'sort_by(.x)[]' | while read -r mon; do
+        name=$(jq -r '.name' <<<"$mon")
+        w=$(jq -r '.width' <<<"$mon")
+        h=$(jq -r '.height' <<<"$mon")
+        rr=$(jq -r '.refreshRate' <<<"$mon" | awk '{printf "%.0f", $1}')
+        y=$(jq -r '.y' <<<"$mon")
+        scale=$(jq -r '.scale' <<<"$mon")
+        transform=$(jq -r '.transform' <<<"$mon")
+
+        case "$transform" in
+          1|3|5|7) eff_w=$(awk -v a="$h" -v s="$scale" 'BEGIN{printf "%.0f", a/s}') ;;
+          *)       eff_w=$(awk -v a="$w" -v s="$scale" 'BEGIN{printf "%.0f", a/s}') ;;
+        esac
+
+        hyprctl keyword monitor \
+          "$name,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${transform}" \
+          >/dev/null
+        x=$((x + eff_w))
+      done
+    '';
+  };
+
   rotate-monitor = pkgs.writeShellApplication {
     name = "rotate-monitor";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk ];
+    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk reflow-monitors ];
     text = ''
       set -euo pipefail
 
@@ -40,14 +77,17 @@ let
       scale=$(jq -r '.scale' <<<"$mon")
 
       hyprctl keyword monitor \
-        "$target,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${new_t}"
+        "$target,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${new_t}" \
+        >/dev/null
       printf '%s' "$new_t" > "$state_dir/$target"
+
+      reflow-monitors
     '';
   };
 
   restore-monitor-transforms = pkgs.writeShellApplication {
     name = "restore-monitor-transforms";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk ];
+    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk reflow-monitors ];
     text = ''
       set -euo pipefail
 
@@ -55,6 +95,7 @@ let
       [[ -d "$state_dir" ]] || exit 0
 
       monitors_json=$(hyprctl -j monitors)
+      changed=0
 
       for f in "$state_dir"/*; do
         [[ -f "$f" ]] || continue
@@ -75,8 +116,14 @@ let
         scale=$(jq -r '.scale' <<<"$mon")
 
         hyprctl keyword monitor \
-          "$name,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${want}"
+          "$name,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${want}" \
+          >/dev/null
+        changed=1
       done
+
+      if [[ "$changed" == "1" ]]; then
+        reflow-monitors
+      fi
     '';
   };
 
@@ -92,7 +139,7 @@ let
   '';
 in
 {
-  home.packages = [ rotate-monitor restore-monitor-transforms ];
+  home.packages = [ rotate-monitor restore-monitor-transforms reflow-monitors ];
 
   wayland.windowManager.hyprland.settings = {
     bind = [
