@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, hostConfig, ... }:
 
 # Per-monitor rotation. Toggles between landscape (transform 0) and portrait
 # (transform 3) on the focused monitor (or a monitor named as arg 1).
@@ -18,7 +18,7 @@ let
   # (transform in {1,3,5,7} ? height : width) / scale.
   reflow-monitors = pkgs.writeShellApplication {
     name = "reflow-monitors";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk ];
+    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk xorg.xrandr ];
     text = ''
       set -euo pipefail
 
@@ -42,6 +42,10 @@ let
           >/dev/null
         x=$((x + eff_w))
       done
+
+      # Re-assert xrandr primary so XWayland (Proton/Wine games) reads mode
+      # list from the main display, not whichever monitor happens to be first.
+      xrandr --output ${hostConfig.displays.monitors.external.name} --primary 2>/dev/null || true
     '';
   };
 
