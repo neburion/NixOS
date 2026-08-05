@@ -79,8 +79,12 @@
       ",XF86AudioLowerVolume,  exec, wpctl set-volume      @DEFAULT_AUDIO_SINK@ 5%-"
       ",XF86AudioMute,         exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
       ",XF86AudioMicMute,      exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
-      ",XF86MonBrightnessUp,   exec, brightnessctl s 10%+"
-      ",XF86MonBrightnessDown, exec, brightnessctl s 10%-"
+      ",XF86MonBrightnessUp,   exec, brightness-all 10%+"
+      ",XF86MonBrightnessDown, exec, brightness-all 10%-"
+
+      # External keyboard (no XF86Brightness keys): Super + ] / [ .
+      "$mod, bracketright, exec, brightness-all 10%+"
+      "$mod, bracketleft,  exec, brightness-all 10%-"
     ];
   };
 }
