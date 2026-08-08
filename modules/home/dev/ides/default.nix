@@ -2,6 +2,6 @@
 
 {
   imports = [
-    ./zed.nix
+    ./intellij.nix
   ];
 }

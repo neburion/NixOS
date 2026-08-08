@@ -16,8 +16,7 @@ let
       "fishPrimary":    "${t.fishPrimary}",
       "fishSecondary":  "${t.fishSecondary}",
       "superfileTheme": "${t.superfileTheme}",
-      "nvimTheme":      "${t.nvimTheme}",
-      "zedTheme":       "${t.zedTheme}"
+      "nvimTheme":      "${t.nvimTheme}"
     })'';
 
   paletteEntries = lib.concatStringsSep ",\n    " (lib.mapAttrsToList mkPaletteEntry themes);
@@ -50,7 +49,6 @@ in
         readonly property color fishSecondary:  current.fishSecondary
         readonly property string superfileTheme: current.superfileTheme
         readonly property string nvimTheme:      current.nvimTheme
-        readonly property string zedTheme:       current.zedTheme
 
         readonly property color warning: "#dc381f"
 
