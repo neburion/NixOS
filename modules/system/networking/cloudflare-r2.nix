@@ -28,5 +28,5 @@
   };
 
   # Current fleet declarations. Add buckets here; run rebuild.
-  config.cloudflare.r2.buckets."neburion-backup" = { };
+  config.cloudflare.r2.buckets."backup" = { };
 }

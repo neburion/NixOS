@@ -263,6 +263,28 @@ let
       done
 
       # ────────────────────────────────────────────────────────────────
+      # R2 free-tier guardrail — total storage across all buckets vs 10GB
+      # ────────────────────────────────────────────────────────────────
+      # CF R2 free tier: 10GB storage. Overage: $0.015/GB/month.
+      # Warn at 80% (8GB), hard-warn at 100% (10GB). Doesn't block anything —
+      # just flags before a rebuild that a bill is imminent.
+      total_bytes=0
+      for bucket_name in $current_buckets; do
+        # bucket usage endpoint returns payloadSize as a string number
+        u="$(cf_api GET "/accounts/$ACCOUNT_ID/r2/buckets/$bucket_name/usage" \
+             | jq -r '.result.payloadSize // "0"')"
+        total_bytes=$((total_bytes + u))
+      done
+      total_gb=$(awk "BEGIN {printf \"%.2f\", $total_bytes / (1024*1024*1024)}")
+      if [[ "$total_bytes" -gt 10737418240 ]]; then
+        echo "  ✗ R2 usage $total_gb GB > 10 GB free tier — you WILL be charged (\$0.015/GB/mo overage)"
+      elif [[ "$total_bytes" -gt 8589934592 ]]; then
+        echo "  ⚠ R2 usage $total_gb GB > 8 GB — approaching 10 GB free-tier cap"
+      else
+        echo "  ✓ R2 usage $total_gb GB / 10 GB (free tier)"
+      fi
+
+      # ────────────────────────────────────────────────────────────────
       # Summary
       # ────────────────────────────────────────────────────────────────
       if [[ "$any_changed" == "true" ]]; then
