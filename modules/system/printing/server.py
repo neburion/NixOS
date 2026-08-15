@@ -187,20 +187,24 @@ STRINGS = {
         'dpi_150': '150 dpi (draft)',
         'dpi_300': '300 dpi (normal)',
         'dpi_600': '600 dpi (high quality)',
-        'start_scan': 'Place first page, then scan',
+        'start_scan': 'Scan first page',
         'session_heading': 'Scan in progress',
         'pages_scanned_one': '1 page scanned',
         'pages_scanned_many': '{n} pages scanned',
+        'scanning_now': 'Scanning page {n}…',
+        'scanning_hint': 'Hold on, the scanner is working.',
         'add_page': 'Scan next page',
-        'finish_pdf': 'Finish — download PDF',
-        'finish_print': 'Finish — send to printer',
+        'finish_scan': 'Finish scan',
         'cancel_scan': 'Cancel',
+        'done_heading': 'Scan complete',
+        'download_pdf': 'Download PDF',
+        'send_printer': 'Send to printer',
+        'new_scan': 'New scan',
         'scan_error': 'Scan error: {err}',
         'scan_no_device': 'No scanner found. Check the USB cable and power.',
         'scan_busy': 'A scan is already in progress.',
-        'scan_page_added_one': 'Scanned page 1.',
-        'scan_page_added_many': 'Scanned page {n}.',
-        'scan_pdf_ready': 'PDF ready ({n} pages).',
+        'scan_pdf_ready_one': '1 page ready.',
+        'scan_pdf_ready_many': '{n} pages ready.',
         'scan_printed_one': 'Sent scan (1 page) to the printer.',
         'scan_printed_many': 'Sent scan ({n} pages) to the printer.',
         'scan_cancelled': 'Scan cancelled.',
@@ -232,20 +236,24 @@ STRINGS = {
         'dpi_150': '150 ppp (brouillon)',
         'dpi_300': '300 ppp (normal)',
         'dpi_600': '600 ppp (haute qualité)',
-        'start_scan': 'Placez la première page puis numérisez',
+        'start_scan': 'Numériser la première page',
         'session_heading': 'Numérisation en cours',
         'pages_scanned_one': '1 page numérisée',
         'pages_scanned_many': '{n} pages numérisées',
+        'scanning_now': 'Numérisation de la page {n}…',
+        'scanning_hint': 'Patientez, le scanner travaille.',
         'add_page': 'Numériser la page suivante',
-        'finish_pdf': 'Terminer — télécharger le PDF',
-        'finish_print': 'Terminer — envoyer à l\'imprimante',
+        'finish_scan': 'Terminer la numérisation',
         'cancel_scan': 'Annuler',
+        'done_heading': 'Numérisation terminée',
+        'download_pdf': 'Télécharger le PDF',
+        'send_printer': 'Envoyer à l\'imprimante',
+        'new_scan': 'Nouvelle numérisation',
         'scan_error': 'Erreur de numérisation : {err}',
         'scan_no_device': 'Aucun scanner trouvé. Vérifiez le câble USB et l\'alimentation.',
         'scan_busy': 'Une numérisation est déjà en cours.',
-        'scan_page_added_one': 'Page 1 numérisée.',
-        'scan_page_added_many': 'Page {n} numérisée.',
-        'scan_pdf_ready': 'PDF prêt ({n} pages).',
+        'scan_pdf_ready_one': '1 page prête.',
+        'scan_pdf_ready_many': '{n} pages prêtes.',
         'scan_printed_one': 'Numérisation (1 page) envoyée à l\'imprimante.',
         'scan_printed_many': 'Numérisation ({n} pages) envoyée à l\'imprimante.',
         'scan_cancelled': 'Numérisation annulée.',
@@ -357,7 +365,7 @@ CSS = """
     width: 100%;
   }
   input[type=file] { padding: .5rem; }
-  button {
+  button, .btn {
     font: inherit;
     font-weight: 600;
     padding: .8rem 1.5rem;
@@ -369,14 +377,28 @@ CSS = """
     min-height: 48px;
     width: 100%;
   }
-  button:hover { background: var(--btn-bg-hover); }
-  button:active { transform: scale(.98); }
-  button.primary {
+  /* Anchors that look like buttons (download links). */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    text-align: center;
+  }
+  button:hover, .btn:hover { background: var(--btn-bg-hover); }
+  button:active, .btn:active { transform: scale(.98); }
+  button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+  }
+  button:disabled:hover { background: var(--btn-bg); }
+  button.primary, .btn.primary {
     background: var(--btn-primary-bg);
     border-color: var(--btn-primary-bg);
     color: #fff;
   }
-  button.primary:hover { background: var(--btn-primary-hover); }
+  button.primary:hover, .btn.primary:hover { background: var(--btn-primary-hover); }
   .msg {
     padding: .75rem 1rem;
     border-radius: .5rem;
@@ -392,7 +414,28 @@ CSS = """
     border-radius: .5rem;
     font-size: 1.15em;
   }
+  .count .hint {
+    display: block;
+    font-size: .8em;
+    color: var(--muted);
+    margin-top: .25rem;
+  }
+  .count.busy { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+  .spinner {
+    width: 1.4em;
+    height: 1.4em;
+    border: 3px solid var(--border);
+    border-top-color: var(--btn-primary-bg);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2.4s; }
+  }
   .action-row { display: flex; flex-direction: column; gap: .5rem; }
+  /* Cancel out the generic form+form spacing inside a stacked button column. */
+  .action-row form + form { margin-top: 0; }
 """
 
 
@@ -569,8 +612,18 @@ def _lt():
 
 # --- Scan -------------------------------------------------------------------
 
+# The scanner is slow (5–30s a page), so scanimage NEVER runs inside a request
+# handler — a POST that blocks on it leaves the browser spinning on a pending
+# navigation and the "Scan in progress" UI doesn't paint until the page is
+# already done. Instead every scan is handed to a worker thread, the POST
+# redirects immediately, and the session page polls /scan/status and reloads
+# itself when the page count changes.
 _scan_lock = threading.Lock()
-_scan = None  # dict: {tmpdir, pages: [path...], dpi, mode}
+_scan = None  # dict: {tmpdir, pages: [path...], dpi, mode, scanning: bool}
+_done = None  # dict: {tmpdir, pdf, n} — finished PDF awaiting download/print
+# Set by the worker thread, which has no request context and so can't flash().
+# Consumed (and cleared) by the next GET /scan render.
+_scan_error = None  # (strings_key, kwargs)
 
 
 def scan_start_form():
@@ -598,37 +651,102 @@ def scan_start_form():
   </form>'''
 
 
-def scan_session_body():
-    global _scan
+def _poll_script(sig):
+    """Reload the page once the worker thread changes the scan state."""
+    return f'''<script>
+  (function () {{
+    var sig = "{sig}";
+    setInterval(function () {{
+      fetch("/scan/status", {{ headers: {{ "Accept": "application/json" }} }})
+        .then(function (r) {{ return r.json(); }})
+        .then(function (d) {{ if (d.sig !== sig) location.reload(); }})
+        .catch(function () {{}});
+    }}, 1000);
+  }})();
+  </script>
+  <noscript><meta http-equiv=refresh content=3></noscript>'''
+
+
+def scan_session_body(scan):
+    """Body for an in-flight scan session. Caller holds _scan_lock."""
     s = STRINGS[pick_lang()]
-    n = len(_scan['pages'])
-    count_key = 'pages_scanned_one' if n == 1 else 'pages_scanned_many'
-    count_text = s[count_key].format(n=n) if n != 1 else s[count_key]
-    return f'''<div class=count>{count_text}</div>
+    n = len(scan['pages'])
+    busy = scan['scanning']
+
+    if busy:
+        count_html = (
+            f'<div class="count busy"><div class=spinner></div>'
+            f'{s["scanning_now"].format(n=n + 1)}'
+            f'<span class=hint>{s["scanning_hint"]}</span></div>'
+        )
+    else:
+        key = 'pages_scanned_one' if n == 1 else 'pages_scanned_many'
+        count_html = f'<div class=count>{s[key].format(n=n)}</div>'
+
+    dis = ' disabled' if busy else ''
+    return f'''{count_html}
   <div class=action-row>
     <form method=post action="/scan/page{qs()}">
-      <button type=submit class=primary>{s['add_page']}</button>
+      <button type=submit class=primary{dis}>{s['add_page']}</button>
     </form>
     <form method=post action="/scan/finish{qs()}">
-      <input type=hidden name=dest value=pdf>
-      <button type=submit>{s['finish_pdf']}</button>
-    </form>
-    <form method=post action="/scan/finish{qs()}">
-      <input type=hidden name=dest value=print>
-      <button type=submit>{s['finish_print']}</button>
+      <button type=submit{dis}>{s['finish_scan']}</button>
     </form>
     <form method=post action="/scan/cancel{qs()}">
       <button type=submit>{s['cancel_scan']}</button>
     </form>
+  </div>
+  {_poll_script(_state_sig()) if busy else ''}'''
+
+
+def scan_done_body(done):
+    """Body for a finished scan: pick a destination. Caller holds _scan_lock."""
+    s = STRINGS[pick_lang()]
+    n = done['n']
+    key = 'scan_pdf_ready_one' if n == 1 else 'scan_pdf_ready_many'
+    return f'''<div class=count>{s[key].format(n=n)}</div>
+  <div class=action-row>
+    <a class="btn primary" href="/scan/download{qs()}" download>{s['download_pdf']}</a>
+    <form method=post action="/scan/print{qs()}">
+      <button type=submit>{s['send_printer']}</button>
+    </form>
+    <form method=post action="/scan/discard{qs()}">
+      <button type=submit>{s['new_scan']}</button>
+    </form>
   </div>'''
+
+
+def _state_sig():
+    """Signature of the scan state. Caller holds _scan_lock."""
+    if _done is not None:
+        return f'done:{_done["n"]}'
+    if _scan is None:
+        return 'idle'
+    return f'scan:{len(_scan["pages"])}:{int(_scan["scanning"])}'
+
+
+@app.get('/scan/status')
+def scan_status():
+    with _scan_lock:
+        return {'sig': _state_sig()}
 
 
 @app.get('/scan')
 def scan_index():
+    global _scan_error
     s = STRINGS[pick_lang()]
     with _scan_lock:
-        if _scan and _scan['pages']:
-            return layout('scan', s['session_heading'], scan_session_body(),
+        # Surface whatever the worker thread reported, exactly once.
+        if _scan_error is not None:
+            key, kwargs = _scan_error
+            _scan_error = None
+            flash_msg('err', key, **kwargs)
+
+        if _done is not None:
+            return layout('scan', s['done_heading'], scan_done_body(_done),
+                          s['scan_title'])
+        if _scan is not None:
+            return layout('scan', s['session_heading'], scan_session_body(_scan),
                           s['scan_title'])
     return layout('scan', s['scan_start_heading'], scan_start_form(),
                   s['scan_title'])
@@ -649,7 +767,7 @@ def _scanimage_page(mode, dpi, out_path):
 
 @app.post('/scan/start')
 def scan_start():
-    global _scan
+    global _scan, _scan_error
     mode = request.form.get('mode', 'Gray')
     if mode not in SCAN_MODES:
         mode = 'Gray'
@@ -664,26 +782,29 @@ def scan_start():
         if _scan is not None:
             flash_msg('err', 'scan_busy')
             return redirect(url_for('scan_index', **_lt()))
+        _drop_done_locked()
+        _scan_error = None
         tmpdir = tempfile.mkdtemp(prefix='scan-')
-        _scan = {'tmpdir': tmpdir, 'pages': [], 'dpi': dpi, 'mode': mode}
+        _scan = {'tmpdir': tmpdir, 'pages': [], 'dpi': dpi, 'mode': mode,
+                 'scanning': True}
+        _spawn_scan_locked(_scan)
 
-    _add_scan_page()
     return redirect(url_for('scan_index', **_lt()))
 
 
-def _add_scan_page():
-    """Scan one page into current session. Flashes result. Assumes _scan set."""
-    global _scan
-    # Snapshot under lock, run scanimage outside lock (slow), commit under lock.
-    with _scan_lock:
-        if _scan is None:
-            flash_msg('err', 'scan_error', err='no active session')
-            return
-        mode = _scan['mode']
-        dpi = _scan['dpi']
-        tmpdir = _scan['tmpdir']
-        page_num = len(_scan['pages']) + 1
+def _spawn_scan_locked(scan):
+    """Kick off one page scan in the background. Caller holds _scan_lock."""
+    t = threading.Thread(
+        target=_scan_page_worker,
+        args=(scan['tmpdir'], scan['mode'], scan['dpi'], len(scan['pages']) + 1),
+        daemon=True,
+    )
+    t.start()
 
+
+def _scan_page_worker(tmpdir, mode, dpi, page_num):
+    """Scan one page into the session identified by tmpdir. Runs off-request."""
+    global _scan, _scan_error
     out = os.path.join(tmpdir, f'page-{page_num:03d}.png')
     ok, err = _scanimage_page(mode, dpi, out)
 
@@ -693,26 +814,34 @@ def _add_scan_page():
             if os.path.exists(out):
                 os.unlink(out)
             return
+        _scan['scanning'] = False
         if ok:
             _scan['pages'].append(out)
-            key = 'scan_page_added_one' if page_num == 1 else 'scan_page_added_many'
-            flash_msg('ok', key, n=page_num)
+            return
+
+        low = err.lower()
+        # scanimage says "no SANE devices found" when nothing is plugged in —
+        # match that literally, the shorter substrings below never cover it.
+        if ('no sane devices' in low or 'no such device' in low
+                or 'no scanners' in low or 'no devices' in low):
+            _scan_error = ('scan_no_device', {})
         else:
-            # If the very first page failed, tear down the session so the user
-            # sees the start form again instead of a "0 pages, add another" UI.
-            if not _scan['pages']:
-                shutil.rmtree(_scan['tmpdir'], ignore_errors=True)
-                _scan = None
-            low = err.lower()
-            if 'no such device' in low or 'no scanners' in low or 'no devices' in low:
-                flash_msg('err', 'scan_no_device')
-            else:
-                flash_msg('err', 'scan_error', err=err[:200])
+            _scan_error = ('scan_error', {'err': err[:200]})
+        # If the very first page failed, tear down the session so the user
+        # sees the start form again instead of a "0 pages, add another" UI.
+        if not _scan['pages']:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+            _scan = None
 
 
 @app.post('/scan/page')
 def scan_page():
-    _add_scan_page()
+    with _scan_lock:
+        if _scan is None:
+            return redirect(url_for('scan_index', **_lt()))
+        if not _scan['scanning']:
+            _scan['scanning'] = True
+            _spawn_scan_locked(_scan)
     return redirect(url_for('scan_index', **_lt()))
 
 
@@ -729,11 +858,11 @@ def _combine_pdf(pages, out_path):
 
 @app.post('/scan/finish')
 def scan_finish():
-    global _scan
-    dest = request.form.get('dest', 'pdf')
+    """Close the session and build the PDF. Destination is picked afterwards."""
+    global _scan, _done
 
     with _scan_lock:
-        if not _scan or not _scan['pages']:
+        if not _scan or not _scan['pages'] or _scan['scanning']:
             return redirect(url_for('scan_index', **_lt()))
         tmpdir = _scan['tmpdir']
         pages = list(_scan['pages'])
@@ -747,36 +876,73 @@ def scan_finish():
         flash_msg('err', 'scan_error', err=err[:200])
         return redirect(url_for('scan_index', **_lt()))
 
-    n = len(pages)
-    if dest == 'print':
-        ok, err = do_print(pdf_path, 1, 'A4')
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        if ok:
-            key = 'scan_printed_one' if n == 1 else 'scan_printed_many'
-            flash_msg('ok', key, n=n)
-        else:
-            flash_msg('err', 'error', err=err)
-        return redirect(url_for('scan_index', **_lt()))
+    with _scan_lock:
+        _drop_done_locked()
+        _done = {'tmpdir': tmpdir, 'pdf': pdf_path, 'n': len(pages)}
 
-    # Download the PDF. send_file streams, so we can't rmtree until the
-    # response is fully written — use call_on_close.
-    resp = send_file(
+    return redirect(url_for('scan_index', **_lt()))
+
+
+@app.get('/scan/download')
+def scan_download():
+    """Hand over the finished PDF. Keeps it around so it can also be printed."""
+    with _scan_lock:
+        if _done is None:
+            return redirect(url_for('scan_index', **_lt()))
+        pdf_path = _done['pdf']
+    return send_file(
         pdf_path,
         mimetype='application/pdf',
         as_attachment=True,
         download_name='scan.pdf',
     )
-    resp.call_on_close(lambda: shutil.rmtree(tmpdir, ignore_errors=True))
-    return resp
+
+
+@app.post('/scan/print')
+def scan_print():
+    global _done
+    with _scan_lock:
+        if _done is None:
+            return redirect(url_for('scan_index', **_lt()))
+        pdf_path = _done['pdf']
+        n = _done['n']
+
+    ok, err = do_print(pdf_path, 1, 'A4')
+    if ok:
+        with _scan_lock:
+            _drop_done_locked()
+        key = 'scan_printed_one' if n == 1 else 'scan_printed_many'
+        flash_msg('ok', key, n=n)
+    else:
+        # Keep the PDF so the user can retry or fall back to downloading it.
+        flash_msg('err', 'error', err=err)
+    return redirect(url_for('scan_index', **_lt()))
+
+
+@app.post('/scan/discard')
+def scan_discard():
+    with _scan_lock:
+        _drop_done_locked()
+    return redirect(url_for('scan_index', **_lt()))
+
+
+def _drop_done_locked():
+    """Delete the finished PDF, if any. Caller holds _scan_lock."""
+    global _done
+    if _done is not None:
+        shutil.rmtree(_done['tmpdir'], ignore_errors=True)
+        _done = None
 
 
 @app.post('/scan/cancel')
 def scan_cancel():
-    global _scan
+    global _scan, _scan_error
     with _scan_lock:
         if _scan is not None:
             shutil.rmtree(_scan['tmpdir'], ignore_errors=True)
             _scan = None
+        _drop_done_locked()
+        _scan_error = None
     flash_msg('ok', 'scan_cancelled')
     return redirect(url_for('scan_index', **_lt()))
 
