@@ -21,9 +21,9 @@
       };
       external = {
         name     = "HDMI-A-1";
-        mode     = "3840x2160@144";
+        mode     = "2560x1440@144";
         position = "1920x0";
-        scale    = "1.5";
+        scale    = "1";
       };
       secondary = {
         name     = "DP-1";

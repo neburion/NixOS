@@ -23,5 +23,14 @@
       match:class = ^(waypaper)$
     }
 
+    # LibreOffice requests fullscreen/maximize when launched from a file
+    # manager (Nautilus xdg-activation), popping over whatever's on screen.
+    # Suppress those requests so the window opens tiled like any other.
+    windowrule {
+      name           = libreoffice-suppress-fs
+      suppress_event = fullscreen maximize
+      match:class    = ^(libreoffice-.*)$
+    }
+
   '';
 }

@@ -4,11 +4,11 @@
   wayland.windowManager.hyprland.settings = {
     # Workspaces
     workspace = [
-      "1,  monitor:$builtInMonitor"
-      "2,  monitor:$builtInMonitor"
-      "3,  monitor:$builtInMonitor"
-      "4,  monitor:$builtInMonitor"
-      "5,  monitor:$builtInMonitor"
+      "1,  monitor:$secondaryMonitor"
+      "2,  monitor:$secondaryMonitor"
+      "3,  monitor:$secondaryMonitor"
+      "4,  monitor:$secondaryMonitor"
+      "5,  monitor:$secondaryMonitor"
       "6,  monitor:$externalMonitor"
       "7,  monitor:$externalMonitor"
       "8,  monitor:$externalMonitor"
