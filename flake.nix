@@ -2,6 +2,9 @@
   description = "NixOS configuration";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # Rolling channel for cherry-picked packages that need to be fresher
+    # than the release channel. Exposed via overlay as `pkgs.unstable.<name>`.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,6 +39,10 @@
           { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
               canon-cups-ufr2 = final.callPackage ./modules/system/printing/canon-cups-ufr2/package.nix {};
+              unstable = import inputs.nixpkgs-unstable {
+                inherit system;
+                config.allowUnfree = true;
+              };
             })]; }
           ./hosts/${host}/configuration.nix
         ] ++ nixpkgs.lib.optionals withHomeManager [
