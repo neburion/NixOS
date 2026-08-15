@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  home-manager.users.home-admin.imports = [
+  home-manager.users.server-admin.imports = [
     ../../modules/home/base.nix
     ../../modules/home/cli/shell/fish.nix
     ../../modules/home/cli/nixos-scripts.nix

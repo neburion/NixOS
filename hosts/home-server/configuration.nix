@@ -23,7 +23,7 @@
     ../../modules/system/power-profiles.nix
     ../../modules/system/printing
 
-    ../../users/home-admin
+    ../../users/server-admin
 
     ./hardware-configuration.nix
   ];

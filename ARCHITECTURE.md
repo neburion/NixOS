@@ -47,7 +47,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 - **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts.nix`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
 - **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and home-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
-- **Remote deploys to home-server.** From pod042: rsync `~/NixOS` to `home-admin@home-server.local:/home/home-admin/NixOS/`, then `ssh home-admin@home-server.local 'sudo nixos-rebuild switch --flake path:./NixOS#home-server'`. Sudo password on home-server = `1234` (matches `initialPassword`), pipe via `sudo -S`.
+- **Remote deploys to any host.** `rebuild <hostname>` from any fleet workstation: uses `nixos-rebuild --target-host` over SSH, no rsync. Fleet SSH config (modules/system/networking/ssh.nix) maps hostnames to `server-admin` for server-class hosts. Passwordless wheel on servers means non-interactive activation.
 
 ## Entry points
 
@@ -64,7 +64,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 | Host          | Purpose                                                | Boot            | User(s)             |
 |---------------|--------------------------------------------------------|-----------------|---------------------|
 | `pod042`      | Main laptop                                            | `limine`        | `neburion`          |
-| `home-server` | Headless family server: print/scan web UI              | `systemd-boot`  | `home-admin`        |
+| `home-server` | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
 | `installer`   | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
 
 ## Module tree (behavior layer)
@@ -245,4 +245,4 @@ No host changes needed — the age keypair is unchanged, only its at-rest envelo
 ## Known security debt
 
 - `hosts/*/hardware-layout/wifi-layout.nix` — wifi PSK in plaintext. Migration path: move into `secrets/<host>.yaml` and reference via `sops.secrets` (once wifi module reads from a file path instead of an inline string).
-- `users/home-admin/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for a LAN-only family kiosk; not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.
+- `users/server-admin/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for headless server-class hosts (LAN-only + auth-gated CF tunnel); not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.

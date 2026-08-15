@@ -19,8 +19,8 @@
   # hostname (used in `rebuild <host>`) matches the tailnet MagicDNS name,
   # so no separate hostname mapping is needed.
   programs.ssh.extraConfig = ''
-    Host home-server
-      User home-admin
+    Host home-server personal-server
+      User server-admin
 
     Host *
       StrictHostKeyChecking accept-new
