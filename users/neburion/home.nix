@@ -15,7 +15,7 @@
     ../../modules/home/cli/packager/flatpak.nix
     ../../modules/home/cli/tree.nix
 
-    ../../modules/home/desktop/presets/hyprland-tmp.nix
+    ../../modules/home/desktop/presets/simple.nix
     ../../modules/home/desktop/utils/nautilus.nix
     ../../modules/home/desktop/utils/loupe.nix
     ../../modules/home/desktop/utils/celluloid.nix

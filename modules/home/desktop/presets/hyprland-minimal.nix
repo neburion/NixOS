@@ -1,8 +1,8 @@
 { ... }:
 
 # minimal preset — Hyprland + Waybar (legacy / fallback stack of older apps).
-# Swap ../bar/waybar-minimal for ../bar/quickshell-minimal-qs to upgrade
-# to the minimal-qs preset.
+# Swap ../bar/waybar-minimal for ../bar/quickshell-simple to upgrade
+# to the simple preset.
 
 {
   imports = [

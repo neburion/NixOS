@@ -93,7 +93,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: 28
         implicitWidth: layout.implicitWidth + 14
 
@@ -104,7 +104,7 @@
 
             Text {
                 font.family: "FiraMono Nerd Font"
-                font.pixelSize: 19
+                font.pixelSize: 15
                 font.weight: Font.Black
                 color: Theme.fg
                 text: (Audio.muted ? "󰝟" : "󰕾") + " " + Audio.volume + "%"
@@ -126,7 +126,7 @@
 
             Text {
                 font.family: "FiraMono Nerd Font"
-                font.pixelSize: 19
+                font.pixelSize: 15
                 font.weight: Font.Black
                 color: Theme.fg
                 text: "󰢮 " + SystemStats.gpuPercent + "%"
@@ -134,7 +134,7 @@
 
             Text {
                 font.family: "FiraMono Nerd Font"
-                font.pixelSize: 19
+                font.pixelSize: 15
                 font.weight: Font.Black
                 color: SystemStats.cpuPercent >= 90 ? Theme.warning : Theme.fg
                 text: "󰍛 " + SystemStats.cpuPercent + "%"
@@ -142,7 +142,7 @@
 
             Text {
                 font.family: "FiraMono Nerd Font"
-                font.pixelSize: 19
+                font.pixelSize: 15
                 font.weight: Font.Black
                 color: SystemStats.memPercent >= 80 ? Theme.warning : Theme.fg
                 text: " " + SystemStats.memPercent + "%"

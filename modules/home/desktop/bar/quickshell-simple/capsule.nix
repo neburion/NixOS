@@ -8,7 +8,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: content.implicitHeight
         implicitWidth: content.implicitWidth
 

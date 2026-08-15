@@ -67,7 +67,7 @@
                                      "󰁺"
 
         font.family: "FiraMono Nerd Font"
-        font.pixelSize: 19
+        font.pixelSize: 15
         font.weight: Font.Black
         color: Battery.capacity <= 20 && !Battery.charging ? Theme.warning : Theme.fg
         text: root.glyph + " " + Battery.capacity + "%"

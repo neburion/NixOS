@@ -29,6 +29,7 @@
                 BarClock { }
                 BarPowerToggle { }
                 BarMonitorToggle { }
+                BarPhoneDisplay { }
             }
 
             BarWorkspaces {

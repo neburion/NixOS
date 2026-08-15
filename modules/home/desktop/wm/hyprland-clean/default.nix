@@ -1,6 +1,6 @@
 { ... }:
 
-# tmp hyprland: same as base but swaps looks.nix for tmp-specific
+# clean hyprland: same as base but swaps looks.nix for clean-specific
 # animations (faster horizontal slide, niercurve bezier).
 
 {

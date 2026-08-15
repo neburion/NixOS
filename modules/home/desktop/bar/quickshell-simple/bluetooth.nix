@@ -124,7 +124,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: 28
         implicitWidth: btText.implicitWidth + 14
 
@@ -132,7 +132,7 @@
             id: btText
             anchors.centerIn: parent
             font.family:    "FiraMono Nerd Font"
-            font.pixelSize: 19
+            font.pixelSize: 15
             font.weight:    Font.Black
             color: BluetoothState.connectedCount > 0 ? Theme.selection
                  : BluetoothState.powered             ? Theme.fg

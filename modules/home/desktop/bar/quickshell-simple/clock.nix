@@ -30,7 +30,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: 28
         implicitWidth: label.implicitWidth + 10
 
@@ -38,7 +38,7 @@
             id: label
             anchors.centerIn: parent
             font.family: "FiraMono Nerd Font"
-            font.pixelSize: 19
+            font.pixelSize: 15
             font.weight: Font.Black
             color: Theme.fg
             text: Qt.formatDateTime(Time.now, "ddd dd MMM - hh:mm AP")

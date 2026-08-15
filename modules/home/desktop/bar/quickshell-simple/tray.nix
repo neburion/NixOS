@@ -18,7 +18,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: 28
         implicitWidth: layout.implicitWidth + 14
         visible: SystemTray.items.values.length > 0

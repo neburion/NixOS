@@ -38,7 +38,8 @@
             if (q.length === 0) return all.slice(0, 50);
             return all.filter(function(a) {
                 return a.name.toLowerCase().indexOf(q) !== -1
-                    || (a.genericName && a.genericName.toLowerCase().indexOf(q) !== -1);
+                    || (a.genericName && a.genericName.toLowerCase().indexOf(q) !== -1)
+                    || (a.categories && a.categories.toString().toLowerCase().indexOf(q) !== -1);
             }).slice(0, 50);
         }
 

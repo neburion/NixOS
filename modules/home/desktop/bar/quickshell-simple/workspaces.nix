@@ -32,7 +32,7 @@
     Rectangle {
         id: root
         color: Theme.surface
-        radius: 5
+        radius: 2
         implicitHeight: 28
         implicitWidth: layout.implicitWidth + 20
 
@@ -60,7 +60,7 @@
                     readonly property bool isEmpty: !ws || ws.windows === 0
 
                     font.family: "FiraMono Nerd Font"
-                    font.pixelSize: 19
+                    font.pixelSize: 15
                     font.weight: Font.Black
                     color: Theme.fg
                     text: isActive ? "" : (isEmpty ? "" : "")
