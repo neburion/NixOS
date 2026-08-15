@@ -29,7 +29,14 @@
   services.tailscale = {
     enable         = true;
     authKeyFile    = config.sops.secrets.tailscale-auth-key.path;
-    extraUpFlags   = [ "--accept-dns" ];
+    # --accept-dns=false: DO NOT let Tailscale hijack /etc/resolv.conf.
+    # Tailscale replaces the OS resolver with 100.100.100.100 (MagicDNS),
+    # which then forwards non-tailnet queries only if the tailnet admin has
+    # configured global nameservers. Ours isn't configured (would require a
+    # Tailscale dashboard visit); without that, all external DNS silently
+    # dies. Keeping the OS resolver intact + adding tailnet peer names to
+    # networking.hosts is the fully-declarative alternative.
+    extraUpFlags   = [ "--accept-dns=false" ];
     # Persist state across reboots. Default location works.
     openFirewall   = true;
   };
