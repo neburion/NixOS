@@ -8,6 +8,9 @@
 #   file pickers, screenshot tools respecting $XDG_PICTURES_DIR, etc.)
 #   route the standard names to this custom layout instead of the stock
 #   ~/Documents ~/Downloads ~/Music ~/Pictures ~/Videos.
+# - `backup.paths.neburion` declares which of these get nightly R2 backup
+#   via modules/system/backup/restic.nix. Only "irreplaceable" dirs — no
+#   Downloads, no caches, no gaming installs.
 
 let
   home = "/home/neburion";
@@ -15,11 +18,13 @@ let
   dirs = [
     "Docs"
     "Downloads"
+    "Passwords"
     "Media"
     "Media/Image"
     "Media/Image/Screenshot"
     "Media/Video"
     "Media/Music"
+    "Media/Books"
     "Media/Wallpapers"
     "Media/Wallpapers/Catppuccin"
     "Media/Wallpapers/Dark"
@@ -51,4 +56,11 @@ in
     templates   = null;
     publicShare = null;
   };
+
+  backup.paths.neburion = [
+    "${home}/Docs"
+    "${home}/Projects"
+    "${home}/Passwords"
+    "${home}/Media/Books"
+  ];
 }
