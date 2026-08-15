@@ -12,6 +12,7 @@
     ../../modules/system/boot/systemd-boot.nix
     ../../modules/system/networking/networkmanager.nix
     ../../modules/system/networking/ssh.nix
+    ../../modules/system/networking/tailscale.nix
     ../../modules/system/always-on.nix
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix

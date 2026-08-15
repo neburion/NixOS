@@ -17,6 +17,7 @@
     ../../modules/system/locale.nix
     ../../modules/system/networking/networkmanager.nix
     ../../modules/system/networking/ssh.nix
+    ../../modules/system/networking/tailscale.nix
     ../../modules/system/networking/avahi.nix
     ../../modules/system/networking/cloudflare-tunnel.nix
     ../../modules/system/networking/localsend-firewall.nix
