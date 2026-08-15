@@ -16,8 +16,14 @@
 #     Adding: edit modules/system/networking/cloudflare-r2.nix
 #     Removing: NEVER auto-deletes (data loss risk); warns
 #
+# Authenticates with the Global API Key (X-Auth-Email + X-Auth-Key headers)
+# instead of a scoped bearer token — one credential for the whole fleet
+# instead of juggling scoped tokens per capability. Global Key rotation
+# is done by changing your Cloudflare account password (regenerates the
+# key as a side effect), then re-run `sops set` in secrets/common.yaml.
+#
 # Requires:
-#   - `cloudflare-api-token` present in secrets/common.yaml
+#   - `cloudflare-api-key` + `cloudflare-email` in secrets/common.yaml
 #   - Age key at /var/lib/sops-nix/key.txt (sudo readable)
 #   - Repo at $HOME/NixOS on the invoking machine
 
@@ -33,21 +39,25 @@ let
       REPO="''${NIXOS_REPO:-$HOME/NixOS}"
       ACCOUNT_ID="${cfAccountId}"
 
-      # Decrypt the CF API token (needs sudo to read /var/lib/sops-nix/key.txt).
-      TOKEN="$(sudo env SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
-        sops --decrypt --extract '["cloudflare-api-token"]' "$REPO/secrets/common.yaml")"
+      # Decrypt the CF Global API Key + email (needs sudo to read the age key).
+      CF_KEY="$(sudo env SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
+        sops --decrypt --extract '["cloudflare-api-key"]' "$REPO/secrets/common.yaml")"
+      CF_EMAIL="$(sudo env SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
+        sops --decrypt --extract '["cloudflare-email"]' "$REPO/secrets/common.yaml")"
 
       cf_api() {
         local method="$1" path="$2" data="''${3:-}"
         if [[ -n "$data" ]]; then
           curl -sS -X "$method" \
-            -H "Authorization: Bearer $TOKEN" \
+            -H "X-Auth-Email: $CF_EMAIL" \
+            -H "X-Auth-Key: $CF_KEY" \
             -H "Content-Type: application/json" \
             -d "$data" \
             "https://api.cloudflare.com/client/v4$path"
         else
           curl -sS -X "$method" \
-            -H "Authorization: Bearer $TOKEN" \
+            -H "X-Auth-Email: $CF_EMAIL" \
+            -H "X-Auth-Key: $CF_KEY" \
             "https://api.cloudflare.com/client/v4$path"
         fi
       }
