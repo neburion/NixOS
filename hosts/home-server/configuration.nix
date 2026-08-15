@@ -5,6 +5,7 @@
     ./hardware-layout
 
     ../../modules/system/nixos.nix
+    ../../modules/system/security/sops.nix
     ../../modules/system/locale.nix
     ../../modules/system/boot/systemd-boot.nix
     ../../modules/system/networking/networkmanager.nix

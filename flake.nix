@@ -25,8 +25,12 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, ... }@inputs:
+  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:
   let
     themes = import ./modules/home/themes;
 
@@ -36,6 +40,7 @@
         specialArgs = { inherit zen-browser nvf inputs; };
         modules = [
           disko.nixosModules.disko
+          sops-nix.nixosModules.sops
           { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
               canon-cups-ufr2 = final.callPackage ./modules/system/printing/canon-cups-ufr2/package.nix {};

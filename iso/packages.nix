@@ -10,5 +10,6 @@
     p7zip
     parted
     rclone
+    age
   ];
 }

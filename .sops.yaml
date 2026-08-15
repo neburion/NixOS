@@ -1,0 +1,25 @@
+# Sops encryption rules. See modules/system/security/sops.nix for the runtime
+# side (how decrypted secrets land under /run/secrets/ on each host).
+#
+# The single age recipient below is the public half of the fleet-wide age
+# keypair. The private half is:
+#   - Encrypted at rest with your sops master passphrase in `secrets/age-key.enc`
+#   - Installed decrypted at `/var/lib/sops-nix/key.txt` on each host at install
+#     time by iso/scripts/nixinstall.sh (or manually after `sops updatekeys`).
+#
+# Every file matched below is encrypted to this one recipient, so any host
+# holding the private key can decrypt every secret. This is intentional
+# (single-fleet trust boundary); do NOT add low-trust hosts to this system.
+#
+# To add a secret: `sops secrets/<host>.yaml` opens an editor with decrypted
+# content. Save → commit encrypted version. Next rebuild on the target picks
+# it up.
+
+keys:
+  - &fleet age1j7u7jm24hav954s0upe98fz5fla2rh60dutj885kfk837cptxqvqu3lg0v
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - age:
+          - *fleet

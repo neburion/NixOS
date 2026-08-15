@@ -104,6 +104,25 @@ printf "\n"
 read -rp "Target disk (e.g. /dev/nvme0n1): " DISK
 [[ ! -b "$DISK" ]] && { printf "${RED}Not a block device: %s${NC}\n" "$DISK"; exit 1; }
 
+# ── SOPS KEY (existing host only — the standalone "new minimal" path has no secrets) ─
+SOPS_ENC="$STAGE/repo/secrets/age-key.enc"
+SOPS_PASS=""
+INSTALL_SOPS=false
+
+if ! $NEW_HOST && [[ -f "$SOPS_ENC" ]]; then
+  printf "\n${YLW}Sops master passphrase (empty to skip installing key — any sops-decrypted secret will fail on first activation):${NC}\n"
+  read -rsp "> " SOPS_PASS; printf "\n"
+  if [[ -n "$SOPS_PASS" ]]; then
+    # Dry-run decrypt now so we catch a wrong passphrase BEFORE we've wiped the disk.
+    if ! printf '%s' "$SOPS_PASS" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+         -in "$SOPS_ENC" -pass stdin >/dev/null 2>&1; then
+      printf "${RED}Wrong passphrase for secrets/age-key.enc — bailing before touching the disk.${NC}\n"
+      exit 1
+    fi
+    INSTALL_SOPS=true
+  fi
+fi
+
 # ── CONFIRM ───────────────────────────────────────────────────────────────────
 printf "\n${YLW}Summary:${NC}\n"
 if $NEW_HOST; then
@@ -111,6 +130,7 @@ if $NEW_HOST; then
   printf "  User:  %s\n" "$USERNAME"
 else
   printf "  Host:  %s (from repo)\n" "$HOST"
+  printf "  Sops:  %s\n" "$($INSTALL_SOPS && echo 'age key will be installed to /var/lib/sops-nix/key.txt' || echo 'SKIPPED')"
 fi
 printf "  Disk:  %s\n\n" "$DISK"
 printf "${RED}WARNING: ALL DATA on %s will be erased.${NC}\n" "$DISK"
@@ -150,6 +170,15 @@ if ! $NEW_HOST; then
   # this file) won't clobber it.
   nixos-generate-config --root /mnt --show-hardware-config \
     > "$TARGET/hosts/$HOST/hardware-configuration.nix"
+
+  if $INSTALL_SOPS; then
+    printf "\n${GRN}Installing sops age key to /mnt/var/lib/sops-nix/key.txt...${NC}\n"
+    install -Dm400 /dev/null /mnt/var/lib/sops-nix/key.txt
+    printf '%s' "$SOPS_PASS" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+      -in "$SOPS_ENC" -pass stdin \
+      > /mnt/var/lib/sops-nix/key.txt
+    chmod 400 /mnt/var/lib/sops-nix/key.txt
+  fi
 
   printf "\n${GRN}Installing NixOS...${NC}\n"
   # `path:` scheme bypasses git-tracked-only filtering so the freshly

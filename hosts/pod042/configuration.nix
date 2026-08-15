@@ -5,6 +5,7 @@
     ./hardware-layout
 
     ../../modules/system/nixos.nix
+    ../../modules/system/security/sops.nix
     ../../modules/system/boot/limine.nix
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/touchpad.nix
