@@ -6,6 +6,8 @@
 
     ../../modules/system/nixos.nix
     ../../modules/system/security/sops.nix
+    ../../modules/system/security/sudo.nix
+    ../../modules/system/rebuild-hooks/registry.nix
     ../../modules/system/boot/limine.nix
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/touchpad.nix
