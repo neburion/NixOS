@@ -1,13 +1,100 @@
 from flask import (
     Flask, request, redirect, url_for, flash, get_flashed_messages,
-    send_file,
+    send_file, Response,
 )
-import subprocess, tempfile, os, shutil, secrets, threading, html
+import subprocess, tempfile, os, shutil, secrets, threading, html, hmac, time
+from collections import defaultdict, deque
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 # Fresh key per restart is fine — sessions only carry one-shot flash messages.
 app.secret_key = secrets.token_hex(32)
+
+# ────────────────────────────────────────────────────────────────
+# Auth + rate limiting
+# ────────────────────────────────────────────────────────────────
+# HTTP Basic Auth against a single shared password read from the environment
+# (populated by sops-nix from secrets/home-server.yaml at systemd unit start).
+# The username is arbitrary (any value works — browsers store user+password
+# pairs, so pick "print" to keep it memorable). Password rotation = update
+# secrets/home-server.yaml + rebuild.
+#
+# Rate limit gates BRUTE FORCE: 5 failed attempts per IP per 15 min. This
+# means an 8-char alphanumeric password (62^8 ≈ 2e14 space) is uncrackable
+# in any human timescale even with parallelized IPs. Browser silently sends
+# credentials once saved, so legit users see the login prompt exactly once
+# per browser per device.
+#
+# Client IP source: Cloudflare tunnel passes the real client IP in the
+# CF-Connecting-IP header. Falling back to request.remote_addr (which would
+# be Cloudflare's edge IP) would rate-limit everyone globally, defeating the
+# purpose.
+def _load_password() -> str:
+    # systemd LoadCredential=password:... puts the file at
+    # $CREDENTIALS_DIRECTORY/password. Fall back to env var for dev use.
+    creds_dir = os.environ.get('CREDENTIALS_DIRECTORY')
+    if creds_dir:
+        path = os.path.join(creds_dir, 'password')
+        if os.path.exists(path):
+            with open(path) as f:
+                return f.read().strip()
+    return os.environ.get('PRINT_SERVER_PASSWORD', '').strip()
+
+PRINT_PASSWORD = _load_password()
+BASIC_AUTH_USER = 'print'
+RATE_WINDOW_SECONDS = 900
+RATE_MAX_FAILURES  = 5
+
+_rate_lock = threading.Lock()
+_failed_attempts: 'defaultdict[str, deque]' = defaultdict(deque)
+
+def _client_ip() -> str:
+    return request.headers.get('CF-Connecting-IP') or request.remote_addr or 'unknown'
+
+def _check_rate_ok(ip: str) -> bool:
+    now = time.time()
+    with _rate_lock:
+        attempts = _failed_attempts[ip]
+        while attempts and now - attempts[0] > RATE_WINDOW_SECONDS:
+            attempts.popleft()
+        return len(attempts) < RATE_MAX_FAILURES
+
+def _record_failure(ip: str) -> None:
+    with _rate_lock:
+        _failed_attempts[ip].append(time.time())
+
+def _clear_failures(ip: str) -> None:
+    with _rate_lock:
+        _failed_attempts.pop(ip, None)
+
+@app.before_request
+def _require_auth():
+    # Fail closed on misconfiguration — never silently allow if the password
+    # env var is missing.
+    if not PRINT_PASSWORD:
+        return Response('Server misconfigured: PRINT_SERVER_PASSWORD unset', status=503)
+
+    ip = _client_ip()
+    if not _check_rate_ok(ip):
+        return Response(
+            'Too many failed auth attempts. Try again in 15 minutes.',
+            status=429,
+            headers={'Retry-After': str(RATE_WINDOW_SECONDS)},
+        )
+
+    auth = request.authorization
+    if (auth
+        and auth.username == BASIC_AUTH_USER
+        and hmac.compare_digest(auth.password or '', PRINT_PASSWORD)):
+        _clear_failures(ip)
+        return None  # pass through to the actual handler
+
+    _record_failure(ip)
+    return Response(
+        'Authentication required',
+        status=401,
+        headers={'WWW-Authenticate': 'Basic realm="Printer"'},
+    )
 
 # Doc formats need LibreOffice to convert to PDF before CUPS can print them.
 DOC_EXTS = {'.docx', '.odt', '.doc', '.rtf'}

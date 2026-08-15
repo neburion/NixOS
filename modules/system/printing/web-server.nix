@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   pythonEnv = pkgs.python3.withPackages (p: [ p.flask ]);
@@ -52,6 +52,22 @@ in
   };
   users.groups.print-server = { };
 
+  # HTTP Basic Auth password for the print/scan UI. Sops-decrypted at
+  # activation to /run/secrets/print-server-password, then wrapped in a
+  # KEY=VALUE env file that the systemd unit loads via EnvironmentFile.
+  # Rotation: `sops set secrets/home-server.yaml '["print-server-password"]'
+  # '"newpass"'` + rebuild.
+  sops.secrets.print-server-password = {
+    sopsFile = ../../../secrets/home-server.yaml;
+    mode     = "0400";
+    owner    = "print-server";
+  };
+
+  # LoadCredential= reads the sops-decrypted secret as root at unit startup
+  # and hands it to the service at $CREDENTIALS_DIRECTORY/password after the
+  # User/Group drop. Avoids the EnvironmentFile chicken-egg (systemd loads
+  # env files BEFORE ExecStartPre runs) and keeps the secret out of the
+  # process env table. server.py reads it from that path.
   systemd.services.print-server = {
     description = "Web print server for Canon MF3010";
     wantedBy = [ "multi-user.target" ];
@@ -59,6 +75,7 @@ in
     requires = [ "cups.service" ];
     serviceConfig = {
       ExecStart = "${printServer}/bin/print-server";
+      LoadCredential = "password:${config.sops.secrets.print-server-password.path}";
       Restart = "on-failure";
       RestartSec = "5s";
       User = "print-server";
