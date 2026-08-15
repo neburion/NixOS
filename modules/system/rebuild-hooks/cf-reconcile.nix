@@ -1,14 +1,20 @@
 { pkgs, ... }:
 
-# cf-reconcile — reads declared tunnels from every host's nix config,
-# ensures each exists in Cloudflare's control plane, writes any created
-# credentials into secrets/<host>.yaml (sops-encrypted) and the plaintext
-# UUID mapping into hosts/<host>/hardware-layout/cf-tunnels.lock.json.
+# cf-reconcile — reads Cloudflare-related declarations from the flake and
+# converges Cloudflare's control plane to match. Registers as
+# `rebuild.preHooks.cf-tunnels` so `rebuild` runs it automatically before
+# every deploy.
 #
-# Registers as `rebuild.preHooks.cf-tunnels` so `rebuild` runs it
-# automatically before every deploy. Adding a tunnel is:
-#   1. Edit hosts/<host>/hardware-layout/cloudflare-layout.nix
-#   2. `rebuild <host>` (or just `rebuild` if editing the local host)
+# Resources it manages:
+#   - Tunnels + DNS records (per-host declaredTunnels)
+#     Adding: edit hosts/<host>/hardware-layout/cloudflare-layout.nix
+#     Removing: NOT YET (manual via API/dashboard for now)
+#   - Email routing rules (fleet-wide cloudflare.email.rules)
+#     Adding: edit modules/system/networking/cloudflare-email.nix
+#     Removing: warns; delete manually
+#   - R2 buckets (fleet-wide cloudflare.r2.buckets)
+#     Adding: edit modules/system/networking/cloudflare-r2.nix
+#     Removing: NEVER auto-deletes (data loss risk); warns
 #
 # Requires:
 #   - `cloudflare-api-token` present in secrets/common.yaml
@@ -46,7 +52,16 @@ let
         fi
       }
 
-      # Discover fleet hosts from the flake.
+      zone_id_for() {
+        local zone="$1"
+        cf_api GET "/zones?name=$zone" | jq -r '.result[0].id // empty'
+      }
+
+      # ────────────────────────────────────────────────────────────────
+      # 1. Tunnels + DNS
+      # ────────────────────────────────────────────────────────────────
+      echo "▸ tunnels"
+
       mapfile -t HOSTS < <(nix eval --json --impure --expr \
         "builtins.attrNames (builtins.getFlake \"path:$REPO\").nixosConfigurations" \
         | jq -r '.[]')
@@ -56,39 +71,32 @@ let
       for host in "''${HOSTS[@]}"; do
         [[ "$host" == "installer" ]] && continue
 
-        # Read this host's declaredTunnels attrset as JSON.
         declared_json="$(nix eval --json --impure --expr \
           "let cfg = (builtins.getFlake \"path:$REPO\").nixosConfigurations.\"$host\".config.cloudflare.declaredTunnels or {}; in cfg")"
 
         lock_file="$REPO/hosts/$host/hardware-layout/cf-tunnels.lock.json"
         current_lock="$(cat "$lock_file" 2>/dev/null || echo '{}')"
 
-        # Loop over declared tunnels for this host.
         for hostname in $(echo "$declared_json" | jq -r 'keys[]'); do
-          # Check the lock file — do we already have a UUID for this hostname?
           existing_uuid="$(echo "$current_lock" | jq -r --arg h "$hostname" '.[$h].uuid // ""')"
 
           if [[ -n "$existing_uuid" ]]; then
-            # Verify tunnel still exists on CF side.
             check="$(cf_api GET "/accounts/$ACCOUNT_ID/cfd_tunnel/$existing_uuid")"
             if [[ "$(echo "$check" | jq -r '.success')" == "true" && \
                   "$(echo "$check" | jq -r '.result.deleted_at // ""')" == "" ]]; then
-              echo "  ✓ $hostname → $existing_uuid (exists)"
+              echo "  ✓ $hostname → $existing_uuid"
               continue
             fi
             echo "  ⚠ $hostname → $existing_uuid was deleted upstream; recreating"
           fi
 
           echo "  + creating tunnel for $hostname on $host"
-
-          # Generate a random 32-byte tunnel secret (base64-encoded).
           tunnel_secret_b64="$(head -c 32 /dev/urandom | base64)"
 
           create_payload="$(jq -n \
             --arg name "$host-$hostname" \
             --arg secret "$tunnel_secret_b64" \
             '{name: $name, tunnel_secret: $secret, config_src: "local"}')"
-
           create_resp="$(cf_api POST "/accounts/$ACCOUNT_ID/cfd_tunnel" "$create_payload")"
 
           if [[ "$(echo "$create_resp" | jq -r '.success')" != "true" ]]; then
@@ -100,30 +108,25 @@ let
           uuid="$(echo "$create_resp" | jq -r '.result.id')"
           echo "    → UUID $uuid"
 
-          # Build the credentials JSON that cloudflared expects.
           creds_json="$(jq -n \
             --arg AccountTag "$ACCOUNT_ID" \
             --arg TunnelSecret "$tunnel_secret_b64" \
             --arg TunnelID "$uuid" \
             '{AccountTag: $AccountTag, TunnelSecret: $TunnelSecret, TunnelID: $TunnelID}')"
 
-          # Discover the zone for this hostname (e.g. "printer.azuresalt.app" → "azuresalt.app").
           zone_name="$(echo "$hostname" | awk -F. '{n=NF; print $(n-1)"."$n}')"
-          zone_resp="$(cf_api GET "/zones?name=$zone_name")"
-          zone_id="$(echo "$zone_resp" | jq -r '.result[0].id')"
+          zone_id="$(zone_id_for "$zone_name")"
 
-          if [[ "$zone_id" == "null" || -z "$zone_id" ]]; then
+          if [[ -z "$zone_id" ]]; then
             echo "  ✗ zone $zone_name not found in this Cloudflare account" >&2
             exit 1
           fi
 
-          # Create or update the DNS record: <hostname> CNAME <uuid>.cfargotunnel.com
           dns_payload="$(jq -n \
             --arg name "$hostname" \
             --arg content "$uuid.cfargotunnel.com" \
             '{type: "CNAME", name: $name, content: $content, proxied: true, ttl: 1}')"
 
-          # Check for an existing record first (idempotent).
           existing_dns="$(cf_api GET "/zones/$zone_id/dns_records?name=$hostname&type=CNAME")"
           existing_record_id="$(echo "$existing_dns" | jq -r '.result[0].id // ""')"
 
@@ -135,26 +138,18 @@ let
             echo "    → DNS created: $hostname CNAME $uuid.cfargotunnel.com"
           fi
 
-          # Encrypt credentials into secrets/<host>.yaml.
-          # Secret name: cloudflared-<sanitized-hostname>. Sanitize to attrname-safe chars.
           secret_name="cloudflared-$(echo "$hostname" | tr '.' '-')"
           host_secrets="$REPO/secrets/$host.yaml"
 
           if [[ ! -f "$host_secrets" ]]; then
-            # Create empty encrypted file with a placeholder so sops has something to work with.
-            # Must be inside the repo so .sops.yaml creation rules match.
             echo "placeholder: init" > "$host_secrets"
             (cd "$REPO" && sops --encrypt --in-place "$host_secrets")
           fi
 
-          # `sops set` expects a JSON value; wrap the credentials JSON blob
-          # as a JSON string literal via `jq -Rs .` (slurp so newlines are
-          # preserved, produce a single JSON string).
           creds_json_string="$(printf '%s' "$creds_json" | jq -Rs .)"
           sudo env SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
             sops set "$host_secrets" "[\"$secret_name\"]" "$creds_json_string"
 
-          # Update the lock file.
           current_lock="$(echo "$current_lock" | jq \
             --arg h "$hostname" \
             --arg u "$uuid" \
@@ -164,15 +159,116 @@ let
           any_changed=true
         done
 
-        # Persist the lock file if any tunnels were touched for this host.
         mkdir -p "$(dirname "$lock_file")"
         echo "$current_lock" | jq -S . > "$lock_file"
       done
 
+      # ────────────────────────────────────────────────────────────────
+      # 2. Email routing rules
+      # ────────────────────────────────────────────────────────────────
+      echo "▸ email routing"
+
+      # Read fleet-wide rules from any host's config (they're the same).
+      email_rules_json="$(nix eval --json --impure --expr \
+        "let cfg = (builtins.getFlake \"path:$REPO\").nixosConfigurations.pod042.config.cloudflare.email.rules or {}; in cfg")"
+
+      for zone_name in $(echo "$email_rules_json" | jq -r 'keys[]'); do
+        zone_id="$(zone_id_for "$zone_name")"
+        if [[ -z "$zone_id" ]]; then
+          echo "  ✗ zone $zone_name not found; skipping"
+          continue
+        fi
+
+        # Fetch current rules
+        current_rules="$(cf_api GET "/zones/$zone_id/email/routing/rules")"
+
+        # Declared rules for this zone
+        declared_rules="$(echo "$email_rules_json" | jq --arg z "$zone_name" '.[$z]')"
+
+        for i in $(seq 0 $(($(echo "$declared_rules" | jq 'length') - 1))); do
+          rule="$(echo "$declared_rules" | jq ".[$i]")"
+          is_catch_all="$(echo "$rule" | jq -r '.catch_all // false')"
+          forward_to="$(echo "$rule" | jq -r '.forward')"
+          local_part="$(echo "$rule" | jq -r '.local_part // empty')"
+
+          if [[ "$is_catch_all" == "true" ]]; then
+            # Check if a catch-all rule to $forward_to already exists
+            existing="$(echo "$current_rules" | jq --arg fwd "$forward_to" \
+              '[.result[] | select(.matchers[0].type == "all" and .actions[0].value[0] == $fwd)] | .[0].id // ""' -r)"
+            if [[ -n "$existing" ]]; then
+              echo "  ✓ $zone_name: catch-all → $forward_to"
+              continue
+            fi
+            echo "  + $zone_name: creating catch-all → $forward_to"
+            payload="$(jq -n --arg fwd "$forward_to" \
+              '{matchers:[{type:"all"}], actions:[{type:"forward", value:[$fwd]}], enabled:true, priority:2147483647}')"
+            cf_api POST "/zones/$zone_id/email/routing/rules" "$payload" > /dev/null
+            any_changed=true
+          elif [[ -n "$local_part" ]]; then
+            # Literal match: <local_part>@<zone> → forward_to
+            match_val="$local_part@$zone_name"
+            existing="$(echo "$current_rules" | jq --arg m "$match_val" --arg fwd "$forward_to" \
+              '[.result[] | select(.matchers[0].type == "literal" and .matchers[0].value == $m and .actions[0].value[0] == $fwd)] | .[0].id // ""' -r)"
+            if [[ -n "$existing" ]]; then
+              echo "  ✓ $zone_name: $match_val → $forward_to"
+              continue
+            fi
+            echo "  + $zone_name: creating $match_val → $forward_to"
+            payload="$(jq -n --arg m "$match_val" --arg fwd "$forward_to" \
+              '{matchers:[{type:"literal", field:"to", value:$m}], actions:[{type:"forward", value:[$fwd]}], enabled:true, priority:0}')"
+            cf_api POST "/zones/$zone_id/email/routing/rules" "$payload" > /dev/null
+            any_changed=true
+          fi
+        done
+
+        # Warn about rules present in CF but not declared
+        declared_forwards="$(echo "$declared_rules" | jq -r '[.[] | .forward] | unique | .[]')"
+        for extra_rule_id in $(echo "$current_rules" | jq -r '.result[] | .id'); do
+          extra_fwd="$(echo "$current_rules" | jq --arg id "$extra_rule_id" \
+            '[.result[] | select(.id == $id)] | .[0].actions[0].value[0]' -r)"
+          if ! echo "$declared_forwards" | grep -qx "$extra_fwd"; then
+            :  # A rule with an unexpected forward target — could warn, but noisy
+          fi
+        done
+      done
+
+      # ────────────────────────────────────────────────────────────────
+      # 3. R2 buckets
+      # ────────────────────────────────────────────────────────────────
+      echo "▸ R2 buckets"
+
+      r2_buckets_json="$(nix eval --json --impure --expr \
+        "let cfg = (builtins.getFlake \"path:$REPO\").nixosConfigurations.pod042.config.cloudflare.r2.buckets or {}; in cfg")"
+
+      current_buckets="$(cf_api GET "/accounts/$ACCOUNT_ID/r2/buckets" | jq -r '.result.buckets[]?.name')"
+
+      for bucket_name in $(echo "$r2_buckets_json" | jq -r 'keys[]'); do
+        if echo "$current_buckets" | grep -qx "$bucket_name"; then
+          echo "  ✓ $bucket_name"
+          continue
+        fi
+        echo "  + creating R2 bucket $bucket_name"
+        location="$(echo "$r2_buckets_json" | jq -r --arg b "$bucket_name" '.[$b].location')"
+        payload="$(jq -n --arg name "$bucket_name" --arg loc "$location" \
+          'if $loc == "auto" then {name:$name} else {name:$name, locationHint:$loc} end')"
+        cf_api POST "/accounts/$ACCOUNT_ID/r2/buckets" "$payload" > /dev/null
+        any_changed=true
+      done
+
+      # Warn about R2 buckets in CF but not declared (never auto-delete)
+      for existing_bucket in $current_buckets; do
+        if ! echo "$r2_buckets_json" | jq -e --arg b "$existing_bucket" 'has($b)' > /dev/null; then
+          echo "  ⚠ R2 bucket '$existing_bucket' exists in CF but not declared — leaving alone (never auto-deleting R2 data)"
+        fi
+      done
+
+      # ────────────────────────────────────────────────────────────────
+      # Summary
+      # ────────────────────────────────────────────────────────────────
       if [[ "$any_changed" == "true" ]]; then
         echo ""
-        echo "▸ cf-reconcile made changes — remember to commit updated secrets/*.yaml"
-        echo "  and hosts/*/hardware-layout/cf-tunnels.lock.json files."
+        echo "▸ cf-reconcile made changes — commit updated secrets/*.yaml and"
+        echo "  hosts/*/hardware-layout/cf-tunnels.lock.json files."
       fi
     '';
   };

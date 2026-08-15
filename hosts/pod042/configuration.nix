@@ -22,6 +22,8 @@
     ../../modules/system/networking/tailnet-hosts.nix
     ../../modules/system/networking/avahi.nix
     ../../modules/system/networking/cloudflare-tunnel.nix
+    ../../modules/system/networking/cloudflare-email.nix
+    ../../modules/system/networking/cloudflare-r2.nix
     ../../modules/system/networking/localsend-firewall.nix
     ../../modules/system/networking/syncthing.nix
     ../../modules/system/bluetooth.nix

@@ -16,6 +16,8 @@
     ../../modules/system/networking/tailscale.nix
     ../../modules/system/networking/tailnet-hosts.nix
     ../../modules/system/networking/cloudflare-tunnel.nix
+    ../../modules/system/networking/cloudflare-email.nix
+    ../../modules/system/networking/cloudflare-r2.nix
     ../../modules/system/always-on.nix
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix
