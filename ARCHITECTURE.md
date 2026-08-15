@@ -244,5 +244,5 @@ No host changes needed — the age keypair is unchanged, only its at-rest envelo
 
 ## Known security debt
 
-- `hosts/*/hardware-layout/wifi-layout.nix` — wifi PSK in plaintext. Migration path: move into `secrets/<host>.yaml` and reference via `sops.secrets` (once wifi module reads from a file path instead of an inline string).
+- `hosts/*/hardware-layout/wifi-layout.nix` — wifi PSK in plaintext, **intentionally**. Threat model requires attacker + physical proximity to the wifi + knowledge of the public repo simultaneously. Payoff = free wifi. Not worth the sops indirection.
 - `users/server-admin/account.nix` — `initialPassword = "1234"` in plaintext. Deliberately trivial for headless server-class hosts (LAN-only + auth-gated CF tunnel); not a real secret. If ever elevated, switch to `hashedPasswordFile` fed by sops.
