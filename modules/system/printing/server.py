@@ -1,37 +1,48 @@
 from flask import (
     Flask, request, redirect, url_for, flash, get_flashed_messages,
-    send_file, Response,
+    send_file, Response, session,
 )
 import subprocess, tempfile, os, shutil, secrets, threading, html, hmac, time
 from collections import defaultdict, deque
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
-# Fresh key per restart is fine — sessions only carry one-shot flash messages.
-app.secret_key = secrets.token_hex(32)
+# Session cookies signed with this key. Kept STABLE across restarts so
+# existing family sessions survive `rebuild home-server` — otherwise every
+# rebuild would force everyone to log in again.
+def _load_secret_key() -> bytes:
+    creds_dir = os.environ.get('CREDENTIALS_DIRECTORY')
+    if creds_dir:
+        path = os.path.join(creds_dir, 'password')
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                # Derive the session key deterministically from the password.
+                # Rotating the password also invalidates all sessions — desirable.
+                import hashlib
+                return hashlib.sha256(f.read().strip()).digest()
+    return secrets.token_bytes(32)
+
+app.secret_key = _load_secret_key()
+app.permanent_session_lifetime = timedelta(days=30)
 
 # ────────────────────────────────────────────────────────────────
-# Auth + rate limiting
+# Auth: cookie-based, password-only
 # ────────────────────────────────────────────────────────────────
-# HTTP Basic Auth against a single shared password read from the environment
-# (populated by sops-nix from secrets/home-server.yaml at systemd unit start).
-# The username is arbitrary (any value works — browsers store user+password
-# pairs, so pick "print" to keep it memorable). Password rotation = update
-# secrets/home-server.yaml + rebuild.
+# Simple password-only login. First visit shows a form with just a password
+# field (no username to type). On success, sets a signed session cookie
+# valid for 30 days; subsequent visits pass through silently.
 #
-# Rate limit gates BRUTE FORCE: 5 failed attempts per IP per 15 min. This
-# means an 8-char alphanumeric password (62^8 ≈ 2e14 space) is uncrackable
-# in any human timescale even with parallelized IPs. Browser silently sends
-# credentials once saved, so legit users see the login prompt exactly once
-# per browser per device.
+# Rate limit: 20 failed attempts per IP per hour. Way more forgiving than
+# the previous 5/15min so a family member fat-fingering the password 5
+# times doesn't lock everyone at the house out. Still uncrackable — an
+# 11-char lowercase password (~52 bits) at 20/hour ≥ 10^12 years brute force.
 #
 # Client IP source: Cloudflare tunnel passes the real client IP in the
-# CF-Connecting-IP header. Falling back to request.remote_addr (which would
-# be Cloudflare's edge IP) would rate-limit everyone globally, defeating the
-# purpose.
+# CF-Connecting-IP header. Falling back to request.remote_addr would
+# bucket every visitor as "the CF edge IP that hit us" — useless for
+# rate limiting.
 def _load_password() -> str:
-    # systemd LoadCredential=password:... puts the file at
-    # $CREDENTIALS_DIRECTORY/password. Fall back to env var for dev use.
     creds_dir = os.environ.get('CREDENTIALS_DIRECTORY')
     if creds_dir:
         path = os.path.join(creds_dir, 'password')
@@ -41,9 +52,8 @@ def _load_password() -> str:
     return os.environ.get('PRINT_SERVER_PASSWORD', '').strip()
 
 PRINT_PASSWORD = _load_password()
-BASIC_AUTH_USER = 'print'
-RATE_WINDOW_SECONDS = 900
-RATE_MAX_FAILURES  = 5
+RATE_WINDOW_SECONDS = 3600
+RATE_MAX_FAILURES  = 20
 
 _rate_lock = threading.Lock()
 _failed_attempts: 'defaultdict[str, deque]' = defaultdict(deque)
@@ -67,34 +77,73 @@ def _clear_failures(ip: str) -> None:
     with _rate_lock:
         _failed_attempts.pop(ip, None)
 
-@app.before_request
-def _require_auth():
-    # Fail closed on misconfiguration — never silently allow if the password
-    # env var is missing.
+def _login_page(error: str = '') -> Response:
+    err_html = f'<div class="err">{html.escape(error)}</div>' if error else ''
+    body = f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Printer</title>
+<style>
+  body {{ background:#1a1a1a; color:#e5e5e5; font-family:system-ui,sans-serif;
+         display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }}
+  form {{ background:#232323; padding:2rem; border-radius:8px; width:min(90%, 320px); }}
+  h1 {{ margin:0 0 1rem; font-size:1.25rem; text-align:center; }}
+  input {{ width:100%; padding:.75rem; margin:.5rem 0; box-sizing:border-box;
+           background:#1a1a1a; color:#e5e5e5; border:1px solid #333; border-radius:4px; font-size:1rem; }}
+  button {{ width:100%; padding:.75rem; margin-top:.5rem;
+            background:#1e3a5f; color:#fff; border:0; border-radius:4px; font-size:1rem; cursor:pointer; }}
+  button:hover {{ background:#274b78; }}
+  .err {{ background:#5a1e1e; color:#ffb3b3; padding:.5rem; border-radius:4px;
+          margin-bottom:.75rem; text-align:center; font-size:.9rem; }}
+</style></head><body>
+<form method="post" action="/login">
+  <h1>Printer</h1>
+  {err_html}
+  <input type="password" name="password" placeholder="Password" autofocus required>
+  <button type="submit">Unlock</button>
+</form>
+</body></html>'''
+    return Response(body, status=200, mimetype='text/html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
     if not PRINT_PASSWORD:
         return Response('Server misconfigured: PRINT_SERVER_PASSWORD unset', status=503)
 
     ip = _client_ip()
     if not _check_rate_ok(ip):
         return Response(
-            'Too many failed auth attempts. Try again in 15 minutes.',
+            'Too many failed attempts. Try again in an hour.',
             status=429,
             headers={'Retry-After': str(RATE_WINDOW_SECONDS)},
         )
 
-    auth = request.authorization
-    if (auth
-        and auth.username == BASIC_AUTH_USER
-        and hmac.compare_digest(auth.password or '', PRINT_PASSWORD)):
-        _clear_failures(ip)
-        return None  # pass through to the actual handler
+    if request.method == 'POST':
+        pw = request.form.get('password', '')
+        if hmac.compare_digest(pw, PRINT_PASSWORD):
+            _clear_failures(ip)
+            session.permanent = True
+            session['auth'] = True
+            return redirect(request.args.get('next') or url_for('index'))
+        _record_failure(ip)
+        return _login_page(error='Wrong password.')
 
-    _record_failure(ip)
-    return Response(
-        'Authentication required',
-        status=401,
-        headers={'WWW-Authenticate': 'Basic realm="Printer"'},
-    )
+    return _login_page()
+
+@app.before_request
+def _require_auth():
+    # Fail closed on misconfiguration.
+    if not PRINT_PASSWORD:
+        return Response('Server misconfigured: PRINT_SERVER_PASSWORD unset', status=503)
+
+    # /login is the only route that bypasses the auth check.
+    if request.endpoint == 'login':
+        return None
+
+    if session.get('auth'):
+        return None
+
+    # Preserve where the user was heading so they land there after login.
+    return redirect(url_for('login', next=request.path))
 
 # Doc formats need LibreOffice to convert to PDF before CUPS can print them.
 DOC_EXTS = {'.docx', '.odt', '.doc', '.rtf'}
