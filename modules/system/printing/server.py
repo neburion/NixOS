@@ -52,6 +52,7 @@ def _load_password() -> str:
     return os.environ.get('PRINT_SERVER_PASSWORD', '').strip()
 
 PRINT_PASSWORD = _load_password()
+PRINT_USERNAME = 'print'
 RATE_WINDOW_SECONDS = 3600
 RATE_MAX_FAILURES  = 20
 
@@ -98,7 +99,8 @@ def _login_page(error: str = '') -> Response:
 <form method="post" action="/login">
   <h1>Printer</h1>
   {err_html}
-  <input type="password" name="password" placeholder="Password" autofocus required>
+  <input type="text" name="username" placeholder="Username" autocomplete="username" autofocus required>
+  <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
   <button type="submit">Unlock</button>
 </form>
 </body></html>'''
@@ -118,14 +120,18 @@ def login():
         )
 
     if request.method == 'POST':
-        pw = request.form.get('password', '')
-        if hmac.compare_digest(pw, PRINT_PASSWORD):
+        user = request.form.get('username', '')
+        pw   = request.form.get('password', '')
+        # Constant-time comparison on both to avoid timing side-channels.
+        user_ok = hmac.compare_digest(user, PRINT_USERNAME)
+        pw_ok   = hmac.compare_digest(pw, PRINT_PASSWORD)
+        if user_ok and pw_ok:
             _clear_failures(ip)
             session.permanent = True
             session['auth'] = True
             return redirect(request.args.get('next') or url_for('index'))
         _record_failure(ip)
-        return _login_page(error='Wrong password.')
+        return _login_page(error='Wrong username or password.')
 
     return _login_page()
 
