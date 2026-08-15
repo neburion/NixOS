@@ -16,7 +16,11 @@ in
     enable = true;
 
     loginShellInit = ''
-      if string match -q '/dev/tty*' (tty)
+      # Auto-start Hyprland on TTY login, but only if it's actually installed
+      # on this host. Fleet users share this fish module; headless hosts (e.g.
+      # home-server, personal-server) import fish but not Hyprland, and the
+      # unguarded exec would spam an error on every console-autologin.
+      if string match -q '/dev/tty*' (tty); and command -q Hyprland
         exec Hyprland
       end
     '';
