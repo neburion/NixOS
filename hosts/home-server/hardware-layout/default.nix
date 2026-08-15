@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./displays-layout.nix
+    ./cloudflare-layout.nix
     ./wifi-layout.nix
   ];
 }

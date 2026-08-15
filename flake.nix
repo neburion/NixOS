@@ -47,9 +47,11 @@
               backupFileExtension = "backup";
               extraSpecialArgs = {
                 inherit zen-browser;
+                # Headless hosts don't declare displays/backlight; fall back
+                # to {} so they don't need stub option declarations.
                 hostConfig = {
-                  displays  = { monitors = config.displays.monitors; };
-                  backlight = config.backlight;
+                  displays  = { monitors = config.displays.monitors or {}; };
+                  backlight = config.backlight or {};
                 };
               };
               sharedModules = [

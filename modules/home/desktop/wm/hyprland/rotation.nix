@@ -18,7 +18,7 @@ let
   # (transform in {1,3,5,7} ? height : width) / scale.
   reflow-monitors = pkgs.writeShellApplication {
     name = "reflow-monitors";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk xorg.xrandr ];
+    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk xrandr ];
     text = ''
       set -euo pipefail
 

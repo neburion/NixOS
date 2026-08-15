@@ -30,10 +30,10 @@ let
 
     label {
         monitor     =
-        text        = ユニット · ロック中
+        text        = UNIT · LOCKED
         color       = ${hex t.fg "88"}
         font_size   = 9
-        font_family = Noto Sans JP
+        font_family = Share Tech Mono
         position    = 0, 110
         halign      = center
         valign      = center
