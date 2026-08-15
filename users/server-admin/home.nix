@@ -4,7 +4,7 @@
   home-manager.users.server-admin.imports = [
     ../../modules/home/base.nix
     ../../modules/home/cli/shell/fish.nix
-    ../../modules/home/cli/nixos-scripts.nix
+    ../../modules/home/cli/nixos-scripts
     ../../modules/home/cli/btop.nix
     ../../modules/home/cli/compression.nix
     ../../modules/home/cli/fastfetch.nix

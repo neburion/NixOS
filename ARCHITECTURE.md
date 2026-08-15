@@ -33,7 +33,7 @@ Three layers, no leakage. Importing is enabling.
 Every host is a peer. There is no control node, no "primary" that other hosts depend on. Every host is on the fleet **Tailscale** tailnet (via `modules/system/networking/tailscale.nix` reading a shared `tailscale-auth-key` from `secrets/common.yaml`), so bare hostnames resolve via MagicDNS from anywhere in the world and `rebuild <host>` works over the tailnet interface regardless of the physical network the target is on. Consequences:
 
 - **Any host** can rebuild itself (`rebuild`) or any host it has SSH to (`rebuild <hostname>` — uses `nixos-rebuild --target-host`, no rsync).
-- **Any host** has the tooling (`rebuild`, `cf-reconcile`, future `r2-reconcile`, etc.) via `modules/home/cli/nixos-scripts.nix`.
+- **Any host** has the tooling (`rebuild`, `cf-reconcile`, future `r2-reconcile`, etc.) via `modules/home/cli/nixos-scripts/`.
 - **Any host** with the fleet age key at `/var/lib/sops-nix/key.txt` can decrypt every secret in the repo (per the single-fleet-key design — see the Secrets section).
 - **Adding a host:** copy a `hosts/<existing>/` skeleton, edit imports for the new machine, add one line to `flake.nix` `nixosConfigurations`. No cross-host references need editing.
 - **Removing a host:** delete `hosts/<gone>/` and its `flake.nix` entry. Nothing else references it (except optional SSH `authorized_keys`, which decays harmlessly).
@@ -44,7 +44,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 
 ### Operating rules (for me, Claude)
 
-- **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts.nix`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
+- **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts/`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
 - **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and home-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
 - **Remote deploys to any host.** `rebuild <hostname>` from any fleet workstation: uses `nixos-rebuild --target-host` over SSH, no rsync. Fleet SSH config (modules/system/networking/ssh.nix) maps hostnames to `server-admin` for server-class hosts. Passwordless wheel on servers means non-interactive activation.
@@ -66,6 +66,21 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 | `pod042`      | Main laptop                                            | `limine`        | `neburion`          |
 | `home-server` | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
 | `installer`   | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
+
+### The `installer` host
+
+`iso/` is a host like any other — `iso/configuration.nix` is a pure manifest.
+Two things make it look different:
+
+- **You build a different attribute.** `.config.system.build.isoImage` instead
+  of `.toplevel`. `nixflash` wraps that build plus the `dd`.
+- **It deliberately bypasses `mkSystem`.** No `specialArgs`, no home-manager,
+  no overlays — so it *cannot* import most of `modules/system/`, which assume
+  `inputs`. That's why `iso/nix-experimental.nix` re-states the one nix setting
+  it needs instead of importing `modules/system/nixos.nix`.
+
+Its scripts (`nixinstall`, `nixshrink`) are live-USB-only by nature and carry
+their own `runtimeInputs`, so the ISO needs no shared package list.
 
 ## Module tree (behavior layer)
 
@@ -102,6 +117,10 @@ base.nix                 home.stateVersion
 cli/                     shell/fish, neovim/*, btop, tree, fastfetch, superfile,
                          compression, fonts
 cli/ai/                  claude-code (pinned to pkgs.unstable via flake overlay)
+cli/nixos-scripts/       one script per file — rebuild, trebuild, update,
+                         nixflash. lib.nix holds the shared shell fragments
+                         (cloudFlake, pre-rebuild hook loop, ahead-of-origin
+                         warning); it is a plain function, not a module.
 cli/packager/            flatpak
 
 desktop/wm/hyprland/     env, input, keybinds, looks, monitors, programs, session,

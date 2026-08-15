@@ -2,7 +2,7 @@
 
 # Internal registry — reconciler modules (cloudflare-tunnel, r2-backup, etc.)
 # contribute pre-rebuild hooks via `rebuild.preHooks.<name>`. The `rebuild`
-# wrapper (see modules/home/cli/nixos-scripts.nix) iterates every registered
+# wrapper (see modules/home/cli/nixos-scripts/) iterates every registered
 # hook in name-sorted order before invoking `nixos-rebuild switch`; a non-zero
 # exit from any hook aborts the rebuild before any host is touched.
 #
