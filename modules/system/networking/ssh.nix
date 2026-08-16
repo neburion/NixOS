@@ -15,7 +15,11 @@
       # `passwd`-set hash living in mutable /etc/shadow. A lost key is never
       # a lockout: console-autologin.nix gives server-admin a shell on tty1.
       PasswordAuthentication = false;
-      PermitRootLogin        = "no";
+      # Also close the PAM keyboard-interactive path: with UsePAM=yes it
+      # routes through pam_unix and would prompt for the unix password,
+      # silently re-opening what PasswordAuthentication=false shuts.
+      KbdInteractiveAuthentication = false;
+      PermitRootLogin              = "no";
     };
   };
 
