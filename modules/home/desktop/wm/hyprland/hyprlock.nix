@@ -1,8 +1,10 @@
-{ pkgs, lib, themes, ... }:
+{ pkgs, lib, config, themes, ... }:
 
 let
   strip = lib.removePrefix "#";
   rgba  = hex: alpha: "rgba(${strip hex}${alpha})";
+
+  coverLink = "${config.home.homeDirectory}/.config/hypr/lock-cover.png";
 
   mkThemeConf = t: ''
     background {
@@ -54,13 +56,41 @@ let
         halign = center
         valign = center
     }
+
+    # Click target for screen-dark; Super+D does the same without aiming.
+    label {
+        monitor =
+        text = [ SCREEN DARK ]
+        color = ${rgba t.fg "66"}
+        font_size = 14
+        font_family = FiraMono Nerd Font Mono
+        position = 0, -110
+        halign = center
+        valign = center
+        onclick = screen-dark
+    }
+
+    # Transparent until screen-dark flips the symlink to black and signals
+    # SIGUSR2; reload_time = 0 means "reload only on that signal".
+    image {
+        monitor =
+        path = ${coverLink}
+        size = 4000
+        border_size = 0
+        rounding = 0
+        position = 0, 0
+        halign = center
+        valign = center
+        zindex = 100
+        reload_time = 0
+    }
   '';
 in
 {
   programs.hyprlock = {
     enable = true;
     settings.general = {
-      hide_cursor        = true;
+      hide_cursor        = false;   # needed to aim at the SCREEN DARK button
       ignore_empty_input = false;
     };
     extraConfig = ''

@@ -1,8 +1,10 @@
-{ pkgs, lib, themes, ... }:
+{ pkgs, lib, config, themes, ... }:
 
 let
   strip = lib.removePrefix "#";
   hex   = color: alpha: "rgba(${strip color}${alpha})";
+
+  coverLink = "${config.home.homeDirectory}/.config/hypr/lock-cover.png";
 
   mkThemeConf = t: ''
     background {
@@ -76,6 +78,44 @@ let
         hide_input        = false
     }
 
+    # ── Dark button ────────────────────────────────────────────────────
+    #
+    # A real click target: hyprlock runs `onclick` as a command. Super+D does
+    # the same thing without aiming (see screen-dark.nix).
+
+    label {
+        monitor     =
+        text        = [ SCREEN DARK ]
+        color       = ${hex t.fg "66"}
+        font_size   = 10
+        font_family = Share Tech Mono
+        position    = 0, -112
+        halign      = center
+        valign      = center
+        onclick     = screen-dark
+        shadow_passes = 0
+    }
+
+    # ── Dark cover ─────────────────────────────────────────────────────
+    #
+    # Normally a transparent PNG, so this draws nothing. screen-dark flips the
+    # symlink to an opaque black one and sends SIGUSR2; reload_time = 0 means
+    # hyprlock re-reads the file only on that signal. zindex puts it over every
+    # other widget, and 4000px covers the largest panel here from centre.
+
+    image {
+        monitor     =
+        path        = ${coverLink}
+        size        = 4000
+        border_size = 0
+        rounding    = 0
+        position    = 0, 0
+        halign      = center
+        valign      = center
+        zindex      = 100
+        reload_time = 0
+    }
+
     # ── Corner ─────────────────────────────────────────────────────────
     #
     # One line, and it earns its place: which box you are unlocking. The old
@@ -100,7 +140,9 @@ in
     enable = true;
     settings.general = {
       disable_loading_bar = true;
-      hide_cursor         = true;
+      # Was true. A hidden pointer can still click, but you cannot aim at the
+      # SCREEN DARK button without seeing where it is.
+      hide_cursor         = false;
       grace               = 0;
       no_fade_in          = false;
       no_fade_out         = false;
