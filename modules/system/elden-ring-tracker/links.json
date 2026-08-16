@@ -1,106 +1,448 @@
 {
-  "_comment": [
-    "Implication graph: entries the game hands you automatically once you have",
-    "done something else. A target is satisfied when ALL of its sources are.",
-    "Targets become read-only in the UI and are computed, never ticked by hand,",
-    "so one boss kill no longer means four checkboxes.",
-    "",
-    "Reference syntax:",
-    "  'section|Item'                 unique item name within a section",
-    "  'section|Group|Item'           when the name repeats in that section",
-    "  'group:section|Group'          every item in that group",
-    "  {'ref': '...', 'atLeast': N}   a tally that must reach N",
-    "",
-    "Deliberately NOT derived — 'any of' relations, where a tick cannot be",
-    "traced back to one unambiguous cause:",
-    "  ach|Elden Lord      any of four endings",
-    "  ach|Great Rune      any one Divine Tower restoration",
-    "  ach|Roundtable Hold, ach|Erdtree Aflame   no tracked prerequisite"
-  ],
-
-  "links": [
-    { "target": "ach|Shardbearer Godrick", "sources": ["boss|Godrick the Grafted"] },
-    { "target": "ach|Shardbearer Radahn", "sources": ["boss|Starscourge Radahn"] },
-    { "target": "ach|Shardbearer Morgott", "sources": ["boss|Morgott, the Omen King"] },
-    { "target": "ach|Shardbearer Rykard", "sources": ["boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"] },
-    { "target": "ach|Shardbearer Malenia", "sources": ["boss|Malenia, Blade of Miquella"] },
-    { "target": "ach|Shardbearer Mohg", "sources": ["boss|Mohg, Lord of Blood"] },
-    { "target": "ach|Maliketh the Black Blade", "sources": ["boss|Beast Clergyman / Maliketh, the Black Blade"] },
-    { "target": "ach|Hoarah Loux the Warrior", "sources": ["boss|Godfrey, First Elden Lord / Hoarah Loux"] },
-    { "target": "ach|Dragonlord Placidusax", "sources": ["boss|Dragonlord Placidusax"] },
-    { "target": "ach|Rennala, Queen of the Full Moon", "sources": ["boss|Rennala, Queen of the Full Moon"] },
-    { "target": "ach|Lichdragon Fortissax", "sources": ["boss|Lichdragon Fortissax"] },
-    { "target": "ach|Godskin Duo", "sources": ["boss|Godskin Duo"] },
-    { "target": "ach|Fire Giant", "sources": ["boss|Fire Giant"] },
-    { "target": "ach|Dragonkin Soldier of Nokstella", "sources": ["boss|Dragonkin Soldier of Nokstella"] },
-    { "target": "ach|Regal Ancestor Spirit", "sources": ["boss|Regal Ancestor Spirit"] },
-    { "target": "ach|Valiant Gargoyles", "sources": ["boss|Valiant Gargoyle & Valiant Gargoyle (Twinblade)"] },
-    { "target": "ach|Margit, the Fell Omen", "sources": ["boss|Margit, the Fell Omen"] },
-    { "target": "ach|Red Wolf of Radagon", "sources": ["boss|Red Wolf of Radagon"] },
-    { "target": "ach|Godskin Noble", "sources": ["boss|Godskin Noble"] },
-    { "target": "ach|Magma Wyrm Makar", "sources": ["boss|Magma Wyrm Makar"] },
-    { "target": "ach|Godfrey the First Lord", "sources": ["boss|Godfrey, First Elden Lord (Golden Shade)"] },
-    { "target": "ach|Mohg, the Omen", "sources": ["boss|Leyndell, Royal Capital|Mohg, the Omen"] },
-    { "target": "ach|Mimic Tear", "sources": ["boss|Mimic Tear"] },
-    { "target": "ach|Loretta, Knight of the Haligtree", "sources": ["boss|Loretta, Knight of the Haligtree"] },
-    { "target": "ach|Astel, Naturalborn of the Void", "sources": ["boss|Astel, Naturalborn of the Void"] },
-    { "target": "ach|Leonine Misbegotten", "sources": ["boss|Leonine Misbegotten"] },
-    { "target": "ach|Royal Knight Loretta", "sources": ["boss|Royal Knight Loretta"] },
-    { "target": "ach|Elemer of the Briar", "sources": ["boss|Elemer of the Briar"] },
-    { "target": "ach|Ancestor Spirit", "sources": ["boss|Ancestor Spirit"] },
-    { "target": "ach|Commander Niall", "sources": ["boss|Commander Niall"] },
-
-    { "target": "ach|Legendary Armaments", "sources": ["group:leg|Legendary Armaments — 9"] },
-    { "target": "ach|Legendary Ashen Remains", "sources": ["group:leg|Legendary Ashen Remains — 6"] },
-    { "target": "ach|Legendary Sorceries and Incantations", "sources": ["group:leg|Legendary Sorceries & Incantations — 7"] },
-    { "target": "ach|Legendary Talismans", "sources": ["group:leg|Legendary Talismans — 8"] },
-
-    { "target": "ach|Age of the Stars", "sources": ["end|Age of the Stars"] },
-    { "target": "ach|Lord of Frenzied Flame", "sources": ["end|Lord of Frenzied Flame"] },
-    { "target": "ach|God-Slaying Armament", "sources": ["max|Upgrade a weapon to max"] },
-
-    { "target": "rem|Remembrance of the Grafted", "sources": ["boss|Godrick the Grafted"] },
-    { "target": "rem|Remembrance of the Full Moon Queen", "sources": ["boss|Rennala, Queen of the Full Moon"] },
-    { "target": "rem|Remembrance of the Starscourge", "sources": ["boss|Starscourge Radahn"] },
-    { "target": "rem|Remembrance of the Regal Ancestor", "sources": ["boss|Regal Ancestor Spirit"] },
-    { "target": "rem|Remembrance of the Naturalborn", "sources": ["boss|Astel, Naturalborn of the Void"] },
-    { "target": "rem|Remembrance of the Blasphemous", "sources": ["boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"] },
-    { "target": "rem|Remembrance of the Fire Giant", "sources": ["boss|Fire Giant"] },
-    { "target": "rem|Remembrance of the Blood Lord", "sources": ["boss|Mohg, Lord of Blood"] },
-    { "target": "rem|Remembrance of the Black Blade", "sources": ["boss|Beast Clergyman / Maliketh, the Black Blade"] },
-    { "target": "rem|Remembrance of the Dragonlord", "sources": ["boss|Dragonlord Placidusax"] },
-    { "target": "rem|Remembrance of the Lichdragon", "sources": ["boss|Lichdragon Fortissax"] },
-    { "target": "rem|Remembrance of the Omen King", "sources": ["boss|Morgott, the Omen King"] },
-    { "target": "rem|Remembrance of the Rot Goddess", "sources": ["boss|Malenia, Blade of Miquella"] },
-    { "target": "rem|Remembrance of Hoarah Loux", "sources": ["boss|Godfrey, First Elden Lord / Hoarah Loux"] },
-    { "target": "rem|Elden Remembrance", "sources": ["boss|Radagon of the Golden Order / Elden Beast"] },
-
-    { "target": "rem|Remembrance of the Dancing Lion", "sources": ["boss|Gravesite Plain|Divine Beast Dancing Lion"] },
-    { "target": "rem|Remembrance of the Twin Moon Knight", "sources": ["boss|Rellana, Twin Moon Knight"] },
-    { "target": "rem|Remembrance of Putrescence", "sources": ["boss|Putrescent Knight"] },
-    { "target": "rem|Remembrance of the Wild Boar Rider", "sources": ["boss|Commander Gaius"] },
-    { "target": "rem|Remembrance of the Shadow Sunflower", "sources": ["boss|Scadutree Avatar"] },
-    { "target": "rem|Remembrance of the Impaler", "sources": ["boss|Messmer the Impaler"] },
-    { "target": "rem|Remembrance of the Saint of the Bud", "sources": ["boss|Romina, Saint of the Bud"] },
-    { "target": "rem|Remembrance of the Mother of Fingers", "sources": ["boss|Metyr, Mother of Fingers"] },
-    { "target": "rem|Remembrance of the Lord of Frenzied Flame", "sources": ["boss|Midra, Lord of Frenzied Flame"] },
-    { "target": "rem|Remembrance of the Dread Dragon", "sources": ["boss|Bayle the Dread"] },
-    { "target": "rem|Remembrance of a God and a Lord", "sources": ["boss|Promised Consort Radahn"] },
-
-    { "target": "rune|Godrick's Great Rune", "sources": ["boss|Godrick the Grafted"] },
-    { "target": "rune|Radahn's Great Rune", "sources": ["boss|Starscourge Radahn"] },
-    { "target": "rune|Morgott's Great Rune", "sources": ["boss|Morgott, the Omen King"] },
-    { "target": "rune|Rykard's Great Rune", "sources": ["boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"] },
-    { "target": "rune|Mohg's Great Rune", "sources": ["boss|Mohg, Lord of Blood"] },
-    { "target": "rune|Malenia's Great Rune", "sources": ["boss|Malenia, Blade of Miquella"] },
-    { "target": "rune|Great Rune of the Unborn", "sources": ["boss|Rennala, Queen of the Full Moon"] },
-
-    { "target": "max|Rune Level 713", "sources": ["group:max|Level & stats"] },
-    { "target": "max|14 total flask charges", "sources": [{ "ref": "coll|Golden Seeds", "atLeast": 30 }] },
-    { "target": "max|Flask potency +12", "sources": [{ "ref": "coll|Sacred Tears", "atLeast": 12 }] },
-    { "target": "max|10 memory slots", "sources": [{ "ref": "coll|Memory Stones", "atLeast": 8 }] },
-    { "target": "max|4 talisman slots", "sources": [{ "ref": "coll|Talisman Pouches", "atLeast": 3 }] },
-    { "target": "max|Scadutree Blessing +20", "sources": [{ "ref": "coll|Scadutree Fragments", "atLeast": 50 }] },
-    { "target": "max|Revered Spirit Ash Blessing +10", "sources": [{ "ref": "coll|Revered Spirit Ashes", "atLeast": 25 }] }
-  ]
+ "_comment": [
+  "Implication graph: entries the game hands you automatically once you have",
+  "done something else. A target is satisfied when ALL of its sources are.",
+  "Targets become read-only in the UI and are computed, never ticked by hand,",
+  "so one boss kill no longer means four checkboxes.",
+  "",
+  "Reference syntax:",
+  "  'section|Item'                 unique item name within a section",
+  "  'section|Group|Item'           when the name repeats in that section",
+  "  'group:section|Group'          every item in that group",
+  "  {'ref': '...', 'atLeast': N}   a tally that must reach N",
+  "",
+  "Deliberately NOT derived — 'any of' relations, where a tick cannot be",
+  "traced back to one unambiguous cause:",
+  "  ach|Elden Lord      any of four endings",
+  "  ach|Great Rune      any one Divine Tower restoration",
+  "  ach|Roundtable Hold, ach|Erdtree Aflame   no tracked prerequisite"
+ ],
+ "links": [
+  {
+   "target": "ach|Shardbearer Godrick",
+   "sources": [
+    "boss|Godrick the Grafted"
+   ]
+  },
+  {
+   "target": "ach|Shardbearer Radahn",
+   "sources": [
+    "boss|Starscourge Radahn"
+   ]
+  },
+  {
+   "target": "ach|Shardbearer Morgott",
+   "sources": [
+    "boss|Morgott, the Omen King"
+   ]
+  },
+  {
+   "target": "ach|Shardbearer Rykard",
+   "sources": [
+    "boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"
+   ]
+  },
+  {
+   "target": "ach|Shardbearer Malenia",
+   "sources": [
+    "boss|Malenia, Blade of Miquella"
+   ]
+  },
+  {
+   "target": "ach|Shardbearer Mohg",
+   "sources": [
+    "boss|Mohg, Lord of Blood"
+   ]
+  },
+  {
+   "target": "ach|Maliketh the Black Blade",
+   "sources": [
+    "boss|Beast Clergyman / Maliketh, the Black Blade"
+   ]
+  },
+  {
+   "target": "ach|Hoarah Loux the Warrior",
+   "sources": [
+    "boss|Godfrey, First Elden Lord / Hoarah Loux"
+   ]
+  },
+  {
+   "target": "ach|Dragonlord Placidusax",
+   "sources": [
+    "boss|Dragonlord Placidusax"
+   ]
+  },
+  {
+   "target": "ach|Rennala, Queen of the Full Moon",
+   "sources": [
+    "boss|Rennala, Queen of the Full Moon"
+   ]
+  },
+  {
+   "target": "ach|Lichdragon Fortissax",
+   "sources": [
+    "boss|Lichdragon Fortissax"
+   ]
+  },
+  {
+   "target": "ach|Godskin Duo",
+   "sources": [
+    "boss|Godskin Duo"
+   ]
+  },
+  {
+   "target": "ach|Fire Giant",
+   "sources": [
+    "boss|Fire Giant"
+   ]
+  },
+  {
+   "target": "ach|Dragonkin Soldier of Nokstella",
+   "sources": [
+    "boss|Dragonkin Soldier of Nokstella"
+   ]
+  },
+  {
+   "target": "ach|Regal Ancestor Spirit",
+   "sources": [
+    "boss|Regal Ancestor Spirit"
+   ]
+  },
+  {
+   "target": "ach|Valiant Gargoyles",
+   "sources": [
+    "boss|Valiant Gargoyle & Valiant Gargoyle (Twinblade)"
+   ]
+  },
+  {
+   "target": "ach|Margit, the Fell Omen",
+   "sources": [
+    "boss|Margit, the Fell Omen"
+   ]
+  },
+  {
+   "target": "ach|Red Wolf of Radagon",
+   "sources": [
+    "boss|Red Wolf of Radagon"
+   ]
+  },
+  {
+   "target": "ach|Godskin Noble",
+   "sources": [
+    "boss|Godskin Noble"
+   ]
+  },
+  {
+   "target": "ach|Magma Wyrm Makar",
+   "sources": [
+    "boss|Magma Wyrm Makar"
+   ]
+  },
+  {
+   "target": "ach|Godfrey the First Lord",
+   "sources": [
+    "boss|Godfrey, First Elden Lord (Golden Shade)"
+   ]
+  },
+  {
+   "target": "ach|Mohg, the Omen",
+   "sources": [
+    "boss|Leyndell, Royal Capital|Mohg, the Omen"
+   ]
+  },
+  {
+   "target": "ach|Mimic Tear",
+   "sources": [
+    "boss|Mimic Tear"
+   ]
+  },
+  {
+   "target": "ach|Loretta, Knight of the Haligtree",
+   "sources": [
+    "boss|Loretta, Knight of the Haligtree"
+   ]
+  },
+  {
+   "target": "ach|Astel, Naturalborn of the Void",
+   "sources": [
+    "boss|Astel, Naturalborn of the Void"
+   ]
+  },
+  {
+   "target": "ach|Leonine Misbegotten",
+   "sources": [
+    "boss|Leonine Misbegotten"
+   ]
+  },
+  {
+   "target": "ach|Royal Knight Loretta",
+   "sources": [
+    "boss|Royal Knight Loretta"
+   ]
+  },
+  {
+   "target": "ach|Elemer of the Briar",
+   "sources": [
+    "boss|Elemer of the Briar"
+   ]
+  },
+  {
+   "target": "ach|Ancestor Spirit",
+   "sources": [
+    "boss|Ancestor Spirit"
+   ]
+  },
+  {
+   "target": "ach|Commander Niall",
+   "sources": [
+    "boss|Commander Niall"
+   ]
+  },
+  {
+   "target": "ach|Legendary Armaments",
+   "sources": [
+    "group:leg|Legendary Armaments — 9"
+   ]
+  },
+  {
+   "target": "ach|Legendary Ashen Remains",
+   "sources": [
+    "group:leg|Legendary Ashen Remains — 6"
+   ]
+  },
+  {
+   "target": "ach|Legendary Sorceries and Incantations",
+   "sources": [
+    "group:leg|Legendary Sorceries & Incantations — 7"
+   ]
+  },
+  {
+   "target": "ach|Legendary Talismans",
+   "sources": [
+    "group:leg|Legendary Talismans — 8"
+   ]
+  },
+  {
+   "target": "ach|Age of the Stars",
+   "sources": [
+    "end|Age of the Stars"
+   ]
+  },
+  {
+   "target": "ach|Lord of Frenzied Flame",
+   "sources": [
+    "end|Lord of Frenzied Flame"
+   ]
+  },
+  {
+   "target": "ach|God-Slaying Armament",
+   "sources": [
+    "max|Upgrade a weapon to max"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Grafted",
+   "sources": [
+    "boss|Godrick the Grafted"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Full Moon Queen",
+   "sources": [
+    "boss|Rennala, Queen of the Full Moon"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Starscourge",
+   "sources": [
+    "boss|Starscourge Radahn"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Regal Ancestor",
+   "sources": [
+    "boss|Regal Ancestor Spirit"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Naturalborn",
+   "sources": [
+    "boss|Astel, Naturalborn of the Void"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Blasphemous",
+   "sources": [
+    "boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Fire Giant",
+   "sources": [
+    "boss|Fire Giant"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Blood Lord",
+   "sources": [
+    "boss|Mohg, Lord of Blood"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Black Blade",
+   "sources": [
+    "boss|Beast Clergyman / Maliketh, the Black Blade"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Dragonlord",
+   "sources": [
+    "boss|Dragonlord Placidusax"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Lichdragon",
+   "sources": [
+    "boss|Lichdragon Fortissax"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Omen King",
+   "sources": [
+    "boss|Morgott, the Omen King"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Rot Goddess",
+   "sources": [
+    "boss|Malenia, Blade of Miquella"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of Hoarah Loux",
+   "sources": [
+    "boss|Godfrey, First Elden Lord / Hoarah Loux"
+   ]
+  },
+  {
+   "target": "rem|Elden Remembrance",
+   "sources": [
+    "boss|Radagon of the Golden Order / Elden Beast"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Dancing Lion",
+   "sources": [
+    "boss|Gravesite Plain|Divine Beast Dancing Lion"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Twin Moon Knight",
+   "sources": [
+    "boss|Rellana, Twin Moon Knight"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of Putrescence",
+   "sources": [
+    "boss|Putrescent Knight"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Wild Boar Rider",
+   "sources": [
+    "boss|Commander Gaius"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Shadow Sunflower",
+   "sources": [
+    "boss|Scadutree Avatar"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Impaler",
+   "sources": [
+    "boss|Messmer the Impaler"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Saint of the Bud",
+   "sources": [
+    "boss|Romina, Saint of the Bud"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Mother of Fingers",
+   "sources": [
+    "boss|Metyr, Mother of Fingers"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Lord of Frenzied Flame",
+   "sources": [
+    "boss|Midra, Lord of Frenzied Flame"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of the Dread Dragon",
+   "sources": [
+    "boss|Bayle the Dread"
+   ]
+  },
+  {
+   "target": "rem|Remembrance of a God and a Lord",
+   "sources": [
+    "boss|Promised Consort Radahn"
+   ]
+  },
+  {
+   "target": "rune|Godrick's Great Rune",
+   "sources": [
+    "boss|Godrick the Grafted"
+   ]
+  },
+  {
+   "target": "rune|Radahn's Great Rune",
+   "sources": [
+    "boss|Starscourge Radahn"
+   ]
+  },
+  {
+   "target": "rune|Morgott's Great Rune",
+   "sources": [
+    "boss|Morgott, the Omen King"
+   ]
+  },
+  {
+   "target": "rune|Rykard's Great Rune",
+   "sources": [
+    "boss|God-Devouring Serpent / Rykard, Lord of Blasphemy"
+   ]
+  },
+  {
+   "target": "rune|Mohg's Great Rune",
+   "sources": [
+    "boss|Mohg, Lord of Blood"
+   ]
+  },
+  {
+   "target": "rune|Malenia's Great Rune",
+   "sources": [
+    "boss|Malenia, Blade of Miquella"
+   ]
+  },
+  {
+   "target": "rune|Great Rune of the Unborn",
+   "sources": [
+    "boss|Rennala, Queen of the Full Moon"
+   ]
+  },
+  {
+   "target": "max|Rune Level 713",
+   "sources": [
+    "group:max|Level & stats"
+   ]
+  }
+ ]
 }

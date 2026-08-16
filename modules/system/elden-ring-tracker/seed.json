@@ -255,7 +255,7 @@
  {
   "id": "max",
   "t": "Maxing the Tarnished",
-  "n": "Every permanent upgrade the character can take.",
+  "n": "Permanent character state — everything here survives New Game cycles, which makes it the part of the list still worth ticking in NG+.",
   "g": [
    {
     "name": "Level & stats",
@@ -350,85 +350,22 @@
  {
   "id": "coll",
   "t": "Collectibles & Tallies",
-  "n": "Counts rather than named lists, where the game gives you far more than you need or the names carry no information.",
+  "n": "Only what survives a New Game cycle. Consumables and world pickups — Golden Seeds, Larval Tears, Deathroot, Dragon Hearts, Scadutree Fragments — respawn every NG, so counting them tells you nothing; what persists is the upgrade they bought, tracked under Maxing the Tarnished.",
   "g": [
-   {
-    "name": "Progression",
-    "items": [
-     {
-      "n": "Golden Seeds",
-      "max": 45,
-      "d": "Only 30 are needed for 14 flask charges — 45 exist."
-     },
-     {
-      "n": "Sacred Tears",
-      "max": 12,
-      "d": "All 12 for +12 flask potency."
-     },
-     {
-      "n": "Memory Stones",
-      "max": 8,
-      "d": "Ten memory slots at full."
-     },
-     {
-      "n": "Talisman Pouches",
-      "max": 3,
-      "d": "Godrick, Margit's Shackle merchant, and Enia after two Great Runes."
-     },
-     {
-      "n": "Larval Tears",
-      "max": 18,
-      "d": "Respec at Rennala."
-     },
-     {
-      "n": "Deathroot",
-      "max": 9,
-      "d": "Feed to Gurranq at the Bestial Sanctum for his full reward list."
-     }
-    ]
-   },
-   {
-    "name": "Shadow Realm",
-    "dlc": 1,
-    "items": [
-     {
-      "n": "Scadutree Fragments",
-      "max": 50,
-      "d": "Two per blessing level, up to +20."
-     },
-     {
-      "n": "Revered Spirit Ashes",
-      "max": 25,
-      "d": "Summon damage and defence, up to +10."
-     },
-     {
-      "n": "Furnace Golems",
-      "max": 12,
-      "d": "Each drops a Crystal Tear or upgrade material."
-     }
-    ]
-   },
    {
     "name": "Odds and ends",
     "items": [
-     {
-      "n": "Cookbooks",
-      "max": 104,
-      "d": "59 in the base game, 45 in the DLC."
-     },
+     "All cookbook recipes learned::Recipes are permanent once read; the 104 books themselves respawn each cycle.",
+     "All Gurranq rewards claimed::Nine Deathroot deliveries at the Bestial Sanctum. The rewards keep; the Deathroot respawn.",
      {
       "n": "Gestures",
       "max": 47,
-      "d": "12 come with your class; 35 are found or taught."
+      "d": "Learned permanently — 12 come with your class, 35 are found or taught."
      },
      {
       "n": "Map Fragments — base",
-      "max": 19
-     },
-     {
-      "n": "Dragon Hearts",
-      "max": 20,
-      "d": "Spent at Cathedrals of Dragon Communion. Farm more from any dragon."
+      "max": 19,
+      "d": "The revealed map carries across NG."
      }
     ]
    },
