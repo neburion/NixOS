@@ -4,7 +4,12 @@ let
   strip = lib.removePrefix "#";
   hex   = color: alpha: "rgba(${strip color}${alpha})";
 
-  coverLink = "${config.home.homeDirectory}/.config/hypr/lock-cover.png";
+  screenDark = import ../hyprland/screen-dark-pkg.nix {
+    inherit pkgs;
+    homeDirectory = config.home.homeDirectory;
+  };
+
+  coverLink = screenDark.coverLink;
 
   mkThemeConf = t: ''
     background {
@@ -80,8 +85,8 @@ let
 
     # ── Dark button ────────────────────────────────────────────────────
     #
-    # A real click target: hyprlock runs `onclick` as a command. Super+D does
-    # the same thing without aiming (see screen-dark.nix).
+    # A real click target: hyprlock runs `onclick` as a command. Super+Shift+D
+    # does the same thing without aiming (see screen-dark.nix).
 
     label {
         monitor     =
@@ -92,7 +97,7 @@ let
         position    = 0, -112
         halign      = center
         valign      = center
-        onclick     = screen-dark
+        onclick     = ${screenDark.script}/bin/screen-dark
         shadow_passes = 0
     }
 

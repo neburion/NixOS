@@ -4,7 +4,12 @@ let
   strip = lib.removePrefix "#";
   rgba  = hex: alpha: "rgba(${strip hex}${alpha})";
 
-  coverLink = "${config.home.homeDirectory}/.config/hypr/lock-cover.png";
+  screenDark = import ./screen-dark-pkg.nix {
+    inherit pkgs;
+    homeDirectory = config.home.homeDirectory;
+  };
+
+  coverLink = screenDark.coverLink;
 
   mkThemeConf = t: ''
     background {
@@ -57,7 +62,7 @@ let
         valign = center
     }
 
-    # Click target for screen-dark; Super+D does the same without aiming.
+    # Click target for screen-dark; Super+Shift+D does the same without aiming.
     label {
         monitor =
         text = [ SCREEN DARK ]
@@ -67,7 +72,7 @@ let
         position = 0, -110
         halign = center
         valign = center
-        onclick = screen-dark
+        onclick = ${screenDark.script}/bin/screen-dark
     }
 
     # Transparent until screen-dark flips the symlink to black and signals
