@@ -4,7 +4,7 @@
 
 let
   inherit (import ./lib.nix { inherit osConfig; })
-    cloudFlake runHooks warnIfLocalDiverged;
+    runHooks warnIfLocalDiverged deployHost;
 in
 {
   home.packages = [
@@ -20,6 +20,7 @@ in
 
         ${warnIfLocalDiverged}
         ${runHooks}
+        ${deployHost}
 
         # First non-flag arg (if any) is treated as a target hostname.
         # `--` explicitly ends target-parsing, so `rebuild -- --show-trace`
@@ -36,25 +37,7 @@ in
           target="$(hostname -s)"
         fi
 
-        # --refresh forces nix to re-fetch the flake source (bypasses the
-        # 1-hour tarball cache) so a `git push` immediately followed by
-        # `rebuild` uses the just-pushed commit.
-        if [[ "$target" != "$(hostname -s)" ]]; then
-          echo "▸ remote deploy → $target (from ${cloudFlake})"
-          nixos-rebuild switch \
-            --flake "${cloudFlake}#$target" \
-            --refresh \
-            --target-host "$target" \
-            --sudo \
-            --no-reexec \
-            "$@"
-        else
-          echo "▸ local rebuild → $target (from ${cloudFlake})"
-          sudo nixos-rebuild switch \
-            --flake "${cloudFlake}#$target" \
-            --refresh \
-            "$@"
-        fi
+        deploy_host "$target" "$@"
       '';
     })
   ];
