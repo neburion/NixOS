@@ -11,13 +11,13 @@ tailnet only. See the module tree entry in `ARCHITECTURE.md`.
 |---|---|
 | `service.nix` | systemd unit, system user, tailnet firewall rule |
 | `schema.sql` | tables, views, FTS5 index |
-| `seed.json` | the 1,672-entry reference dataset |
+| `seed.json` | the 1,640-entry reference dataset |
 | `links.json` | the implication graph — what a tick settles automatically |
 | `seed.py` | rebuilds reference tables from `seed.json`, **keeps progress** |
 | `app.py` | HTTP server + JSON API |
 | `ui.html` | the UI |
 
-2,031 tickable units across 18 sections (1,672 rows; tallies like the 45 Golden
+1,704 tickable units across 17 sections (1,640 rows; tallies like the 45 Golden
 Seeds and 104 Cookbooks count for more than one).
 
 ## Where the data lives
@@ -111,14 +111,21 @@ Overrides: `ER_DB`, `ER_SEED`, `ER_SCHEMA`, `ER_UI`, `ER_HOST`, `ER_PORT`.
 
 ## Security
 
-The app has **no authentication**. The `tailscale0`-scoped firewall rule in
-`service.nix` is the only access control. Do not point a Cloudflare tunnel at
-:8777 without an Access policy in front of it — `cf-reconcile` does not manage
-Access, so a tunnel with no policy is open to the internet.
+HTTP Basic Auth, on whenever a password is present — the systemd credential
+`password` (the `elden-ring-password` sops secret) or `$ER_PASSWORD`. Without
+one the app refuses to bind anything but loopback, so a misconfigured deploy
+fails to start rather than serving the ledger to the internet.
+
+That is a second gate, not the only one: the `tailscale0`-scoped firewall rule
+in `service.nix` still limits who can reach :8777, and the Cloudflare tunnel to
+`eldenring.azuresalt.app` wants an Access policy in front of it — `cf-reconcile`
+does not manage Access, so a tunnel with no policy leans on Basic Auth alone.
 
 ## Sources
 
 Fextralife and wiki.gg Elden Ring wikis, PowerPyx, Game8. Current through Shadow
 of the Erdtree. Boss lists cover named and unique encounters; ordinary field and
 dungeon repeats are not listed individually. Consumables, crafting materials and
-Stonesword Keys are excluded as renewable or trivial.
+Stonesword Keys are excluded as renewable or trivial — the one exception is the
+Sacrificial Twig, which is consumable but sits in the talisman list in-game, and
+the talisman section is complete on purpose.
