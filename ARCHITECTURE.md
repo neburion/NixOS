@@ -85,11 +85,13 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 headless, `server-admin`, always-on) split by *audience*: the family depends on
 one, so it stays boring; the other is mine to break. Per the fleet principle
 neither depends on the other — the split is about blast radius, not topology.
-`personal-server` runs one service so far, the Elden Ring tracker, reachable at
-`http://personal-server:8777` from anywhere on the tailnet. Its Cloudflare tunnel
-wiring stays pre-attached but unused, so exposing something publicly later is one
-line in its `cloudflare-layout.nix` — plus an Access policy, because the tracker
-has no auth of its own.
+`personal-server` runs one service so far, the Elden Ring tracker: on the tailnet
+at `http://personal-server:8777`, and publicly at `https://eldenring.azuresalt.app`
+through a Cloudflare tunnel. It is the first host to expose something whose gate
+is not solely a Cloudflare Access policy — the app carries HTTP Basic Auth from
+the `elden-ring-password` sops secret and refuses to bind a non-loopback address
+without it, so a missing Access policy weakens the gate rather than removing it.
+Set the policy anyway.
 
 ### The `installer` host
 
@@ -120,9 +122,12 @@ power-profiles.nix
 always-on.nix            keep host awake: no lid handling, no sleep targets
 
 elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracker
-                         + web UI on :8777, tailnet-only firewall rule; seed.py
-                         runs as ExecStartPre and migrates the DB in place,
-                         re-attaching progress by natural key)
+                         + web UI on :8777; firewall opens the port on tailscale0
+                         only, cloudflared reaches it via loopback. HTTP Basic
+                         Auth from a sops secret via LoadCredential; refuses to
+                         bind non-loopback without it. seed.py runs as
+                         ExecStartPre and migrates the DB in place, re-attaching
+                         progress by natural key)
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend

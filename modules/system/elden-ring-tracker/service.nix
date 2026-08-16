@@ -1,7 +1,8 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 # Elden Ring 100% completion tracker — SQLite + a small web UI on :8777,
-# reachable over the tailnet only.
+# reachable over the tailnet and publicly at https://eldenring.azuresalt.app
+# through the Cloudflare tunnel declared in the host's cloudflare-layout.nix.
 #
 # Stdlib Python only: no Flask, no pip. `sqlite3` ships with pkgs.python3 and
 # nixpkgs builds it with FTS5, which the search endpoint needs.
@@ -54,6 +55,14 @@ in
   };
   users.groups.elden-ring = { };
 
+  # HTTP Basic Auth password for the UI. Rotate with:
+  #   sops secrets/personal-server.yaml   (edit elden-ring-password)
+  #   git commit && git push && rebuild personal-server
+  sops.secrets.elden-ring-password = {
+    sopsFile = ../../../secrets/personal-server.yaml;
+    mode = "0400";
+  };
+
   systemd.services.elden-ring-tracker = {
     description = "Elden Ring completion tracker";
     wantedBy = [ "multi-user.target" ];
@@ -63,6 +72,13 @@ in
     serviceConfig = {
       ExecStartPre = "${seedDb}/bin/elden-ring-tracker-seed";
       ExecStart = "${tracker}/bin/elden-ring-tracker";
+
+      # Read as root at unit start, handed to the service at
+      # $CREDENTIALS_DIRECTORY/password after the User= drop. Same approach as
+      # the print server: avoids EnvironmentFile's ordering problem and keeps
+      # the password out of the process environment table.
+      LoadCredential = "password:${config.sops.secrets.elden-ring-password.path}";
+
       Restart = "on-failure";
       RestartSec = "5s";
       User = "elden-ring";
@@ -91,11 +107,17 @@ in
     };
   };
 
-  # Tailnet-only. The listener binds 0.0.0.0 so it answers on the tailscale0
-  # address, but the port is opened on that interface alone — nothing on the
-  # LAN or the internet can reach it. There is no auth in the app, so this
-  # firewall rule IS the access control. Do not point a Cloudflare tunnel at
-  # this port without putting an Access policy in front of it first (see the
-  # warning in hosts/personal-server/hardware-layout/cloudflare-layout.nix).
+  # The listener binds 0.0.0.0, but the only interface the port is opened on is
+  # tailscale0 — nothing on the LAN can reach it. Public access comes from
+  # cloudflared instead, which connects to 127.0.0.1:8777 from inside the host
+  # and so needs no firewall rule at all.
+  #
+  # Three independent layers gate the public hostname, because two of them are
+  # configured by hand and can silently go missing:
+  #   1. Cloudflare Access policy — dashboard only, NOT managed by cf-reconcile.
+  #   2. HTTP Basic Auth in app.py, from the sops secret above.
+  #   3. app.py refuses to bind a non-loopback address with no password, so a
+  #      credential failure produces a restart loop and a 502 rather than an
+  #      unauthenticated service on the open internet.
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ port ];
 }

@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-"""Elden Ring completion tracker — local web server.
+"""Elden Ring completion tracker — web server.
 
 Stdlib only. Serves a small JSON API over eldenring.db plus the UI in ui.html.
 
-    python3 app.py                 # http://127.0.0.1:8777
+    python3 app.py                 # http://127.0.0.1:8777, no auth
     python3 app.py --port 9000
     python3 app.py --stats         # print progress and exit, no server
+
+Auth is HTTP Basic, enabled whenever a password is present (systemd credential
+'password', or $ER_PASSWORD). Binding anything other than loopback without one
+is refused — see main().
 """
 import argparse
+import base64
+import hmac
 import json
 import os
 import re
 import sqlite3
+import threading
+import time
 import webbrowser
+from collections import defaultdict, deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -24,6 +33,75 @@ DB = Path(os.environ.get("ER_DB") or HERE / "eldenring.db")
 UI = Path(os.environ.get("ER_UI") or HERE / "ui.html")
 DEFAULT_HOST = os.environ.get("ER_HOST", "127.0.0.1")
 DEFAULT_PORT = int(os.environ.get("ER_PORT", "8777"))
+
+
+# --------------------------------------------------------------------- auth
+#
+# HTTP Basic Auth, because this is reachable from the public internet through
+# a Cloudflare tunnel. Cloudflare Access is meant to sit in front of it too,
+# but Access is configured by hand in the dashboard and is not managed by
+# cf-reconcile — so if it is ever missing or misconfigured, this is what
+# stands between the database and the internet. Belt and braces on purpose:
+# every POST endpoint here can delete a run.
+#
+# The password comes from systemd LoadCredential (same pattern as the print
+# server). With no password configured, auth is disabled entirely so the
+# script still runs from a checkout with no arguments — that path is only
+# ever bound to 127.0.0.1.
+
+def _load_password():
+    creds = os.environ.get("CREDENTIALS_DIRECTORY")
+    if creds:
+        p = Path(creds) / "password"
+        if p.exists():
+            return p.read_text().strip()
+    return (os.environ.get("ER_PASSWORD") or "").strip()
+
+
+PASSWORD = _load_password()
+USERNAME = "tarnished"
+AUTH_ON = bool(PASSWORD)
+
+RATE_WINDOW = 3600
+RATE_MAX = 20
+_rate_lock = threading.Lock()
+_failures = defaultdict(deque)
+
+
+def _rate_ok(ip):
+    now = time.time()
+    with _rate_lock:
+        q = _failures[ip]
+        while q and now - q[0] > RATE_WINDOW:
+            q.popleft()
+        return len(q) < RATE_MAX
+
+
+def _rate_fail(ip):
+    with _rate_lock:
+        _failures[ip].append(time.time())
+
+
+def check_auth(header, ip):
+    """(ok, reason). Constant-time compare; never leaks which half was wrong."""
+    if not AUTH_ON:
+        return True, ""
+    if not _rate_ok(ip):
+        return False, "rate"
+    if not header or not header.startswith("Basic "):
+        return False, "missing"
+    try:
+        raw = base64.b64decode(header[6:]).decode("utf-8")
+        user, _, pw = raw.partition(":")
+    except Exception:
+        _rate_fail(ip)
+        return False, "bad"
+    ok_user = hmac.compare_digest(user, USERNAME)
+    ok_pw = hmac.compare_digest(pw, PASSWORD)
+    if ok_user and ok_pw:
+        return True, ""
+    _rate_fail(ip)
+    return False, "bad"
 
 
 # ----------------------------------------------------------------- database
@@ -186,6 +264,30 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass  # quiet
 
+    def client_ip(self):
+        # Behind the Cloudflare tunnel every request arrives from the edge, so
+        # remote_addr would bucket the whole internet into one rate-limit key.
+        return (self.headers.get("CF-Connecting-IP")
+                or self.client_address[0]
+                or "unknown")
+
+    def authed(self):
+        """Gate every request. Returns True if the caller may proceed."""
+        ok, why = check_auth(self.headers.get("Authorization"), self.client_ip())
+        if ok:
+            return True
+        if why == "rate":
+            self.send_response(429)
+            self.send_header("Retry-After", str(RATE_WINDOW))
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+        else:
+            self.send_response(401)
+            self.send_header("WWW-Authenticate", 'Basic realm="Tarnished Ledger"')
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+        return False
+
     def _send(self, obj, code=200):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
@@ -222,6 +324,8 @@ class Handler(BaseHTTPRequestHandler):
         return default_profile(db)
 
     def do_GET(self):
+        if not self.authed():
+            return
         u = urlparse(self.path)
         qs = parse_qs(u.query)
         if u.path in ("/", "/index.html"):
@@ -264,6 +368,8 @@ class Handler(BaseHTTPRequestHandler):
             db.close()
 
     def do_POST(self):
+        if not self.authed():
+            return
         u = urlparse(self.path)
         db = connect()
         try:
@@ -352,9 +458,23 @@ def main():
     if a.stats:
         return print_stats()
 
+    # Fail closed. Binding a public interface with no password would put every
+    # POST endpoint — including "delete this run" — on the open internet. If
+    # the credential ever fails to load, a restart loop and a 502 through the
+    # tunnel is a far better outcome than a silently unauthenticated service.
+    loopback = a.host in ("127.0.0.1", "localhost", "::1")
+    if not AUTH_ON and not loopback and not os.environ.get("ER_ALLOW_NO_AUTH"):
+        raise SystemExit(
+            f"refusing to bind {a.host} with no password set.\n"
+            "Set ER_PASSWORD, provide a systemd credential named 'password', "
+            "or bind 127.0.0.1. Override with ER_ALLOW_NO_AUTH=1 if you really "
+            "mean it."
+        )
+
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     url = f"http://{a.host}:{a.port}"
-    print(f"Elden Ring tracker → {url}   (ctrl-c to stop)")
+    auth = "password required" if AUTH_ON else "NO AUTH (loopback only)"
+    print(f"Elden Ring tracker → {url}   [{auth}]   (ctrl-c to stop)")
     if a.open:
         webbrowser.open(url)
     try:
