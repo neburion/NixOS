@@ -85,9 +85,20 @@ def main():
             ("Main run", "First playthrough"),
         )
 
+    # An item inserted mid-list shifts every position after it, and with it the
+    # ukey of items nobody touched. Fall back to section/group/name, which is
+    # position-free — but only when it picks out exactly one item, so a group
+    # with repeated names (the bosses) still needs the position to disambiguate.
+    by_name = {}
+    for iid, ukey in db.execute("SELECT id, ukey FROM item"):
+        by_name.setdefault(ukey.rsplit("\x1f", 1)[0], []).append(iid)
+
     restored = 0
     for profile_id, ukey, value, updated_at in saved:
         row = db.execute("SELECT id FROM item WHERE ukey = ?", (ukey,)).fetchone()
+        if not row:
+            moved_ids = by_name.get(ukey.rsplit("\x1f", 1)[0], ())
+            row = (moved_ids[0],) if len(moved_ids) == 1 else None
         if row:
             db.execute(
                 "INSERT OR REPLACE INTO progress(profile_id, item_id, value, updated_at) "
