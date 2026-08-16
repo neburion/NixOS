@@ -17,21 +17,6 @@ let
     ];
     text = "exec python3 ${./server.py}";
   };
-
-  # Publish "printer.local" via mDNS pointing at this host's LAN IP.
-  # We resolve the IP at start time so it works over Wi-Fi / DHCP moves.
-  publishAlias = pkgs.writeShellApplication {
-    name = "publish-printer-alias";
-    runtimeInputs = with pkgs; [ avahi iproute2 gawk coreutils ];
-    text = ''
-      ip=$(ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n1)
-      if [[ -z "$ip" ]]; then
-        echo "No global IPv4 address found; retrying via service restart."
-        exit 1
-      fi
-      exec avahi-publish -a -R printer.local "$ip"
-    '';
-  };
 in
 {
   # SANE for the MF3010 scanner side of the MFP. hardware.sane.enable also
@@ -71,7 +56,7 @@ in
   systemd.services.print-server = {
     description = "Web print server for Canon MF3010";
     wantedBy = [ "multi-user.target" ];
-    after = [ "cups.service" "network.target" "avahi-daemon.service" ];
+    after = [ "cups.service" "network.target" ];
     requires = [ "cups.service" ];
     serviceConfig = {
       ExecStart = "${printServer}/bin/print-server";
@@ -91,35 +76,11 @@ in
     };
   };
 
-  # Advertise "printer.local" over mDNS so family devices can visit
-  # http://printer.local without knowing the IP or a port.
-  services.avahi = {
-    enable = true;
-    nssmdns4 = true;
-    openFirewall = true;
-    publish = {
-      enable = true;
-      addresses = true;
-      workstation = true;
-      # Allow the printer-mdns-alias service to publish printer.local.
-      userServices = true;
-    };
-  };
-
-  systemd.services.printer-mdns-alias = {
-    description = "mDNS alias printer.local → this host";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "avahi-daemon.service" "network-online.target" ];
-    wants = [ "network-online.target" ];
-    requires = [ "avahi-daemon.service" ];
-    serviceConfig = {
-      ExecStart = "${publishAlias}/bin/publish-printer-alias";
-      Restart = "on-failure";
-      RestartSec = "10s";
-      User = "avahi";
-      Group = "avahi";
-    };
-  };
-
-  networking.firewall.allowedTCPPorts = [ 80 ];
+  # Reachable only over the tailnet and through the Cloudflare tunnel.
+  # cloudflared proxies to http://localhost:80 (loopback, no firewall rule
+  # needed), so this interface-scoped rule is the only host-facing exposure —
+  # the LAN can't reach the UI. The old printer.local mDNS alias + avahi
+  # publishing were removed with this change; nothing on the LAN resolves or
+  # reaches the printer anymore.
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 80 ];
 }
