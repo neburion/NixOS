@@ -65,18 +65,27 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 - **`flake.nix`** — defines `mkSystem { host, ... }` helper; builds each host by importing `hosts/${host}/configuration.nix`. Injects `networking.hostName = host;` as a module so hosts stay pure. Threads `zen-browser`, `nvf`, `inputs`, and `themes` down via `specialArgs` / `sharedModules`.
 - **`hosts/<host>/configuration.nix`** — pure manifest. Imports only.
 - **`hosts/<host>/hardware-layout/`** — environment (displays, wifi, disk, GPU).
-- **`hosts/<host>/hardware-configuration.nix`** — placeholder, git-ignored, real one lives in `/etc/nixos/`.
+- **`hosts/<host>/hardware-configuration.nix`** — **committed**, one real file per host. (This line used to claim the file was git-ignored with the real one in `/etc/nixos/`; it isn't, and `.gitignore` never mentioned it.) The distinction matters because `rebuild` deploys from `github:`, so the *committed* file is what a remote deploy uses — a machine whose generated hardware config was never copied back into the repo gets deployed a config describing someone else's disks. `nixinstall.sh` writes the generated file into the repo copy at `/mnt/etc/nixos` and installs via `path:`, so the **install** is correct; it's the first `rebuild` afterwards that bites. Copy the generated file back and commit it as a post-install step.
 - **`users/<user>/default.nix`** — pure manifest. Aggregates `account.nix`, `home.nix`, and any user-specific system modules.
 - **`users/<user>/account.nix`** — the `users.users.<user>` block (identity, groups, shell, bootstrap password if applicable).
 - **`users/<user>/home.nix`** — the `home-manager.users.<user>.imports = [ ... ]` list.
 
 ## Hosts
 
-| Host          | Purpose                                                | Boot            | User(s)             |
-|---------------|--------------------------------------------------------|-----------------|---------------------|
-| `pod042`      | Main laptop                                            | `limine`        | `neburion`          |
-| `home-server` | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
-| `installer`   | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
+| Host              | Purpose                                                | Boot            | User(s)             |
+|-------------------|--------------------------------------------------------|-----------------|---------------------|
+| `pod042`          | Main laptop                                            | `limine`        | `neburion`          |
+| `home-server`     | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
+| `personal-server` | Headless personal server: my own self-hosted services  | `systemd-boot`  | `server-admin`      |
+| `installer`       | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
+
+`home-server` and `personal-server` are the same *class* of machine (old laptop,
+headless, `server-admin`, always-on) split by *audience*: the family depends on
+one, so it stays boring; the other is mine to break. Per the fleet principle
+neither depends on the other — the split is about blast radius, not topology.
+`personal-server` currently declares no services; it's a skeleton with the
+Cloudflare tunnel wiring pre-attached so exposing something later is one line in
+its `cloudflare-layout.nix`.
 
 ### The `installer` host
 
@@ -220,7 +229,7 @@ Displays and backlight are surfaced to home-manager via `flake.nix` (`hostConfig
 - `default.nix` in a directory = aggregator. Never has config.
 - New app? Add `modules/home/apps/<name>.nix`, then add one import line to `users/neburion/home.nix`.
 - New theme? Add `modules/home/themes/<name>.nix` (data only), then add it to `modules/home/themes/default.nix`.
-- New host? Copy `hosts/pod042/` skeleton, minimize imports, put physical facts in `hardware-layout/`, add to `flake.nix` `nixosConfigurations`. Do NOT add `networking.hostName` — the flake injects it.
+- New host? Copy `hosts/pod042/` skeleton, minimize imports, put physical facts in `hardware-layout/`, add to `flake.nix` `nixosConfigurations`. Do NOT add `networking.hostName` — the flake injects it. Two steps land *after* first boot, not before: add the tailnet IP to `modules/system/networking/tailnet-hosts.nix` (nothing resolves the bare hostname until then), and commit the generated `hardware-configuration.nix`.
 - New user? Copy `users/neburion/` skeleton, keep `default.nix` as pure aggregator, put identity in `account.nix`, put HM imports in `home.nix`.
 - Swap a component (e.g. waybar → quickshell)? Delete the waybar import, add the quickshell import. Don't touch either module.
 - Swap a shell provider (bar, wallpaper, launcher)? See **Shell auto-wiring** below — only the import changes.
