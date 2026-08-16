@@ -9,7 +9,6 @@
     ../hyprland/enable.nix
     ../hyprland/env.nix
     ./hyprlock.nix
-    ../hyprland/idle.nix
     ../hyprland/input.nix
     ../hyprland/keybinds.nix
     ../hyprland/lid.nix
