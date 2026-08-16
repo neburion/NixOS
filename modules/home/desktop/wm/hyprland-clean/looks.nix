@@ -1,7 +1,7 @@
 { ... }:
 
-# NieR looks: identical to base except workspace animations use horizontal
-# slide (1=left, 10=right) with the niercurve bezier at ~1.5× speed.
+# clean looks: identical to base except workspace animations use horizontal
+# slide (1=left, 10=right) with the easeInOutQuint bezier at ~1.5× speed.
 
 {
   wayland.windowManager.hyprland.settings = {
@@ -62,7 +62,7 @@
         "linear,         0,    0,    1,    1"
         "almostLinear,   0.5,  0.5,  0.75, 1"
         "quick,          0.15, 0,    0.1,  1"
-        "niercurve,      0.83, 0,    0.16, 1"
+        "easeInOutQuint, 0.83, 0,    0.16, 1"
       ];
       animation = [
         "global,        1, 10,   default"
@@ -78,9 +78,9 @@
         "layersOut,     1, 1.5,  linear,       fade"
         "fadeLayersIn,  1, 1.79, almostLinear"
         "fadeLayersOut, 1, 1.39, almostLinear"
-        "workspaces,    1, 2.5,  niercurve,    slide"
-        "workspacesIn,  1, 2.0,  niercurve,    slide"
-        "workspacesOut, 1, 2.5,  niercurve,    slide"
+        "workspaces,    1, 2.5,  easeInOutQuint, slide"
+        "workspacesIn,  1, 2.0,  easeInOutQuint, slide"
+        "workspacesOut, 1, 2.5,  easeInOutQuint, slide"
         "zoomFactor,    1, 7,    quick"
       ];
     };

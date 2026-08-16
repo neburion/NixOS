@@ -1,6 +1,6 @@
 { ... }:
 
-# NieR bar — 28px sepia bar with bottom border accent.
+# clean bar — 28px sepia bar with bottom border accent.
 # Layout: workspaces+title | katakana ticker | stats+clock.
 
 {

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 
-# clean preset — quickshell base with sepia NieR:Automata aesthetics.
+# clean preset — quickshell base with sepia terminal aesthetics.
 # Each component lives in its own *-clean directory for independent divergence.
 
 {

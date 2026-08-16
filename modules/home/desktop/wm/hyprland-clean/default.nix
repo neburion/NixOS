@@ -1,7 +1,7 @@
 { ... }:
 
 # clean hyprland: same as base but swaps looks.nix for clean-specific
-# animations (faster horizontal slide, niercurve bezier).
+# animations (faster horizontal slide, easeInOutQuint bezier).
 
 {
   imports = [

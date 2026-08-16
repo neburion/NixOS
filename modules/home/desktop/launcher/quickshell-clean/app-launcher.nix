@@ -1,6 +1,6 @@
 { ... }:
 
-# NieR app launcher — terminal aesthetic, Theme-reactive colors.
+# clean app launcher — terminal aesthetic, Theme-reactive colors.
 
 {
   quickshell.modules.AppLauncher = ''
