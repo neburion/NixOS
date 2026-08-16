@@ -113,7 +113,14 @@ INSTALL_SOPS=false
 
 if ! $NEW_HOST && [[ -f "$SOPS_ENC" ]]; then
   printf '\n%bSops master passphrase (empty to skip installing key — any sops-decrypted secret will fail on first activation):%b\n' "$YLW" "$NC"
-  read -rsp "> " SOPS_PASS; printf "\n"
+  # Echoed as you type, deliberately. Typed once at a physical console during
+  # an install, where physical access is already the trust boundary for these
+  # hosts — so hiding it buys nothing against the threat model while making
+  # a typo invisible. The dry-run decrypt below already catches a *wrong*
+  # passphrase; what visibility catches is an *empty* one, which this script
+  # treats as "skip installing the key" rather than as an error.
+  # No trailing printf: the echoed Enter supplies the newline that -s ate.
+  read -rp "> " SOPS_PASS
   if [[ -n "$SOPS_PASS" ]]; then
     # Dry-run decrypt now so we catch a wrong passphrase BEFORE we've wiped the disk.
     if ! printf '%s' "$SOPS_PASS" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
