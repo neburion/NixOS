@@ -3,7 +3,8 @@
 # Phone-as-extended-display via wayvnc + Hyprland headless output.
 # Toggle script: first press creates a virtual monitor and starts wayvnc on
 # 0.0.0.0:5900 bound to it; second press kills wayvnc and removes the monitor.
-# No auth (LAN-only, user-triggered — never left running).
+# No auth (LAN-only, user-triggered — never left running), and view-only
+# (--disable-input) so an unauthenticated LAN client can't drive the desktop.
 
 let
   phoneDisplayToggle = pkgs.writeShellApplication {
@@ -54,7 +55,11 @@ let
 
         ip=$(ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -1)
 
-        wayvnc --output="$new_output" 0.0.0.0 5900 >/dev/null 2>&1 &
+        # --disable-input: view-only. The phone is an extra display, never a
+        # control surface — and the listener is unauthenticated on the LAN, so
+        # refusing all remote keyboard/mouse means a stray connection can look
+        # but never touch.
+        wayvnc --disable-input --output="$new_output" 0.0.0.0 5900 >/dev/null 2>&1 &
         echo $! > "$pidfile"
 
         # Advertise as a discoverable VNC server so phone clients find it via scan.
