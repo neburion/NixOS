@@ -1,1 +1,6 @@
-{}
+{
+  "eldenring.azuresalt.app": {
+    "credentialsSecret": "cloudflared-eldenring-azuresalt-app",
+    "uuid": "c5c06856-290f-4fac-94c3-920c3441a4bd"
+  }
+}
