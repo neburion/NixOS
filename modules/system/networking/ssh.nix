@@ -10,7 +10,11 @@
   services.openssh = {
     enable = true;
     settings = {
-      PasswordAuthentication = true;
+      # Keys only. Every admin key is declared in users/*/account.nix, so
+      # access is fully reproducible from the repo — no reliance on a
+      # `passwd`-set hash living in mutable /etc/shadow. A lost key is never
+      # a lockout: console-autologin.nix gives server-admin a shell on tty1.
+      PasswordAuthentication = false;
       PermitRootLogin        = "no";
     };
   };
