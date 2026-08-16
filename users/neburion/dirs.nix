@@ -31,6 +31,21 @@ let
     "Media/Wallpapers/Everforest"
     "Media/Wallpapers/Gruvbox"
     "Media/Wallpapers/Nord"
+  ]
+  # Orientation/category wallpaper layout. Files are named
+  # `static-*` / `animated-*` so the two kinds stay sortable within a
+  # category instead of needing separate trees.
+  ++ builtins.concatMap
+    (orientation: map (category: "Media/Wallpapers/${orientation}/${category}") [
+      "Minimal"
+      "Abstract"
+      "Drawn"
+      "Painting"
+      "Photography"
+      "Pixelart"
+    ])
+    [ "Horizontal" "Vertical" ]
+  ++ [
     "Projects"
     "Projects/Dev"
     "Projects/Art"
