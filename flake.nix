@@ -84,6 +84,10 @@
       # web UI. Planned: network-wide DNS ad blocker and other LAN services.
       home-server = mkSystem { host = "home-server"; };
 
+      # Headless personal server (old laptop) — my own self-hosted services,
+      # kept separate from the family-facing home-server. Skeleton for now.
+      personal-server = mkSystem { host = "personal-server"; };
+
       # Live USB installer — build with:
       #   nix build .#nixosConfigurations.installer.config.system.build.isoImage
       # Flash to USB with:

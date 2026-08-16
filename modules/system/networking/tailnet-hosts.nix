@@ -18,5 +18,9 @@
   networking.hosts = {
     "100.82.222.16" = [ "pod042" ];
     "100.93.96.98"  = [ "home-server" ];
+    # personal-server: fill in after its first boot joins the tailnet.
+    # `tailscale status | grep personal-server` on any fleet host, then
+    # commit the line — until then `rebuild personal-server` can't resolve it.
+    # "100.x.y.z"   = [ "personal-server" ];
   };
 }
