@@ -123,30 +123,93 @@ def default_profile(db):
     return row["id"] if row else None
 
 
+def implication_graph(db):
+    """{target_id: [(source_id, needed)]} plus the set of derived ids."""
+    graph = {}
+    for tid, sid, at_least in db.execute(
+            "SELECT i.target_id, i.source_id, "
+            "       COALESCE(i.at_least, it.target) "
+            "FROM implies i JOIN item it ON it.id = i.source_id"):
+        graph.setdefault(tid, []).append((sid, at_least))
+    return graph
+
+
+def effective_values(db, profile_id, graph=None):
+    """Stored progress with derived items resolved to a fixpoint.
+
+    Derived items never have stored rows (seed.py strips them), so their value
+    is computed here. Iterating to a fixpoint keeps chains correct if a derived
+    item ever becomes another's source; the graph is tiny, so the cost is noise.
+    """
+    if graph is None:
+        graph = implication_graph(db)
+    vals = {r[0]: r[1] for r in db.execute(
+        "SELECT item_id, value FROM progress WHERE profile_id = ?", (profile_id,))}
+    if not graph:
+        return vals
+
+    targets = {r[0]: r[1] for r in db.execute(
+        "SELECT id, target FROM item WHERE id IN (SELECT target_id FROM implies)")}
+
+    for _ in range(len(graph) + 1):
+        changed = False
+        for tid, sources in graph.items():
+            got = targets[tid] if all(
+                vals.get(sid, 0) >= needed for sid, needed in sources) else 0
+            if vals.get(tid, 0) != got:
+                if got:
+                    vals[tid] = got
+                else:
+                    vals.pop(tid, None)
+                changed = True
+        if not changed:
+            break
+    return vals
+
+
 def profiles(db):
-    rows = db.execute("""
-        SELECT p.id, p.name, p.note, p.created_at, p.archived,
-               COALESCE(SUM(MIN(pr.value, i.target)), 0) AS done,
-               (SELECT COALESCE(SUM(target), 0) FROM item)  AS total
-        FROM profile p
-        LEFT JOIN progress pr ON pr.profile_id = p.id AND pr.value > 0
-        LEFT JOIN item     i  ON i.id = pr.item_id
-        GROUP BY p.id
-        ORDER BY p.archived, p.id
-    """).fetchall()
-    return [dict(r) for r in rows]
+    rows = db.execute(
+        "SELECT id, name, note, created_at, archived FROM profile "
+        "ORDER BY archived, id").fetchall()
+    total = db.execute("SELECT COALESCE(SUM(target), 0) FROM item").fetchone()[0]
+    caps = {r[0]: r[1] for r in db.execute("SELECT id, target FROM item")}
+    graph = implication_graph(db)
+    out = []
+    for r in rows:
+        vals = effective_values(db, r["id"], graph)
+        done = sum(min(v, caps.get(i, v)) for i, v in vals.items())
+        out.append(dict(r) | {"done": done, "total": total})
+    return out
+
+
+def derivation_labels(db):
+    """{target_id: 'from Godrick the Grafted'} for the UI's auto chip."""
+    out = {}
+    for tid, name in db.execute("""
+            SELECT i.target_id, it.name
+            FROM implies i JOIN item it ON it.id = i.source_id
+            ORDER BY i.target_id, it.name"""):
+        out.setdefault(tid, []).append(name)
+    return {t: (ns[0] if len(ns) == 1 else f"{len(ns)} prerequisites")
+            for t, ns in out.items()}
 
 
 def tree(db, profile_id):
     rows = db.execute("""
-        SELECT v.*, COALESCE(pr.value, 0) AS value,
-               (SELECT COUNT(*) FROM progress x
-                 WHERE x.item_id = v.item_id AND x.value > 0) AS runs
-        FROM v_item v
-        LEFT JOIN progress pr
-               ON pr.item_id = v.item_id AND pr.profile_id = ?
-        ORDER BY v.spos, v.gpos, v.ipos
-    """, (profile_id,)).fetchall()
+        SELECT v.* FROM v_item v ORDER BY v.spos, v.gpos, v.ipos
+    """).fetchall()
+
+    graph = implication_graph(db)
+    vals = effective_values(db, profile_id, graph)
+    labels = derivation_labels(db)
+
+    # "done in N runs" has to respect derivation too, or a boss ticked in three
+    # runs would show its achievement as done in none.
+    runs = {}
+    for (pid,) in db.execute("SELECT id FROM profile"):
+        for iid, v in effective_values(db, pid, graph).items():
+            if v > 0:
+                runs[iid] = runs.get(iid, 0) + 1
 
     sections, by_sec, by_grp = [], {}, {}
     for r in rows:
@@ -162,59 +225,63 @@ def tree(db, profile_id):
                    "dlc": r["dlc"], "choice": r["choice"], "items": []}
             by_grp[r["group_id"]] = grp
             sec["groups"].append(grp)
+        iid = r["item_id"]
         grp["items"].append({
-            "id": r["item_id"], "name": r["name"], "detail": r["detail"],
+            "id": iid, "name": r["name"], "detail": r["detail"],
             "kind": r["kind"], "target": r["target"],
-            "value": r["value"], "runs": r["runs"],
+            "value": vals.get(iid, 0), "runs": runs.get(iid, 0),
+            "derived": iid in graph,
+            "from": labels.get(iid, ""),
         })
     return sections
 
 
 def stats(db, profile_id):
-    overall = db.execute("""
-        SELECT (SELECT COALESCE(SUM(target), 0) FROM item) AS total,
-               COALESCE((SELECT SUM(MIN(pr.value, i.target))
-                           FROM progress pr JOIN item i ON i.id = pr.item_id
-                          WHERE pr.profile_id = ?), 0) AS done
-    """, (profile_id,)).fetchone()
-
-    per_section = db.execute("""
-        SELECT s.id, s.slug, s.title,
-               SUM(i.target) AS total,
-               COALESCE(SUM(MIN(COALESCE(pr.value, 0), i.target)), 0) AS done
-        FROM section s
-        JOIN grp  g ON g.section_id = s.id
-        JOIN item i ON i.group_id  = g.id
-        LEFT JOIN progress pr ON pr.item_id = i.id AND pr.profile_id = ?
-        GROUP BY s.id
+    vals = effective_values(db, profile_id)
+    meta = db.execute("""
+        SELECT i.id, i.target, s.id AS sid, s.slug, s.title, s.pos
+        FROM item i JOIN grp g ON g.id = i.group_id JOIN section s ON s.id = g.section_id
         ORDER BY s.pos
-    """, (profile_id,)).fetchall()
+    """).fetchall()
 
-    return {
-        "done": overall["done"], "total": overall["total"],
-        "sections": [dict(r) for r in per_section],
-    }
+    per = {}
+    done = total = 0
+    for r in meta:
+        got = min(vals.get(r["id"], 0), r["target"])
+        done += got
+        total += r["target"]
+        e = per.setdefault(r["sid"], {"id": r["sid"], "slug": r["slug"],
+                                      "title": r["title"], "done": 0, "total": 0})
+        e["done"] += got
+        e["total"] += r["target"]
+
+    return {"done": done, "total": total, "sections": list(per.values())}
 
 
 def coverage(db):
     """Units finished in at least one profile — the real answer to the
     mutually-exclusive-questline problem."""
-    row = db.execute("""
-        SELECT (SELECT COALESCE(SUM(target), 0) FROM item) AS total,
-               COALESCE(SUM(u.best), 0) AS done
-        FROM (SELECT MIN(MAX(pr.value), i.target) AS best
-                FROM progress pr JOIN item i ON i.id = pr.item_id
-               GROUP BY pr.item_id) u
-    """).fetchone()
-    missing = db.execute("""
+    graph = implication_graph(db)
+    best = {}
+    for (pid,) in db.execute("SELECT id FROM profile"):
+        for iid, v in effective_values(db, pid, graph).items():
+            if v > best.get(iid, 0):
+                best[iid] = v
+
+    rows = db.execute("""
         SELECT v.item_id, v.name, v.title, v.group_name, v.target
-        FROM v_item v
-        WHERE COALESCE((SELECT MAX(value) FROM progress WHERE item_id = v.item_id), 0)
-              < v.target
-        ORDER BY v.spos, v.gpos, v.ipos
+        FROM v_item v ORDER BY v.spos, v.gpos, v.ipos
     """).fetchall()
-    return {"done": row["done"], "total": row["total"],
-            "missing": [dict(r) for r in missing]}
+
+    done = total = 0
+    missing = []
+    for r in rows:
+        got = min(best.get(r["item_id"], 0), r["target"])
+        done += got
+        total += r["target"]
+        if got < r["target"]:
+            missing.append(dict(r))
+    return {"done": done, "total": total, "missing": missing}
 
 
 FTS_SAFE = re.compile(r"[^\w\s]+", re.UNICODE)
@@ -227,22 +294,25 @@ def search(db, q, profile_id):
     match = " ".join(f'"{t}"*' for t in q.split())
     rows = db.execute("""
         SELECT v.item_id, v.name, v.detail, v.kind, v.target,
-               v.title, v.group_name, v.dlc,
-               COALESCE(pr.value, 0) AS value
+               v.title, v.group_name, v.dlc
         FROM item_fts f
         JOIN v_item v ON v.item_id = f.rowid
-        LEFT JOIN progress pr ON pr.item_id = v.item_id AND pr.profile_id = ?
         WHERE item_fts MATCH ?
         ORDER BY rank
         LIMIT 300
-    """, (profile_id, match)).fetchall()
-    return [dict(r) for r in rows]
+    """, (match,)).fetchall()
+    vals = effective_values(db, profile_id)
+    return [dict(r) | {"value": vals.get(r["item_id"], 0)} for r in rows]
 
 
 def set_value(db, profile_id, item_id, value):
     row = db.execute("SELECT target FROM item WHERE id = ?", (item_id,)).fetchone()
     if row is None:
         raise KeyError("no such item")
+    if db.execute("SELECT 1 FROM implies WHERE target_id = ?", (item_id,)).fetchone():
+        # Storing a value here would shadow the computed one and drift out of
+        # sync with its sources. Tick the prerequisite instead.
+        raise PermissionError("this entry is derived — tick what it comes from")
     value = max(0, min(int(value), row["target"]))
     if value:
         db.execute("""
@@ -379,7 +449,15 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/set":
                 pid = int(body["profile"])
                 val = set_value(db, pid, int(body["item"]), int(body["value"]))
-                return self._send({"ok": True, "value": val, "stats": stats(db, pid)})
+                # Ticking a boss can settle its achievement, Remembrance and
+                # Great Rune at once. Return every derived value (there are
+                # only a few dozen) so the UI repaints them without refetching
+                # the whole tree.
+                vals = effective_values(db, pid)
+                derived = {t: vals.get(t, 0) for (t,) in
+                           db.execute("SELECT DISTINCT target_id FROM implies")}
+                return self._send({"ok": True, "value": val, "derived": derived,
+                                   "stats": stats(db, pid)})
 
             if u.path == "/api/profiles":
                 name = (body.get("name") or "").strip()
@@ -416,16 +494,28 @@ class Handler(BaseHTTPRequestHandler):
 
             if u.path == "/api/import":
                 pid = int(body["profile"])
-                n = 0
+                n = skipped = 0
                 for row in body.get("progress", []):
                     it = db.execute("SELECT id, target FROM item WHERE ukey = ?",
                                     (row.get("ukey"),)).fetchone()
-                    if it:
+                    if not it:
+                        continue
+                    try:
                         set_value(db, pid, it["id"], row.get("value", 0))
                         n += 1
-                return self._send({"ok": True, "imported": n, "stats": stats(db, pid)})
+                    except PermissionError:
+                        # Backups taken before derivation existed carry rows for
+                        # entries that are now computed. Skipping them loses
+                        # nothing: whatever implies them is in the same backup.
+                        skipped += 1
+                return self._send({"ok": True, "imported": n, "derived_skipped": skipped,
+                                   "stats": stats(db, pid)})
 
             return self.send_error(404, "no such endpoint")
+        except PermissionError as e:
+            # Derived entries are computed, not stored — a 409 tells the UI to
+            # put the checkbox back rather than treating it as a server fault.
+            return self._send({"error": str(e)}, 409)
         except Exception as e:
             return self._send({"error": str(e)}, 500)
         finally:

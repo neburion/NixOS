@@ -12,6 +12,7 @@ tailnet only. See the module tree entry in `ARCHITECTURE.md`.
 | `service.nix` | systemd unit, system user, tailnet firewall rule |
 | `schema.sql` | tables, views, FTS5 index |
 | `seed.json` | the 1,672-entry reference dataset |
+| `links.json` | the implication graph — what a tick settles automatically |
 | `seed.py` | rebuilds reference tables from `seed.json`, **keeps progress** |
 | `app.py` | HTTP server + JSON API |
 | `ui.html` | the UI |
@@ -41,6 +42,36 @@ It logs a warning to the journal if a progress row loses its item:
 ```bash
 ssh personal-server journalctl -u elden-ring-tracker -n 30
 ```
+
+## Derived entries
+
+Much of the list is redundant by nature: killing Godrick *is* the Shardbearer
+Godrick achievement, *is* the Remembrance of the Grafted, *is* Godrick's Great
+Rune. Ticking four boxes for one kill is busywork and drifts out of sync.
+
+`links.json` declares those implications. A target is satisfied when all its
+sources are; targets render read-only with an `auto` chip, and `POST /api/set`
+refuses them with **409**. Tick the prerequisite instead. One Godrick tick
+settles four units.
+
+Sources can be a single item, every item in a group (the legendary sets), or a
+tally threshold — 14 flask charges needs 30 of the 45 Golden Seeds, not all.
+
+Every reference is resolved at seed time and **an unresolvable or ambiguous one
+aborts the seed**. A silently dropped link would be indistinguishable from
+"you haven't done it yet", which is the worst possible failure for a checklist.
+Names that repeat inside a section (`Mohg, the Omen` appears in both Leyndell
+variants) must be qualified as `section|Group|Item`.
+
+Relations that are "any of" rather than "all of" are deliberately left manual,
+because a tick can't be traced back to one cause: the **Elden Lord** achievement
+(any of four endings) and **Great Rune** (any one Divine Tower).
+
+`seed.py` migrates in both directions. If an entry becomes derived while you
+already ticked it, the tick is pushed down onto its sources — ticking
+"Shardbearer Godrick" means you demonstrably killed Godrick — and the stored row
+is removed so the computed value takes over. Without that, turning items derived
+would silently zero them.
 
 ## Runs
 

@@ -125,9 +125,11 @@ elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracke
                          + web UI on :8777; firewall opens the port on tailscale0
                          only, cloudflared reaches it via loopback. HTTP Basic
                          Auth from a sops secret via LoadCredential; refuses to
-                         bind non-loopback without it. seed.py runs as
-                         ExecStartPre and migrates the DB in place, re-attaching
-                         progress by natural key)
+                         bind non-loopback without it. links.json declares an
+                         implication graph so one boss tick settles its
+                         achievement/Remembrance/Great Rune; seed.py runs as
+                         ExecStartPre, migrates the DB in place, re-attaches
+                         progress by natural key, and aborts on a bad link)
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend

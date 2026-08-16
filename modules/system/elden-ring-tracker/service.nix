@@ -28,6 +28,7 @@ let
   env = {
     ER_DB = "${stateDir}/eldenring.db";
     ER_SEED = "${src}/seed.json";
+    ER_LINKS = "${src}/links.json";
     ER_SCHEMA = "${src}/schema.sql";
     ER_UI = "${src}/ui.html";
     ER_HOST = "0.0.0.0";

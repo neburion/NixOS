@@ -33,6 +33,24 @@ CREATE TABLE IF NOT EXISTS item (
   pos      INTEGER NOT NULL
 );
 
+-- Implication graph, rebuilt from links.json alongside the reference tables.
+-- A target item is satisfied when every one of its sources is; `at_least` lets
+-- a tally source count as satisfied at a threshold below its own target (14
+-- flask charges needs 30 of the 45 Golden Seeds, not all of them).
+--
+-- Targets are computed, never stored: app.py rejects writes to them and
+-- derives their value on read, so one boss kill settles its achievement, its
+-- Remembrance and its Great Rune at once.
+CREATE TABLE IF NOT EXISTS implies (
+  target_id INTEGER NOT NULL REFERENCES item(id) ON DELETE CASCADE,
+  source_id INTEGER NOT NULL REFERENCES item(id) ON DELETE CASCADE,
+  at_least  INTEGER,
+  PRIMARY KEY (target_id, source_id),
+  CHECK (target_id <> source_id)
+) WITHOUT ROWID;
+
+CREATE INDEX IF NOT EXISTS ix_implies_source ON implies(source_id);
+
 CREATE TABLE IF NOT EXISTS profile (
   id         INTEGER PRIMARY KEY,
   name       TEXT    NOT NULL UNIQUE,

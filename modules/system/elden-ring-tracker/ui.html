@@ -94,6 +94,16 @@ select{font:inherit;font-size:13px;background:var(--ground);color:var(--ink);
 .chip.x{background:var(--warn-wash);color:var(--warn);border:1px solid var(--warn)}
 .chip.runs{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold);
   letter-spacing:.04em;margin-left:6px;vertical-align:1px}
+.chip.auto{background:transparent;color:var(--muted);border:1px dashed var(--rule);
+  letter-spacing:.04em;margin-left:6px;vertical-align:1px;font-weight:500}
+
+/* Derived entries: computed from a prerequisite, never ticked by hand. */
+.item[data-derived] label{cursor:default}
+.item[data-derived] label:hover{background:transparent}
+.item[data-derived] input[type=checkbox]{
+  cursor:default;border-style:dashed;opacity:.75}
+.item[data-derived] input:checked{opacity:1;border-style:solid}
+.item[data-derived] .tx{color:var(--muted)}
 
 .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1px 22px;
   list-style:none;padding:0;margin:0}
@@ -236,9 +246,15 @@ function render(){
             <span class="cn">${esc(it.name)}${it.detail?`<span class="d">${esc(it.detail)}</span>`:""}</span>
             <span class="num"><b>${it.value}</b> / ${it.target}</span></div></li>`;
         } else {
-          lis += `<li ${base} data-kind="check"><label>
-            <input type="checkbox" data-id="${it.id}"${it.value?" checked":""}>
-            <span class="tx">${esc(it.name)}${runsChip(it)}${it.detail?`<span class="d">${esc(it.detail)}</span>`:""}</span>
+          const auto = it.derived
+            ? `<span class="chip auto" title="Computed from ${esc(it.from)} — tick that instead">auto</span>`
+            : "";
+          const det = it.derived
+            ? `<span class="d">Automatic: ${esc(it.from)}${it.detail?" · "+esc(it.detail):""}</span>`
+            : (it.detail?`<span class="d">${esc(it.detail)}</span>`:"");
+          lis += `<li ${base}${it.derived?' data-derived="1"':""} data-kind="check"><label>
+            <input type="checkbox" data-id="${it.id}"${it.value?" checked":""}${it.derived?" disabled":""}>
+            <span class="tx">${esc(it.name)}${auto}${runsChip(it)}${det}</span>
             </label></li>`;
         }
       }
@@ -336,7 +352,18 @@ async function setVal(id, value){
   const j = await api("/api/set", {method:"POST",
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({profile:PID, item:id, value})});
+  if (j.derived) applyDerived(j.derived);
   return j.value;
+}
+
+// Repaint the computed entries a write just settled (or un-settled).
+function applyDerived(map){
+  for (const [id, v] of Object.entries(map)){
+    const li = document.querySelector(`.item[data-id="${id}"]`);
+    if (!li) continue;
+    const box = li.querySelector('input[type="checkbox"]');
+    if (box) box.checked = v > 0;
+  }
 }
 
 document.addEventListener("change", async e => {
