@@ -32,6 +32,8 @@ let
     ER_UI = "${src}/ui.html";
     ER_HOST = "0.0.0.0";
     ER_PORT = toString port;
+    # Login half that isn't secret. The password is the sops secret below.
+    ER_USERNAME = "tracker";
   };
 
   python = pkgs.python3;

@@ -59,7 +59,9 @@ def _load_password():
 
 
 PASSWORD = _load_password()
-USERNAME = "tarnished"
+# Not a secret, so it lives in the unit rather than in sops — keeping both
+# halves of the login in service.nix beats splitting them across two files.
+USERNAME = os.environ.get("ER_USERNAME", "tracker")
 AUTH_ON = bool(PASSWORD)
 
 RATE_WINDOW = 3600
