@@ -146,59 +146,9 @@
   ]
  },
  {
-  "id": "rem",
-  "t": "Remembrances",
-  "n": "26 in all. Each is exchanged with Enia at the Roundtable Hold for a choice of two rewards (three for the Elden Remembrance). Take one, then duplicate the Remembrance at a Walking Mausoleum — or claim the other in NG+.",
-  "g": [
-   {
-    "name": "Base game — 15",
-    "items": [
-     "Remembrance of the Grafted::Godrick the Grafted",
-     "Remembrance of the Full Moon Queen::Rennala",
-     "Remembrance of the Starscourge::Starscourge Radahn",
-     "Remembrance of the Regal Ancestor::Regal Ancestor Spirit",
-     "Remembrance of the Naturalborn::Astel, Naturalborn of the Void",
-     "Remembrance of the Blasphemous::Rykard, Lord of Blasphemy",
-     "Remembrance of the Fire Giant::Fire Giant",
-     "Remembrance of the Blood Lord::Mohg, Lord of Blood",
-     "Remembrance of the Black Blade::Maliketh",
-     "Remembrance of the Dragonlord::Dragonlord Placidusax",
-     "Remembrance of the Lichdragon::Lichdragon Fortissax",
-     "Remembrance of the Omen King::Morgott",
-     "Remembrance of the Rot Goddess::Malenia",
-     "Remembrance of Hoarah Loux::Godfrey, First Elden Lord",
-     "Elden Remembrance::Radagon / Elden Beast — three rewards"
-    ]
-   },
-   {
-    "name": "Shadow of the Erdtree — 11",
-    "dlc": 1,
-    "items": [
-     "Remembrance of the Dancing Lion::Divine Beast Dancing Lion",
-     "Remembrance of the Twin Moon Knight::Rellana",
-     "Remembrance of Putrescence::Putrescent Knight",
-     "Remembrance of the Wild Boar Rider::Commander Gaius",
-     "Remembrance of the Shadow Sunflower::Scadutree Avatar",
-     "Remembrance of the Impaler::Messmer",
-     "Remembrance of the Saint of the Bud::Romina",
-     "Remembrance of the Mother of Fingers::Metyr",
-     "Remembrance of the Lord of Frenzied Flame::Midra",
-     "Remembrance of the Dread Dragon::Bayle the Dread",
-     "Remembrance of a God and a Lord::Promised Consort Radahn"
-    ]
-   },
-   {
-    "name": "Duplication",
-    "items": [
-     "Use the Walking Mausoleums::Ring the bell inside a Walking Mausoleum to duplicate one Remembrance. Wandering mausoleums require breaking their leg-bells first."
-    ]
-   }
-  ]
- },
- {
   "id": "leg",
   "t": "The Four Legendary Sets",
-  "n": "Thirty items across four achievements. These are the ones people miss.",
+  "n": "Thirty items across four achievements. These are the ones people miss. Remembrance rewards are not listed separately — every weapon, spell and Ash of War a Remembrance can buy is tracked in Weapons, Sorceries, Incantations and Ashes of War, which is what you actually keep.",
   "g": [
    {
     "name": "Legendary Armaments — 9",
@@ -2377,6 +2327,7 @@
      "Dane's Set",
      "Death Knight Set",
      "Depraved Perfumer Set",
+     "Divine Beast Head::Remembrance of the Dancing Lion — a standalone helm, not part of the Divine Beast Warrior set.",
      "Divine Beast Warrior Set",
      "Divine Bird Warrior Set",
      "Drake Knight Set",
@@ -2465,8 +2416,8 @@
      "Rakshasa Set",
      "Raptor's Set",
      "Raya Lucaria Foot Soldier Set",
-     "Raya Lucaria Soldier Set",
      "Raya Lucaria Set",
+     "Raya Lucaria Soldier Set",
      "Redmane Knight Set",
      "Rellana's Set",
      "Ronin's Set",

@@ -2,528 +2,629 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#E9E6DC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15150F" media="(prefers-color-scheme: dark)">
 <title>The Tarnished Ledger</title>
 <style>
+/* ── typefaces ─────────────────────────────────────────────────────────
+   Self-hosted, built into the Nix store by service.nix. EB Garamond for
+   headings, including its genuine small-capitals cut for labels — real
+   small caps, not uppercase with letter-spacing bolted on. IBM Plex Sans
+   for the interface, Plex Mono for figures.                            */
+@font-face{font-family:Garamond;src:url(/fonts/garamond.woff2) format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:GaramondSC;src:url(/fonts/garamond-sc.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Plex;src:url(/fonts/plex.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Plex;src:url(/fonts/plex-medium.woff2) format("woff2");
+  font-weight:500;font-display:swap}
+@font-face{font-family:Plex;src:url(/fonts/plex-semibold.woff2) format("woff2");
+  font-weight:600;font-display:swap}
+@font-face{font-family:PlexMono;src:url(/fonts/plex-mono.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+
+/* ── tokens ─────────────────────────────────────────────────────────── */
 :root{
-  --ground:#E6E5DC; --surface:#F2F1EA; --ink:#23251F; --ink-2:#4E5147; --muted:#767A6C;
-  --rule:#C9C8BB; --rule-soft:#D6D5C9;
-  --gold:#8A6D12; --gold-bright:#B08D1E; --gold-wash:#EFE7C9;
-  --shade:#5A4A7C; --shade-wash:#E6E1EF;
-  --warn:#8C2F26; --warn-wash:#F3E2DF;
-  --serif:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --page:#E9E6DC;         /* parchment, greened slightly toward the accent */
+  --field:#F3F1E9;        /* raised surface */
+  --ink:#1E201A;
+  --ink-soft:#4A4C43;
+  --ink-faint:#7C7E71;
+  --rule:#C6C4B6;         /* hairline */
+  --rule-faint:#D8D6C9;
+  --mark:#7C6413;         /* accent: gilding. used sparingly */
+  --mark-lit:#A5871F;
+  --shadow-realm:#584874; /* DLC */
+  --forked:#8A2E24;       /* mutually exclusive */
+  --settled:#4F6B3C;      /* satisfied automatically */
+
+  --gap:16px;
+  --tap:44px;             /* minimum comfortable touch target */
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ground:#171714; --surface:#201F1C; --ink:#E8E5D8; --ink-2:#BDBAAC; --muted:#8D8A7D;
-  --rule:#35342E; --rule-soft:#2C2B26;
-  --gold:#D6B34C; --gold-bright:#E8C765; --gold-wash:#302A18;
-  --shade:#A695CE; --shade-wash:#252036;
-  --warn:#D8776B; --warn-wash:#33201D;
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --page:#15150F;
+  --field:#1E1E17;
+  --ink:#E9E5D6;
+  --ink-soft:#BAB7A7;
+  --ink-faint:#87857A;
+  --rule:#32322A;
+  --rule-faint:#282821;
+  --mark:#D2B34F;
+  --mark-lit:#E7CB6C;
+  --shadow-realm:#A897D0;
+  --forked:#D9776A;
+  --settled:#93B577;
 }}
-:root[data-theme="dark"]{
-  --ground:#171714; --surface:#201F1C; --ink:#E8E5D8; --ink-2:#BDBAAC; --muted:#8D8A7D;
-  --rule:#35342E; --rule-soft:#2C2B26;
-  --gold:#D6B34C; --gold-bright:#E8C765; --gold-wash:#302A18;
-  --shade:#A695CE; --shade-wash:#252036;
-  --warn:#D8776B; --warn-wash:#33201D;
+:root[data-theme=dark]{
+  --page:#15150F; --field:#1E1E17; --ink:#E9E5D6; --ink-soft:#BAB7A7;
+  --ink-faint:#87857A; --rule:#32322A; --rule-faint:#282821;
+  --mark:#D2B34F; --mark-lit:#E7CB6C; --shadow-realm:#A897D0;
+  --forked:#D9776A; --settled:#93B577;
 }
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
-  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-
-.bar{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--rule)}
-.bar-in{max-width:1400px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;white-space:nowrap}
-.spacer{flex:1 1 30px}
-.ringwrap{display:flex;align-items:center;gap:10px}
-.ring{width:42px;height:42px;flex:none;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:4}
-.ring .trk{stroke:var(--rule)}
-.ring .val{stroke:var(--gold-bright);stroke-linecap:round;transition:stroke-dashoffset .3s}
-.pct{font-family:var(--mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
-.tal{font-size:11px;color:var(--muted);letter-spacing:.05em;font-variant-numeric:tabular-nums}
-.btn{font:inherit;font-size:13px;color:var(--ink-2);background:var(--ground);
-  border:1px solid var(--rule);border-radius:2px;padding:6px 11px;cursor:pointer;white-space:nowrap}
-.btn:hover{border-color:var(--gold);color:var(--ink)}
-.btn[aria-pressed="true"]{background:var(--gold-wash);border-color:var(--gold);color:var(--gold)}
-.btn:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
-select{font:inherit;font-size:13px;background:var(--ground);color:var(--ink);
-  border:1px solid var(--rule);border-radius:2px;padding:6px 8px;max-width:210px}
-.seg{display:flex;border:1px solid var(--rule);border-radius:2px;overflow:hidden}
-.seg .btn{border:0;border-right:1px solid var(--rule);border-radius:0}
-.seg .btn:last-child{border-right:0}
-.search{display:flex;align-items:center;gap:6px;background:var(--ground);
-  border:1px solid var(--rule);border-radius:2px;padding:5px 9px}
-.search input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;width:200px;outline:none}
-
-.shell{max-width:1400px;margin:0 auto;padding:0 20px 80px;display:flex;gap:32px;align-items:flex-start}
-.rail{position:sticky;top:72px;flex:0 0 216px;padding:22px 0;max-height:calc(100vh - 88px);overflow-y:auto}
-.rail h2{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);
-  margin:0 0 9px;padding-bottom:9px;border-bottom:1px solid var(--rule)}
-.rail a{display:block;text-decoration:none;color:var(--ink-2);padding:6px 0;font-size:13px;
-  border-bottom:1px solid var(--rule-soft)}
-.rail a:hover{color:var(--gold)}
-.rail a.done{color:var(--gold);font-weight:600}
-.rl{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-.rn{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.rbar{height:2px;background:var(--rule);margin-top:5px;position:relative}
-.rbar i{position:absolute;inset:0 auto 0 0;background:var(--gold-bright);transition:width .3s}
-.main{flex:1 1 auto;min-width:0;padding:22px 0}
-
-.sec{margin:0 0 30px;scroll-margin-top:84px}
-.sec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-bottom:8px;
-  border-bottom:1px solid var(--rule)}
-.sec-h h2{font-family:var(--serif);font-size:25px;font-weight:600;margin:0}
-.cnt{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.cnt b{color:var(--gold)}
-.note{color:var(--muted);font-size:13px;margin:8px 0 0;max-width:72ch}
-.fil{height:3px;background:var(--rule);position:relative;margin:10px 0 18px}
-.fil i{position:absolute;inset:0 auto 0 0;background:var(--gold-bright);transition:width .3s}
-
-.grp{margin:0 0 20px}
-.grp-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11px;
-  text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);padding-bottom:7px;
-  margin-bottom:8px;border-bottom:1px solid var(--rule-soft)}
-.gn{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0;margin-left:auto;
-  font-variant-numeric:tabular-nums}
-.chip{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;
-  border-radius:2px;font-weight:600}
-.chip.dlc{background:var(--shade-wash);color:var(--shade);border:1px solid var(--shade)}
-.chip.x{background:var(--warn-wash);color:var(--warn);border:1px solid var(--warn)}
-.chip.runs{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold);
-  letter-spacing:.04em;margin-left:6px;vertical-align:1px}
-.chip.auto{background:transparent;color:var(--muted);border:1px dashed var(--rule);
-  letter-spacing:.04em;margin-left:6px;vertical-align:1px;font-weight:500}
-
-/* Derived entries: computed from a prerequisite, never ticked by hand. */
-.item[data-derived] label{cursor:default}
-.item[data-derived] label:hover{background:transparent}
-.item[data-derived] input[type=checkbox]{
-  cursor:default;border-style:dashed;opacity:.75}
-.item[data-derived] input:checked{opacity:1;border-style:solid}
-.item[data-derived] .tx{color:var(--muted)}
-
-.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1px 22px;
-  list-style:none;padding:0;margin:0}
-.items.wide{grid-template-columns:repeat(auto-fill,minmax(430px,1fr))}
-.item label{display:flex;gap:9px;align-items:flex-start;cursor:pointer;padding:4px 6px 4px 2px;border-radius:2px}
-.item label:hover{background:var(--surface)}
-.item input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:14px;height:14px;
-  margin:4px 0 0;border:1px solid var(--muted);border-radius:1px;background:var(--surface);
-  cursor:pointer;position:relative}
-.item input:checked{background:var(--gold-bright);border-color:var(--gold-bright)}
-.item input:checked::after{content:"";position:absolute;left:4px;top:1px;width:3px;height:7px;
-  border:solid var(--ground);border-width:0 2px 2px 0;transform:rotate(42deg)}
-.tx{min-width:0;font-size:14px;line-height:1.45}
-.d{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:1px}
-.item input:checked ~ .tx{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--rule)}
-.item input:checked ~ .tx .d{text-decoration:none}
-
-.ctr{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--surface);
-  border:1px solid var(--rule);border-radius:2px}
-.ctr.full{border-color:var(--gold);background:var(--gold-wash)}
-.ctr .cn{flex:1 1 auto;min-width:0;font-size:14px}
-.ctr .num{font-family:var(--mono);font-size:14px;min-width:58px;text-align:right;
-  color:var(--ink-2);font-variant-numeric:tabular-nums}
-.ctr .num b{color:var(--gold)}
-.ctr button{font:inherit;width:26px;height:26px;flex:none;line-height:1;background:var(--ground);
-  border:1px solid var(--rule);border-radius:2px;color:var(--ink-2);cursor:pointer;font-size:15px}
-.ctr button:hover{border-color:var(--gold);color:var(--gold)}
-
-.panel{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--gold);
-  padding:18px 22px;margin:0 0 26px}
-.panel h3{font-family:var(--serif);font-size:18px;margin:0 0 6px;font-weight:600}
-.panel p{margin:0 0 10px;color:var(--ink-2);font-size:13.5px;max-width:70ch}
-.panel .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.hidden{display:none !important}
-.msg{color:var(--muted);font-size:14px;padding:36px 0;font-style:italic}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);
-  color:var(--ground);padding:9px 16px;border-radius:2px;font-size:13px;z-index:80;
-  opacity:0;pointer-events:none;transition:opacity .2s}
-.toast.on{opacity:1}
-@media (max-width:940px){
-  .shell{display:block}
-  .rail{position:static;width:auto;flex:none;max-height:none;padding:16px 0 0;display:flex;
-    gap:8px;overflow-x:auto;border-bottom:1px solid var(--rule)}
-  .rail h2{display:none}
-  .rail a{white-space:nowrap;border:1px solid var(--rule);border-radius:2px;padding:6px 10px;font-size:12px}
-  .rbar{display:none}
-  .search input{width:130px}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--page);color:var(--ink);
+  font-family:Plex,system-ui,sans-serif;font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-wrap:break-word;
 }
-@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+/* Nothing in this document is a rounded card. */
+button,input,select{border-radius:0;font:inherit}
+
+.sc{font-family:GaramondSC,Garamond,serif;font-size:1.05em;letter-spacing:.02em}
+
+/* ── masthead ───────────────────────────────────────────────────────── */
+.top{
+  position:sticky;top:0;z-index:30;background:var(--field);
+  border-bottom:1px solid var(--rule);
+  padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));
+}
+.top-row{display:flex;align-items:center;gap:12px}
+.mark{
+  font-family:Garamond,serif;font-size:20px;line-height:1.1;margin:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.score{margin-left:auto;display:flex;align-items:baseline;gap:6px;flex:none}
+.score .pct{font-family:PlexMono,monospace;font-size:17px;font-variant-numeric:tabular-nums}
+.score .of{font-family:PlexMono,monospace;font-size:11px;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums}
+.gauge{height:2px;background:var(--rule);margin-top:8px;position:relative}
+.gauge i{position:absolute;inset:0 auto 0 0;background:var(--mark-lit);transition:width .25s}
+
+.icon{
+  flex:none;width:var(--tap);height:36px;margin:-4px -8px -4px 0;
+  display:grid;place-items:center;background:none;border:0;color:var(--ink-soft);
+  cursor:pointer;
+}
+.icon:hover{color:var(--mark)}
+.icon svg{width:20px;height:20px}
+
+.find{display:flex;align-items:center;gap:8px;margin-top:8px;
+  border:1px solid var(--rule);background:var(--page);padding:0 10px;height:var(--tap)}
+.find svg{width:15px;height:15px;flex:none;color:var(--ink-faint)}
+.find input{flex:1;min-width:0;border:0;background:none;color:var(--ink);
+  font-size:16px;outline:none;height:100%}  /* 16px keeps iOS from zooming */
+
+/* control drawer: hidden on small screens until summoned */
+.drawer{display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--rule-faint)}
+.drawer.open{display:flex}
+.btn{
+  min-height:36px;padding:0 12px;background:var(--page);color:var(--ink-soft);
+  border:1px solid var(--rule);cursor:pointer;font-size:14px;white-space:nowrap;
+}
+.btn:hover{border-color:var(--mark);color:var(--ink)}
+.btn[aria-pressed=true]{background:var(--mark);border-color:var(--mark);color:var(--page)}
+.btn:focus-visible,.find:focus-within,select:focus-visible,input:focus-visible{
+  outline:2px solid var(--mark-lit);outline-offset:1px}
+.pick{min-height:36px;padding:0 8px;background:var(--page);color:var(--ink);
+  border:1px solid var(--rule);flex:1 1 160px;max-width:260px;min-width:0}
+.split{display:flex;border:1px solid var(--rule)}
+.split .btn{border:0;border-right:1px solid var(--rule)}
+.split .btn:last-child{border-right:0}
+
+/* ── section index: a horizontal band on phones, a column on desktop ── */
+.index{
+  display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
+  background:var(--page);border-top:1px solid var(--rule-faint);
+  /* inside the sticky header, bled back out to the screen edges */
+  margin:8px -12px 0;padding:0 12px;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+}
+.index::-webkit-scrollbar{display:none}
+.index a{
+  flex:none;padding:10px 14px;text-decoration:none;color:var(--ink-soft);
+  font-size:13px;white-space:nowrap;border-right:1px solid var(--rule-faint);
+}
+.index a .n{font-family:PlexMono,monospace;font-size:11px;color:var(--ink-faint);
+  margin-left:6px;font-variant-numeric:tabular-nums}
+.index a.full{color:var(--mark)}
+
+.page{padding:0 max(12px,env(safe-area-inset-left)) 64px}
+
+/* ── sections ───────────────────────────────────────────────────────── */
+.part{padding-top:28px;scroll-margin-top:64px}
+.part > h2{
+  font-family:Garamond,serif;font-weight:400;font-size:29px;line-height:1.15;
+  margin:0 0 2px;
+}
+.tally{font-family:PlexMono,monospace;font-size:12px;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums}
+.tally b{color:var(--mark);font-weight:400}
+.gloss{color:var(--ink-soft);font-size:14px;margin:8px 0 0;max-width:62ch;
+  font-family:Garamond,serif;font-size:17px;line-height:1.45}
+.part > hr{border:0;border-top:1px solid var(--rule);margin:14px 0 0}
+
+.band{margin-top:22px}
+.band > h3{
+  margin:0 0 6px;font-weight:400;font-size:15px;color:var(--ink-soft);
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+}
+.band > h3 .n{margin-left:auto;font-family:PlexMono,monospace;font-size:11px;
+  color:var(--ink-faint);font-variant-numeric:tabular-nums}
+.tag{font-family:GaramondSC,serif;font-size:13px;padding:0 5px;line-height:1.5}
+.tag.dlc{color:var(--shadow-realm);border:1px solid var(--shadow-realm)}
+.tag.forked{color:var(--forked);border:1px solid var(--forked)}
+.tag.settled{color:var(--ink-faint);border:1px dotted var(--rule)}
+
+ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-faint)}
+.row{border-bottom:1px solid var(--rule-faint)}
+.row label{display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+  padding:11px 4px;min-height:var(--tap)}
+.row input[type=checkbox]{
+  appearance:none;-webkit-appearance:none;flex:none;
+  width:17px;height:17px;margin:2px 0 0;position:relative;cursor:pointer;
+  border:1px solid var(--ink-faint);background:var(--field);
+}
+.row input:checked{background:var(--mark);border-color:var(--mark)}
+.row input:checked::after{content:"";position:absolute;left:5px;top:1px;
+  width:4px;height:9px;border:solid var(--field);border-width:0 2px 2px 0;
+  transform:rotate(43deg)}
+.row .what{min-width:0;font-size:15px;line-height:1.4}
+.row .where{display:block;font-family:Garamond,serif;font-size:15px;line-height:1.35;
+  color:var(--ink-faint);margin-top:2px}
+.row input:checked ~ .what{color:var(--ink-faint)}
+.row input:checked ~ .what > .name{text-decoration:line-through;
+  text-decoration-color:var(--rule)}
+
+/* automatic rows: outcome of something else, so not directly tickable */
+.row[data-auto] label{cursor:default}
+.row[data-auto] input{cursor:default;border-style:dotted;background:transparent}
+.row[data-auto] input:checked{background:var(--settled);border-color:var(--settled);
+  border-style:solid}
+.row[data-auto] .what{color:var(--ink-faint)}
+.seen{font-family:PlexMono,monospace;font-size:11px;color:var(--mark);margin-left:6px}
+
+/* tallies */
+.count{display:flex;align-items:center;gap:10px;padding:8px 4px;min-height:var(--tap)}
+.count .what{flex:1;min-width:0;font-size:15px}
+.count .num{font-family:PlexMono,monospace;font-size:15px;font-variant-numeric:tabular-nums;
+  color:var(--ink-soft);min-width:56px;text-align:right}
+.count .num b{color:var(--mark);font-weight:400}
+.count button{width:36px;height:36px;flex:none;background:var(--page);
+  border:1px solid var(--rule);color:var(--ink-soft);cursor:pointer;font-size:17px;
+  line-height:1}
+.count button:hover{border-color:var(--mark);color:var(--mark)}
+.count.done .num b{color:var(--settled)}
+
+/* ── notices ────────────────────────────────────────────────────────── */
+.notice{margin-top:22px;padding:14px 0;border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule)}
+.notice h3{font-family:Garamond,serif;font-weight:400;font-size:19px;margin:0 0 4px}
+.notice p{margin:0 0 10px;color:var(--ink-soft);font-size:14px;max-width:62ch}
+.notice .acts{display:flex;gap:8px;flex-wrap:wrap}
+.gone{display:none!important}
+.nil{color:var(--ink-faint);font-family:Garamond,serif;font-size:18px;padding:40px 4px}
+
+.flash{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  background:var(--ink);color:var(--page);padding:9px 15px;font-size:14px;
+  z-index:60;opacity:0;pointer-events:none;transition:opacity .18s;max-width:90vw}
+.flash.up{opacity:1}
+
+/* ── wider screens ──────────────────────────────────────────────────── */
+@media (min-width:760px){
+  body{font-size:15px}
+  .top{padding:10px 24px}
+  .mark{font-size:23px}
+  .find{margin-top:0;flex:1 1 260px;max-width:340px;height:36px}
+  .top-row{flex-wrap:wrap;gap:14px}
+  .icon{display:none}
+  .drawer{display:flex;margin-top:0;padding-top:0;border-top:0;flex:1 1 100%}
+  .gauge{margin-top:10px}
+  .page{display:flex;gap:36px;max-width:1360px;margin:0 auto;
+        padding:0 24px 80px;align-items:flex-start}
+  .index{
+    position:sticky;top:96px;display:block;flex:0 0 196px;overflow:visible;
+    border-top:0;border-right:1px solid var(--rule-faint);background:none;
+    margin:28px 0 0;padding:0 14px 0 0;
+    max-height:calc(100vh - 120px);overflow-y:auto;
+  }
+  .index a{display:flex;justify-content:space-between;gap:8px;padding:5px 0;
+    border-right:0;border-bottom:1px solid var(--rule-faint)}
+  .index a .n{margin-left:0}
+  .body{flex:1 1 auto;min-width:0}
+  .part:first-child{padding-top:24px}
+  ul.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(264px,1fr));
+    column-gap:26px;border-top:0}
+  ul.list.roomy{grid-template-columns:repeat(auto-fill,minmax(460px,1fr))}
+  .row label{padding:6px 2px;min-height:0}
+  .count{padding:6px 2px;min-height:0}
+}
+@media (min-width:1080px){ .part > h2{font-size:34px} }
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 
-<div class="bar"><div class="bar-in">
-  <h1 class="brand">The Tarnished Ledger</h1>
-  <div class="ringwrap">
-    <svg class="ring" viewBox="0 0 42 42" aria-hidden="true">
-      <circle class="trk" cx="21" cy="21" r="17"></circle>
-      <circle class="val" id="ring" cx="21" cy="21" r="17" stroke-dasharray="106.8" stroke-dashoffset="106.8"></circle>
-    </svg>
-    <div><div class="pct" id="pct">0%</div><div class="tal" id="tally">0 / 0</div></div>
+<header class="top">
+  <div class="top-row">
+    <h1 class="mark">The Tarnished Ledger</h1>
+    <div class="score">
+      <span class="pct" id="pct">—</span>
+      <span class="of" id="of"></span>
+    </div>
+    <button class="icon" id="more" aria-label="Show controls" aria-expanded="false">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
   </div>
-  <div class="spacer"></div>
-  <label class="tal" for="prof">Run</label>
-  <select id="prof" aria-label="Active run"></select>
-  <button class="btn" id="newrun">New run</button>
-  <div class="search">
-    <input id="q" type="search" placeholder="Search 1,672 entries…" aria-label="Search">
+  <label class="find">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+      <circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L15 15"/></svg>
+    <input id="q" type="search" placeholder="Search the ledger" aria-label="Search">
+  </label>
+  <div class="drawer" id="drawer">
+    <select class="pick" id="run" aria-label="Active run"></select>
+    <div class="split" role="group" aria-label="Filter by content">
+      <button class="btn" data-scope="all" aria-pressed="true">All</button>
+      <button class="btn" data-scope="base" aria-pressed="false">Base</button>
+      <button class="btn" data-scope="dlc" aria-pressed="false">Shadow</button>
+    </div>
+    <button class="btn" id="veil" aria-pressed="false">Hide done</button>
+    <button class="btn" id="union" aria-pressed="false">Across runs</button>
+    <button class="btn" id="admin">Runs&hellip;</button>
   </div>
-  <div class="seg" role="group" aria-label="Content filter">
-    <button class="btn" data-mode="all" aria-pressed="true">All</button>
-    <button class="btn" data-mode="base" aria-pressed="false">Base</button>
-    <button class="btn" data-mode="dlc" aria-pressed="false">DLC</button>
-  </div>
-  <button class="btn" id="hide" aria-pressed="false">Hide done</button>
-  <button class="btn" id="cov" aria-pressed="false">All runs</button>
-  <button class="btn" id="menu">More</button>
-</div></div>
+  <nav class="index" id="index" aria-label="Sections"></nav>
+  <div class="gauge"><i id="gauge"></i></div>
+</header>
 
-<div class="shell">
-  <nav class="rail" id="rail" aria-label="Sections"><h2>Sections</h2></nav>
-  <main class="main">
-    <section class="panel hidden" id="more">
+<div class="page">
+  <nav class="index gone" id="index-wide" aria-hidden="true"></nav>
+  <main class="body">
+    <section class="notice gone" id="panel">
       <h3>This run</h3>
-      <p id="moretext"></p>
-      <div class="row">
-        <button class="btn" id="rename">Rename run</button>
-        <button class="btn" id="export">Export JSON</button>
-        <button class="btn" id="import">Import JSON</button>
-        <button class="btn" id="reset">Clear this run</button>
-        <button class="btn" id="delrun">Delete run</button>
+      <p id="panel-text"></p>
+      <div class="acts">
+        <button class="btn" id="new">New run</button>
+        <button class="btn" id="rename">Rename</button>
+        <button class="btn" id="save">Export</button>
+        <button class="btn" id="load">Import</button>
+        <button class="btn" id="wipe">Clear ticks</button>
+        <button class="btn" id="drop">Delete run</button>
       </div>
     </section>
-    <section class="panel hidden" id="covpanel">
+    <section class="notice gone" id="union-panel">
       <h3>Across every run</h3>
-      <p id="covtext"></p>
+      <p id="union-text"></p>
     </section>
     <div id="out"></div>
-    <p class="msg hidden" id="none">Nothing matches.</p>
+    <p class="nil gone" id="nil">Nothing here matches.</p>
   </main>
 </div>
-<div class="toast" id="toast"></div>
+<div class="flash" id="flash"></div>
 
 <script>
 const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const api = async (p, opt) => {
-  const r = await fetch(p, opt);
-  const j = await r.json().catch(() => ({error:"bad response"}));
-  if (j.error) { toast(j.error); throw new Error(j.error); }
+const esc = s => String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const api = async (p,o) => {
+  const r = await fetch(p,o);
+  const j = await r.json().catch(()=>({error:"unreadable response"}));
+  if (j.error){ flash(j.error); throw new Error(j.error); }
   return j;
 };
-let toastT;
-function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on");
-  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2200); }
+let flashT;
+function flash(m){ const f=$("#flash"); f.textContent=m; f.classList.add("up");
+  clearTimeout(flashT); flashT=setTimeout(()=>f.classList.remove("up"),2400); }
 
-let PID = null, SECTIONS = [], MODE = "all", HIDE = false, COV = false, Q = "";
-let COVMAP = {};   // item_id -> finished in any run
+let RUN=null, PARTS=[], SCOPE="all", VEIL=false, UNION=false, Q="", DONE_ANY={};
 
-/* ---------------- render ---------------- */
-function render(){
-  let rail = '<h2>Sections</h2>', html = "";
-  for (const s of SECTIONS){
-    rail += `<a href="#s-${s.slug}" data-rail="${s.slug}"><span class="rl">
-      <span>${esc(s.title)}</span><span class="rn" data-rn="${s.slug}"></span></span>
-      <span class="rbar"><i data-rb="${s.slug}"></i></span></a>`;
-    let body = "";
-    for (const g of s.groups){
-      const chips = (g.dlc ? '<span class="chip dlc">Shadow of the Erdtree</span>' : "")
-                  + (g.choice ? '<span class="chip x">choice</span>' : "");
-      const wide = s.slug === "quest";
-      let lis = "";
-      for (const it of g.items){
-        const hay = (it.name + " " + it.detail).toLowerCase();
-        const base = `class="item" data-id="${it.id}" data-dlc="${g.dlc}" data-s="${esc(hay)}" data-target="${it.target}"`;
+/* ── build ─────────────────────────────────────────────────────────── */
+function draw(){
+  let nav="", html="";
+  for (const p of PARTS){
+    nav += `<a href="#p-${p.slug}" data-nav="${p.slug}">
+      <span>${esc(p.title)}</span><span class="n" data-pc="${p.slug}"></span></a>`;
+    let bands="";
+    for (const b of p.groups){
+      const tags = (b.dlc?'<span class="tag dlc">Shadow</span>':"")
+                 + (b.choice?'<span class="tag forked">either / or</span>':"");
+      let rows="";
+      for (const it of b.items){
+        const hay = (it.name+" "+it.detail).toLowerCase();
+        const at = `data-id="${it.id}" data-dlc="${b.dlc}" data-cap="${it.target}" data-hay="${esc(hay)}"`;
         if (it.kind === "tally"){
-          lis += `<li ${base} data-kind="tally"><div class="ctr${it.value>=it.target?" full":""}">
-            <button type="button" data-step="-1" data-id="${it.id}" aria-label="Decrease ${esc(it.name)}">−</button>
-            <button type="button" data-step="1" data-id="${it.id}" aria-label="Increase ${esc(it.name)}">+</button>
-            <span class="cn">${esc(it.name)}${it.detail?`<span class="d">${esc(it.detail)}</span>`:""}</span>
-            <span class="num"><b>${it.value}</b> / ${it.target}</span></div></li>`;
+          rows += `<li class="row" ${at} data-kind="tally">
+            <div class="count${it.value>=it.target?" done":""}">
+              <button type="button" data-step="-1" data-id="${it.id}"
+                aria-label="Fewer ${esc(it.name)}">&minus;</button>
+              <button type="button" data-step="1" data-id="${it.id}"
+                aria-label="More ${esc(it.name)}">+</button>
+              <span class="what"><span class="name">${esc(it.name)}</span>
+                ${it.detail?`<span class="where">${esc(it.detail)}</span>`:""}</span>
+              <span class="num"><b>${it.value}</b>/${it.target}</span>
+            </div></li>`;
         } else {
-          const auto = it.derived
-            ? `<span class="chip auto" title="Computed from ${esc(it.from)} — tick that instead">auto</span>`
-            : "";
-          const det = it.derived
-            ? `<span class="d">Automatic: ${esc(it.from)}${it.detail?" · "+esc(it.detail):""}</span>`
-            : (it.detail?`<span class="d">${esc(it.detail)}</span>`:"");
-          lis += `<li ${base}${it.derived?' data-derived="1"':""} data-kind="check"><label>
-            <input type="checkbox" data-id="${it.id}"${it.value?" checked":""}${it.derived?" disabled":""}>
-            <span class="tx">${esc(it.name)}${auto}${runsChip(it)}${det}</span>
+          const auto = it.derived;
+          const note = auto
+            ? `<span class="where">Settled by ${esc(it.from)}${it.detail?" &middot; "+esc(it.detail):""}</span>`
+            : (it.detail?`<span class="where">${esc(it.detail)}</span>`:"");
+          rows += `<li class="row" ${at}${auto?' data-auto="1"':""} data-kind="check"><label>
+            <input type="checkbox" data-id="${it.id}"${it.value?" checked":""}${auto?" disabled":""}>
+            <span class="what"><span class="name">${esc(it.name)}</span>${
+              auto?' <span class="tag settled">auto</span>':""}${
+              it.runs>1?`<span class="seen">${it.runs}&times;</span>`:""}${note}</span>
             </label></li>`;
         }
       }
-      body += `<div class="grp"><div class="grp-h"><span>${esc(g.name)}</span>${chips}
-        <span class="gn" data-gid="${g.id}"></span></div>
-        <ul class="items${wide?" wide":""}">${lis}</ul></div>`;
+      bands += `<div class="band"><h3>${esc(b.name)}${tags}
+        <span class="n" data-bc="${b.id}"></span></h3>
+        <ul class="list${p.slug==="quest"?" roomy":""}">${rows}</ul></div>`;
     }
-    html += `<section class="sec" id="s-${s.slug}" data-slug="${s.slug}">
-      <div class="sec-h"><h2>${esc(s.title)}</h2><span class="cnt" data-cnt="${s.slug}"></span></div>
-      ${s.note?`<p class="note">${esc(s.note)}</p>`:""}
-      <div class="fil"><i data-fil="${s.slug}"></i></div>${body}</section>`;
+    html += `<section class="part" id="p-${p.slug}" data-part="${p.slug}">
+      <h2>${esc(p.title)}</h2>
+      <div class="tally" data-ptc="${p.slug}"></div>
+      ${p.note?`<p class="gloss">${esc(p.note)}</p>`:""}
+      <hr>${bands}</section>`;
   }
-  $("#rail").innerHTML = rail;
+  $("#index").innerHTML = nav;
+  $("#index-wide").innerHTML = nav;
   $("#out").innerHTML = html;
-  recount();
-  applyFilters();
+  recount(); sift();
 }
 
-function runsChip(it){
-  return (it.runs > 1) ? `<span class="chip runs">${it.runs} runs</span>` : "";
-}
-
-/* client-side recount so ticking feels instant */
+/* count locally so a tap feels instant */
 function recount(){
-  let gd=0, gt=0;
-  for (const sec of document.querySelectorAll(".sec")){
-    let d=0, t=0;
-    for (const li of sec.querySelectorAll(".item")){
-      const target = +li.dataset.target;
-      t += target;
-      d += li.dataset.kind === "tally"
-        ? +li.querySelector(".num b").textContent
-        : (li.querySelector("input").checked ? target : 0);
+  let all=0, got=0;
+  for (const part of document.querySelectorAll(".part")){
+    let a=0,g=0;
+    for (const row of part.querySelectorAll(".row")){
+      const cap=+row.dataset.cap; a+=cap;
+      g += row.dataset.kind==="tally"
+        ? +row.querySelector(".num b").textContent
+        : (row.querySelector("input").checked ? cap : 0);
     }
-    gd+=d; gt+=t;
-    const slug = sec.dataset.slug, p = t ? d/t : 0;
-    sec.querySelector(`[data-cnt="${slug}"]`).innerHTML = `<b>${d}</b> / ${t}`;
-    sec.querySelector(`[data-fil="${slug}"]`).style.width = (p*100).toFixed(1)+"%";
-    const rn=$(`[data-rn="${slug}"]`), rb=$(`[data-rb="${slug}"]`),
-          lk=$(`[data-rail="${slug}"]`);
-    if(rn) rn.textContent = Math.round(p*100)+"%";
-    if(rb) rb.style.width = (p*100).toFixed(1)+"%";
-    if(lk) lk.classList.toggle("done", d===t && t>0);
-    for (const grp of sec.querySelectorAll(".grp")){
-      let a=0,b=0;
-      for (const li of grp.querySelectorAll(".item")){
-        const target=+li.dataset.target; b+=target;
-        a += li.dataset.kind==="tally"
-          ? +li.querySelector(".num b").textContent
-          : (li.querySelector("input").checked ? target : 0);
+    all+=a; got+=g;
+    const slug=part.dataset.part, frac = a? g/a : 0;
+    const t=$(`[data-ptc="${slug}"]`); if(t) t.innerHTML=`<b>${g}</b> of ${a}`;
+    for (const el of document.querySelectorAll(`[data-pc="${slug}"]`))
+      el.textContent = Math.round(frac*100)+"%";
+    for (const el of document.querySelectorAll(`[data-nav="${slug}"]`))
+      el.classList.toggle("full", g===a && a>0);
+    for (const band of part.querySelectorAll(".band")){
+      let x=0,y=0;
+      for (const row of band.querySelectorAll(".row")){
+        const cap=+row.dataset.cap; y+=cap;
+        x += row.dataset.kind==="tally"
+          ? +row.querySelector(".num b").textContent
+          : (row.querySelector("input").checked ? cap : 0);
       }
-      grp.querySelector(".gn").textContent = `${a}/${b}`;
+      band.querySelector("h3 .n").textContent = `${x}/${y}`;
     }
   }
-  const pct = gt ? gd/gt : 0;
-  $("#pct").textContent = (pct*100).toFixed(1)+"%";
-  $("#tally").textContent = `${gd} / ${gt}`;
-  $("#ring").style.strokeDashoffset = (2*Math.PI*17*(1-pct)).toFixed(2);
+  const frac = all? got/all : 0;
+  $("#pct").textContent = (frac*100).toFixed(1)+"%";
+  $("#of").textContent = `${got}/${all}`;
+  $("#gauge").style.width = (frac*100).toFixed(2)+"%";
 }
 
-/* ---------------- filters ---------------- */
-function applyFilters(){
-  let any=false;
-  for (const sec of document.querySelectorAll(".sec")){
-    let sv=false;
-    for (const grp of sec.querySelectorAll(".grp")){
-      let gv=false;
-      for (const li of grp.querySelectorAll(".item")){
-        const dlc = li.dataset.dlc === "1";
-        const done = li.dataset.kind==="tally"
-          ? +li.querySelector(".num b").textContent >= +li.dataset.target
-          : li.querySelector("input").checked;
-        let ok = true;
-        if (MODE==="base" && dlc) ok=false;
-        if (MODE==="dlc" && !dlc) ok=false;
-        if (ok && HIDE && done) ok=false;
-        if (ok && COV && COVMAP[li.dataset.id]) ok=false;
-        if (ok && Q && !li.dataset.s.includes(Q)) ok=false;
-        li.classList.toggle("hidden", !ok);
-        if (ok) gv=true;
+/* ── filtering ─────────────────────────────────────────────────────── */
+function sift(){
+  let anything=false;
+  for (const part of document.querySelectorAll(".part")){
+    let partOn=false;
+    for (const band of part.querySelectorAll(".band")){
+      let bandOn=false;
+      for (const row of band.querySelectorAll(".row")){
+        const dlc = row.dataset.dlc==="1";
+        const full = row.dataset.kind==="tally"
+          ? +row.querySelector(".num b").textContent >= +row.dataset.cap
+          : row.querySelector("input").checked;
+        let show = true;
+        if (SCOPE==="base" && dlc) show=false;
+        if (SCOPE==="dlc" && !dlc) show=false;
+        if (show && VEIL && full) show=false;
+        if (show && UNION && DONE_ANY[row.dataset.id]) show=false;
+        if (show && Q && !row.dataset.hay.includes(Q)) show=false;
+        row.classList.toggle("gone", !show);
+        if (show) bandOn=true;
       }
-      grp.classList.toggle("hidden", !gv);
-      if (gv) sv=true;
+      band.classList.toggle("gone", !bandOn);
+      if (bandOn) partOn=true;
     }
-    sec.classList.toggle("hidden", !sv);
-    if (sv) any=true;
-    const lk=$(`[data-rail="${sec.dataset.slug}"]`);
-    if (lk) lk.classList.toggle("hidden", !sv);
+    part.classList.toggle("gone", !partOn);
+    if (partOn) anything=true;
+    for (const el of document.querySelectorAll(`[data-nav="${part.dataset.part}"]`))
+      el.classList.toggle("gone", !partOn);
   }
-  $("#none").classList.toggle("hidden", any);
+  $("#nil").classList.toggle("gone", anything);
 }
 
-/* ---------------- writes ---------------- */
-async function setVal(id, value){
-  const j = await api("/api/set", {method:"POST",
+/* ── writes ────────────────────────────────────────────────────────── */
+async function put(id, value){
+  const j = await api("/api/set",{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({profile:PID, item:id, value})});
-  if (j.derived) applyDerived(j.derived);
+    body:JSON.stringify({profile:RUN,item:id,value})});
+  if (j.derived) paintAuto(j.derived);
   return j.value;
 }
-
-// Repaint the computed entries a write just settled (or un-settled).
-function applyDerived(map){
-  for (const [id, v] of Object.entries(map)){
-    const li = document.querySelector(`.item[data-id="${id}"]`);
-    if (!li) continue;
-    const box = li.querySelector('input[type="checkbox"]');
-    if (box) box.checked = v > 0;
+function paintAuto(map){
+  for (const [id,v] of Object.entries(map)){
+    const box = document.querySelector(`.row[data-id="${id}"] input[type=checkbox]`);
+    if (box) box.checked = v>0;
   }
 }
 
 document.addEventListener("change", async e => {
-  const box = e.target.closest('input[type="checkbox"][data-id]');
+  const box = e.target.closest('input[type=checkbox][data-id]');
   if (!box) return;
-  const li = box.closest(".item");
-  try { await setVal(+box.dataset.id, box.checked ? +li.dataset.target : 0); }
+  const row = box.closest(".row");
+  try { await put(+box.dataset.id, box.checked ? +row.dataset.cap : 0); }
   catch { box.checked = !box.checked; }
-  recount(); applyFilters();
+  recount(); sift();
 });
 
 document.addEventListener("click", async e => {
   const b = e.target.closest("button[data-step]");
   if (!b) return;
-  const li = b.closest(".item"), numB = li.querySelector(".num b");
-  const target = +li.dataset.target;
-  const next = Math.max(0, Math.min(target, +numB.textContent + (+b.dataset.step)));
-  if (next === +numB.textContent) return;
-  const prev = numB.textContent;
-  numB.textContent = next;
-  li.querySelector(".ctr").classList.toggle("full", next >= target);
-  recount(); applyFilters();
-  try { await setVal(+b.dataset.id, next); }
-  catch { numB.textContent = prev; recount(); applyFilters(); }
+  const row=b.closest(".row"), n=row.querySelector(".num b"), cap=+row.dataset.cap;
+  const was=+n.textContent, now=Math.max(0,Math.min(cap,was+(+b.dataset.step)));
+  if (now===was) return;
+  n.textContent=now;
+  row.querySelector(".count").classList.toggle("done", now>=cap);
+  recount(); sift();
+  try { await put(+b.dataset.id, now); }
+  catch { n.textContent=was; recount(); sift(); }
 });
 
-/* ---------------- profiles ---------------- */
-async function loadProfiles(sel){
+/* ── runs ──────────────────────────────────────────────────────────── */
+async function loadRuns(want){
   const {profiles} = await api("/api/profiles");
-  const s = $("#prof");
-  s.innerHTML = profiles.map(p =>
-    `<option value="${p.id}"${p.id===sel?" selected":""}>${esc(p.name)} — ${p.done}/${p.total}</option>`
-  ).join("");
-  PID = sel ?? +s.value;
-  const cur = profiles.find(p => p.id === PID);
-  if (cur) $("#moretext").textContent =
-    `${cur.name} — started ${cur.created_at}. ${cur.done} of ${cur.total} units done.` +
-    (cur.note ? ` (${cur.note})` : "");
+  const sel=$("#run");
+  sel.innerHTML = profiles.map(p =>
+    `<option value="${p.id}"${p.id===want?" selected":""}>${esc(p.name)} — ${p.done}/${p.total}</option>`).join("");
+  RUN = want ?? +sel.value;
+  const cur = profiles.find(p=>p.id===RUN);
+  if (cur) $("#panel-text").textContent =
+    `${cur.name}. Started ${cur.created_at}. ${cur.done} of ${cur.total} settled.`;
   return profiles;
 }
-
 async function loadTree(){
-  const j = await api("/api/tree?profile=" + PID);
-  SECTIONS = j.sections;
-  render();
+  const j = await api("/api/tree?profile="+RUN);
+  PARTS = j.sections; draw();
 }
 
-$("#prof").addEventListener("change", async e => {
-  PID = +e.target.value;
-  localStorage.setItem("er-pid", PID);
-  await loadProfiles(PID); await loadTree();
-  if (COV) await loadCoverage();
+$("#run").addEventListener("change", async e => {
+  RUN=+e.target.value; localStorage.setItem("er-run",RUN);
+  await loadRuns(RUN); await loadTree();
+  if (UNION) await loadUnion();
+  sift();
 });
-
-$("#newrun").addEventListener("click", async () => {
-  const name = prompt("Name this run (e.g. \"NG+ — Frenzied Flame\")");
-  if (!name) return;
-  const j = await api("/api/profiles", {method:"POST",
-    headers:{"Content-Type":"application/json"}, body: JSON.stringify({name})});
-  PID = j.id; localStorage.setItem("er-pid", PID);
-  await loadProfiles(PID); await loadTree(); toast("Run created");
+$("#new").addEventListener("click", async () => {
+  const name = prompt('Name this run (e.g. "NG+2 — Frenzied Flame")'); if(!name) return;
+  const j = await api("/api/profiles",{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
+  RUN=j.id; localStorage.setItem("er-run",RUN);
+  await loadRuns(RUN); await loadTree(); flash("Run created");
 });
-
 $("#rename").addEventListener("click", async () => {
-  const name = prompt("New name for this run");
-  if (!name) return;
-  await api("/api/profiles/rename", {method:"POST",
-    headers:{"Content-Type":"application/json"}, body: JSON.stringify({profile:PID, name})});
-  await loadProfiles(PID); toast("Renamed");
+  const name=prompt("New name"); if(!name) return;
+  await api("/api/profiles/rename",{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:RUN,name})});
+  await loadRuns(RUN); flash("Renamed");
 });
-
-$("#delrun").addEventListener("click", async () => {
-  if (!confirm("Delete this run and all its progress? This cannot be undone.")) return;
-  const j = await api("/api/profiles/delete", {method:"POST",
-    headers:{"Content-Type":"application/json"}, body: JSON.stringify({profile:PID})});
-  PID = j.profiles[0].id; localStorage.setItem("er-pid", PID);
-  await loadProfiles(PID); await loadTree(); toast("Run deleted");
+$("#drop").addEventListener("click", async () => {
+  if(!confirm("Delete this run and everything ticked in it?")) return;
+  const j = await api("/api/profiles/delete",{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:RUN})});
+  RUN=j.profiles[0].id; localStorage.setItem("er-run",RUN);
+  await loadRuns(RUN); await loadTree(); flash("Run deleted");
 });
-
-$("#reset").addEventListener("click", async () => {
-  if (!confirm("Clear every tick in this run? The run itself stays.")) return;
-  await api("/api/reset", {method:"POST",
-    headers:{"Content-Type":"application/json"}, body: JSON.stringify({profile:PID})});
-  await loadProfiles(PID); await loadTree(); toast("Run cleared");
+$("#wipe").addEventListener("click", async () => {
+  if(!confirm("Clear every tick in this run? The run itself stays.")) return;
+  await api("/api/reset",{method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:RUN})});
+  await loadRuns(RUN); await loadTree(); flash("Run cleared");
 });
-
-$("#export").addEventListener("click", async () => {
-  const j = await api("/api/export?profile=" + PID);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 1)], {type:"application/json"}));
-  a.download = `elden-ring-${j.profile.replace(/\W+/g,"-").toLowerCase()}.json`;
+$("#save").addEventListener("click", async () => {
+  const j = await api("/api/export?profile="+RUN);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(j,null,1)],{type:"application/json"}));
+  a.download=`ledger-${j.profile.replace(/\W+/g,"-").toLowerCase()}.json`;
   a.click(); URL.revokeObjectURL(a.href);
 });
-
-$("#import").addEventListener("click", () => {
-  const f = document.createElement("input");
-  f.type = "file"; f.accept = ".json,application/json";
-  f.onchange = () => {
-    const file = f.files[0]; if (!file) return;
-    const r = new FileReader();
-    r.onload = async () => {
-      try {
-        const d = JSON.parse(r.result);
-        const j = await api("/api/import", {method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({profile:PID, progress:d.progress || []})});
-        await loadProfiles(PID); await loadTree();
-        toast(`Imported ${j.imported} entries`);
-      } catch { toast("That file isn't a ledger export"); }
-    };
-    r.readAsText(file);
-  };
+$("#load").addEventListener("click", () => {
+  const f=document.createElement("input"); f.type="file"; f.accept=".json,application/json";
+  f.onchange=()=>{ const file=f.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=async()=>{ try{
+      const d=JSON.parse(r.result);
+      const j=await api("/api/import",{method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({profile:RUN,progress:d.progress||[]})});
+      await loadRuns(RUN); await loadTree();
+      flash(`Imported ${j.imported}${j.derived_skipped?`, ${j.derived_skipped} now automatic`:""}`);
+    }catch{ flash("That file is not a ledger export"); } };
+    r.readAsText(file); };
   f.click();
 });
 
-/* ---------------- coverage ---------------- */
-async function loadCoverage(){
+/* ── across runs ───────────────────────────────────────────────────── */
+async function loadUnion(){
   const j = await api("/api/coverage");
-  COVMAP = {};
-  const missing = new Set(j.missing.map(m => m.item_id));
-  for (const s of SECTIONS) for (const g of s.groups) for (const it of g.items)
-    COVMAP[it.id] = !missing.has(it.id);
-  const pct = j.total ? (100*j.done/j.total).toFixed(1) : "0";
-  $("#covtext").textContent =
-    `${j.done} of ${j.total} units (${pct}%) are finished in at least one run. ` +
-    `${j.missing.length} entries have never been finished in any run — those are what's ` +
-    `showing below.`;
+  const short = new Set(j.missing.map(m=>m.item_id));
+  DONE_ANY={};
+  for (const p of PARTS) for (const b of p.groups) for (const it of b.items)
+    DONE_ANY[it.id] = !short.has(it.id);
+  $("#union-text").textContent =
+    `${j.done} of ${j.total} settled in at least one run. `+
+    `${j.missing.length} entries have never been settled in any run — those are what is listed below.`;
 }
-
-$("#cov").addEventListener("click", async () => {
-  COV = !COV;
-  $("#cov").setAttribute("aria-pressed", String(COV));
-  $("#covpanel").classList.toggle("hidden", !COV);
-  if (COV) await loadCoverage();
-  applyFilters();
+$("#union").addEventListener("click", async () => {
+  UNION=!UNION;
+  $("#union").setAttribute("aria-pressed",String(UNION));
+  $("#union-panel").classList.toggle("gone",!UNION);
+  if (UNION) await loadUnion();
+  sift();
 });
 
-/* ---------------- misc controls ---------------- */
-$("#q").addEventListener("input", e => { Q = e.target.value.trim().toLowerCase(); applyFilters(); });
-for (const b of document.querySelectorAll("[data-mode]"))
+/* ── controls ──────────────────────────────────────────────────────── */
+$("#q").addEventListener("input", e => { Q=e.target.value.trim().toLowerCase(); sift(); });
+for (const b of document.querySelectorAll("[data-scope]"))
   b.addEventListener("click", () => {
-    MODE = b.dataset.mode;
-    for (const o of document.querySelectorAll("[data-mode]"))
-      o.setAttribute("aria-pressed", String(o === b));
-    applyFilters();
+    SCOPE=b.dataset.scope;
+    for (const o of document.querySelectorAll("[data-scope]"))
+      o.setAttribute("aria-pressed",String(o===b));
+    sift();
   });
-$("#hide").addEventListener("click", () => {
-  HIDE = !HIDE; $("#hide").setAttribute("aria-pressed", String(HIDE)); applyFilters();
+$("#veil").addEventListener("click", () => {
+  VEIL=!VEIL; $("#veil").setAttribute("aria-pressed",String(VEIL)); sift(); });
+$("#more").addEventListener("click", () => {
+  const open = $("#drawer").classList.toggle("open");
+  $("#more").setAttribute("aria-expanded",String(open));
 });
-$("#menu").addEventListener("click", () => {
-  const p = $("#more"); const on = p.classList.toggle("hidden");
-  $("#menu").setAttribute("aria-pressed", String(!on));
+$("#admin").addEventListener("click", () => {
+  const shown = !$("#panel").classList.toggle("gone");
+  if (shown) $("#panel").scrollIntoView({block:"nearest"});
 });
 
-(async function init(){
-  const saved = +localStorage.getItem("er-pid") || null;
-  const ps = await loadProfiles(saved && !isNaN(saved) ? saved : null);
-  if (!ps.some(p => p.id === PID)) PID = ps[0].id;
-  await loadProfiles(PID);
+/* one index element at a time: the band on phones, the column on desktop */
+const wide = window.matchMedia("(min-width:760px)");
+function placeIndex(){
+  $("#index").classList.toggle("gone", wide.matches);
+  $("#index-wide").classList.toggle("gone", !wide.matches);
+  $("#index-wide").setAttribute("aria-hidden", String(!wide.matches));
+  $("#index").setAttribute("aria-hidden", String(wide.matches));
+}
+wide.addEventListener("change", placeIndex);
+
+(async function start(){
+  placeIndex();
+  const saved = +localStorage.getItem("er-run") || null;
+  const runs = await loadRuns(saved || null);
+  if (!runs.some(p=>p.id===RUN)){ RUN=runs[0].id; await loadRuns(RUN); }
   await loadTree();
+  // the tree renders after load, so an incoming #section anchor has nothing
+  // to find until now
+  if (location.hash){
+    const t = document.querySelector(location.hash);
+    if (t) t.scrollIntoView();
+  }
 })();
 </script>
 </body>

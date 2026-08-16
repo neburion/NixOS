@@ -25,12 +25,41 @@ let
 
   src = ./.;
 
+  # Self-hosted webfonts. No CDN is reachable from a tunnel-only host anyway,
+  # and a default system-sans stack is the single loudest "generated page" tell.
+  # nixpkgs ships these as TTF only, so convert once at build time; the result
+  # is a store path the server hands out under /fonts/.
+  #
+  # EB Garamond for display — real 16th-century letterforms, including a true
+  # small-caps cut (AllSC) so section labels are set in actual small capitals
+  # rather than uppercase-plus-letter-spacing. IBM Plex Sans/Mono for the
+  # interface and the figures.
+  fonts = pkgs.runCommand "elden-ring-tracker-fonts" { } ''
+    mkdir -p $out
+    garamond=${pkgs.eb-garamond}/share/fonts/truetype
+    plex=${pkgs.ibm-plex}/share/fonts/truetype
+    for f in \
+      "$garamond/EBGaramond12-Regular.ttf:garamond" \
+      "$garamond/EBGaramond12-AllSC.ttf:garamond-sc" \
+      "$plex/IBMPlexSans-Regular.ttf:plex" \
+      "$plex/IBMPlexSans-Medium.ttf:plex-medium" \
+      "$plex/IBMPlexSans-SemiBold.ttf:plex-semibold" \
+      "$plex/IBMPlexMono-Regular.ttf:plex-mono" \
+    ; do
+      srcfile="''${f%%:*}"; name="''${f##*:}"
+      cp "$srcfile" "$out/$name.ttf"
+      ${pkgs.woff2}/bin/woff2_compress "$out/$name.ttf"
+      rm "$out/$name.ttf"
+    done
+  '';
+
   env = {
     ER_DB = "${stateDir}/eldenring.db";
     ER_SEED = "${src}/seed.json";
     ER_LINKS = "${src}/links.json";
     ER_SCHEMA = "${src}/schema.sql";
     ER_UI = "${src}/ui.html";
+    ER_FONTS = "${fonts}";
     ER_HOST = "0.0.0.0";
     ER_PORT = toString port;
     # Login half that isn't secret. The password is the sops secret below.

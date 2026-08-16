@@ -31,6 +31,7 @@ from urllib.parse import urlparse, parse_qs
 HERE = Path(__file__).resolve().parent
 DB = Path(os.environ.get("ER_DB") or HERE / "eldenring.db")
 UI = Path(os.environ.get("ER_UI") or HERE / "ui.html")
+FONTS = Path(os.environ["ER_FONTS"]) if os.environ.get("ER_FONTS") else None
 DEFAULT_HOST = os.environ.get("ER_HOST", "127.0.0.1")
 DEFAULT_PORT = int(os.environ.get("ER_PORT", "8777"))
 
@@ -369,16 +370,18 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _file(self, path, ctype):
+    def _file(self, path, ctype, cache=False):
         try:
             body = path.read_bytes()
-        except FileNotFoundError:
+        except (FileNotFoundError, IsADirectoryError):
             self.send_error(404, "missing file")
             return
         self.send_response(200)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        # Fonts come from an immutable store path; the UI must never be stale.
+        self.send_header("Cache-Control",
+                         "public, max-age=31536000, immutable" if cache else "no-store")
         self.end_headers()
         self.wfile.write(body)
 
@@ -396,9 +399,20 @@ class Handler(BaseHTTPRequestHandler):
         return default_profile(db)
 
     def do_GET(self):
+        u = urlparse(self.path)
+
+        # Fonts are served before the auth gate on purpose. They are public
+        # typefaces, not data, and a 401 here would not surface as an error —
+        # the page would just silently fall back to a system stack.
+        # Whitelisted by exact filename, so there is nothing for ".." to do.
+        if u.path.startswith("/fonts/"):
+            name = u.path[len("/fonts/"):]
+            if FONTS and re.fullmatch(r"[a-z-]+\.woff2", name):
+                return self._file(FONTS / name, "font/woff2", cache=True)
+            return self.send_error(404, "no such font")
+
         if not self.authed():
             return
-        u = urlparse(self.path)
         qs = parse_qs(u.query)
         if u.path in ("/", "/index.html"):
             return self._file(UI, "text/html; charset=utf-8")
