@@ -80,7 +80,7 @@ let
     image {
         monitor =
         path = ${coverLink}
-        size = 4000
+        size = 3840
         border_size = 0
         rounding = 0
         position = 0, 0
@@ -88,6 +88,7 @@ let
         valign = center
         zindex = 100
         reload_time = 0
+        reload_cmd = ${pkgs.coreutils}/bin/readlink -f ${coverLink}
     }
   '';
 in

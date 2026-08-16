@@ -11,12 +11,20 @@ let
   pkill         = "${pkgs.procps}/bin/pkill";
   pidof         = "${pkgs.procps}/bin/pidof";
 
-  mkCover = name: color: pkgs.runCommand "lock-cover-${name}.png" { } ''
-    ${pkgs.imagemagick}/bin/magick -size 8x8 xc:${color} PNG32:$out
+  # Full-resolution rather than an 8x8 scaled up: whether hyprlock upscales a
+  # tiny source to `size` is an assumption, and a cover that silently renders
+  # as an 8px dot in the middle of the screen looks exactly like "nothing
+  # happened". Solid colour, so both files are a couple of KB regardless.
+  #
+  # Black is PNG24 — no alpha channel to misinterpret. Clear needs one, and
+  # matches dimensions so swapping between them cannot shift the layout.
+  coverBlack = pkgs.runCommand "lock-cover-black.png" { } ''
+    ${pkgs.imagemagick}/bin/magick -size 3840x2160 xc:black PNG24:$out
   '';
 
-  coverBlack = mkCover "black" "black";
-  coverClear = mkCover "clear" "none";
+  coverClear = pkgs.runCommand "lock-cover-clear.png" { } ''
+    ${pkgs.imagemagick}/bin/magick -size 3840x2160 xc:none PNG32:$out
+  '';
 
   coverLink = "${homeDirectory}/.config/hypr/lock-cover.png";
 

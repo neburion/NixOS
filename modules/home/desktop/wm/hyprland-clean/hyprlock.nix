@@ -105,13 +105,18 @@ let
     #
     # Normally a transparent PNG, so this draws nothing. screen-dark flips the
     # symlink to an opaque black one and sends SIGUSR2; reload_time = 0 means
-    # hyprlock re-reads the file only on that signal. zindex puts it over every
-    # other widget, and 4000px covers the largest panel here from centre.
+    # hyprlock re-reads only on that signal. zindex puts it over every other
+    # widget, and 3840px covers the largest panel here from centre.
+    #
+    # reload_cmd resolves the symlink rather than handing back the same
+    # unchanging path: the two covers are distinct store paths, so the value
+    # provably differs between states and no path-keyed texture cache can
+    # decide the reload is a no-op.
 
     image {
         monitor     =
         path        = ${coverLink}
-        size        = 4000
+        size        = 3840
         border_size = 0
         rounding    = 0
         position    = 0, 0
@@ -119,6 +124,7 @@ let
         valign      = center
         zindex      = 100
         reload_time = 0
+        reload_cmd  = ${pkgs.coreutils}/bin/readlink -f ${coverLink}
     }
 
     # ── Corner ─────────────────────────────────────────────────────────
