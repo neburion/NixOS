@@ -14,7 +14,7 @@ let
         color       = ${hex t.bg "cc"}
     }
 
-    # ── Central cluster ────────────────────────────────────────────────
+    # ── Central cluster — identity, time, date, input. Nothing else. ───
 
     label {
         monitor     =
@@ -22,19 +22,7 @@ let
         color       = ${hex t.fg "ff"}
         font_size   = 13
         font_family = Share Tech Mono
-        position    = 0, 128
-        halign      = center
-        valign      = center
-        shadow_passes = 0
-    }
-
-    label {
-        monitor     =
-        text        = UNIT · LOCKED
-        color       = ${hex t.fg "88"}
-        font_size   = 9
-        font_family = Share Tech Mono
-        position    = 0, 110
+        position    = 0, 118
         halign      = center
         valign      = center
         shadow_passes = 0
@@ -77,9 +65,9 @@ let
         font_color        = ${hex t.fg "ff"}
         check_color       = ${hex t.fg "ff"}
         fail_color        = rgba(cc4444ff)
-        fail_text         = <span foreground="#cc4444">AUTHENTICATION FAILED</span>
+        fail_text         = AUTHENTICATION FAILED
         fail_transition   = 200
-        placeholder_text  = <span foreground="${t.fg}" alpha="40%">&gt;_ authentication required</span>
+        placeholder_text  =
         dots_size         = 0.22
         dots_spacing      = 0.20
         dots_center       = true
@@ -88,66 +76,20 @@ let
         hide_input        = false
     }
 
-    # ── Corners ────────────────────────────────────────────────────────
+    # ── Corner ─────────────────────────────────────────────────────────
+    #
+    # One line, and it earns its place: which box you are unlocking. The old
+    # kernel/GPU/uptime corners and the "SYSTEM SCAN · OK" ticker were props —
+    # they never reported anything, so they only competed with the clock.
 
     label {
         monitor     =
-        text        = cmd[update:0] printf "SESSION LOCKED\nNODE · $USER@$HOSTNAME"
-        color       = ${hex t.fg "88"}
-        font_size   = 9
-        font_family = Share Tech Mono
-        position    = 30, -30
-        halign      = left
-        valign      = top
-        shadow_passes = 0
-    }
-
-    label {
-        monitor     =
-        text        = $TIME
-        color       = ${hex t.fg "88"}
-        font_size   = 9
-        font_family = Share Tech Mono
-        position    = -30, -30
-        halign      = right
-        valign      = top
-        shadow_passes = 0
-    }
-
-    label {
-        monitor     =
-        text        = cmd[update:0] printf "KERNEL $(uname -r | cut -d- -f1)\nWM · hyprland"
-        color       = ${hex t.fg "66"}
+        text        = cmd[update:0] uname -n
+        color       = ${hex t.fg "55"}
         font_size   = 9
         font_family = Share Tech Mono
         position    = 30, 30
         halign      = left
-        valign      = bottom
-        shadow_passes = 0
-    }
-
-    label {
-        monitor     =
-        text        = cmd[update:0] printf "NIXOS\n$(lspci 2>/dev/null | grep -i 'vga\|3d' | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | cut -c1-16)"
-        color       = ${hex t.fg "66"}
-        font_size   = 9
-        font_family = Share Tech Mono
-        position    = -30, 30
-        halign      = right
-        valign      = bottom
-        shadow_passes = 0
-    }
-
-    # ── Bottom ticker ──────────────────────────────────────────────────
-
-    label {
-        monitor     =
-        text        = SYSTEM SCAN · OK  ▸  MEMORY INTEGRITY · VERIFIED  ▸  SESSION LOCKED · SECURE  ▸  NETWORK UPLINK · STABLE  ▸
-        color       = ${hex t.fg "44"}
-        font_size   = 8
-        font_family = Share Tech Mono
-        position    = 0, 50
-        halign      = center
         valign      = bottom
         shadow_passes = 0
     }

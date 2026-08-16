@@ -6,6 +6,7 @@
     ./enable.nix
     ./env.nix
     ./hyprlock.nix
+    ./idle.nix
     ./input.nix
     ./keybinds.nix
     ./lid.nix
