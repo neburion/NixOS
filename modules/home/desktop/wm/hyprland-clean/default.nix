@@ -16,7 +16,6 @@
     ../hyprland/movement.nix
     ../hyprland/programs.nix
     ../hyprland/rotation.nix
-    ../hyprland/screen-dark.nix
     ../hyprland/screenshot-tools.nix
     ../hyprland/session.nix
     ../hyprland/themes.nix

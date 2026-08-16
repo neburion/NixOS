@@ -14,7 +14,6 @@
     ./movement.nix
     ./programs.nix
     ./rotation.nix
-    ./screen-dark.nix
     ./screenshot-tools.nix
     ./themes.nix
     ./window-rules.nix

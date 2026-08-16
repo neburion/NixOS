@@ -1,15 +1,8 @@
-{ pkgs, lib, config, themes, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
   strip = lib.removePrefix "#";
   rgba  = hex: alpha: "rgba(${strip hex}${alpha})";
-
-  screenDark = import ./screen-dark-pkg.nix {
-    inherit pkgs;
-    homeDirectory = config.home.homeDirectory;
-  };
-
-  coverLink = screenDark.coverLink;
 
   mkThemeConf = t: ''
     background {
@@ -61,42 +54,13 @@ let
         halign = center
         valign = center
     }
-
-    # Click target for screen-dark; Super+Shift+D does the same without aiming.
-    label {
-        monitor =
-        text = [ SCREEN DARK ]
-        color = ${rgba t.fg "66"}
-        font_size = 14
-        font_family = FiraMono Nerd Font Mono
-        position = 0, -110
-        halign = center
-        valign = center
-        onclick = ${screenDark.script}/bin/screen-dark
-    }
-
-    # Transparent until screen-dark flips the symlink to black and signals
-    # SIGUSR2; reload_time = 0 means "reload only on that signal".
-    image {
-        monitor =
-        path = ${coverLink}
-        size = 3840
-        border_size = 0
-        rounding = 0
-        position = 0, 0
-        halign = center
-        valign = center
-        zindex = 100
-        reload_time = 0
-        reload_cmd = ${pkgs.coreutils}/bin/readlink -f ${coverLink}
-    }
   '';
 in
 {
   programs.hyprlock = {
     enable = true;
     settings.general = {
-      hide_cursor        = false;   # needed to aim at the SCREEN DARK button
+      hide_cursor        = true;
       ignore_empty_input = false;
     };
     extraConfig = ''
