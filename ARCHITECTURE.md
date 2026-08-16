@@ -60,7 +60,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 
   `nixflash` was the exception until 2026-08-16 — it moved into this directory in `0f97cf0` without picking up the flag, so `git push && nixflash` could build an ISO from the *previous* HEAD while printing an entirely normal `Built: /nix/store/...` line. Same failure shape as the dirty-tree bug above, which is the recurring hazard of the cloud-flake design: **when the source is remote, a convincing success message tells you a build happened, never that it built what you just wrote.**
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
-- **Remote deploys to any host.** `rebuild <hostname>` from any fleet workstation: uses `nixos-rebuild --target-host` over SSH, no rsync. Fleet SSH config (modules/system/networking/ssh.nix) maps hostnames to `server-admin` for server-class hosts. Passwordless wheel on servers means non-interactive activation.
+- **Remote deploys to any host.** `rebuild <hostname>` from any fleet workstation: uses `nixos-rebuild --target-host` over SSH, no rsync. Fleet SSH config (modules/system/networking/ssh.nix) maps hostnames to `server-admin` for server-class hosts. Passwordless wheel on servers means non-interactive activation. `rebuild-all` does the whole fleet in one pass — remotes first and the local host last, skipping anything powered off, and one failure doesn't abort the rest. Both share `deploy_host` from `nixos-scripts/lib.nix`, so their flags cannot drift apart.
 
 ## Entry points
 
@@ -139,10 +139,11 @@ base.nix                 home.stateVersion
 cli/                     shell/fish, neovim/*, btop, tree, fastfetch, superfile,
                          compression, fonts
 cli/ai/                  claude-code (pinned to pkgs.unstable via flake overlay)
-cli/nixos-scripts/       one script per file — rebuild, trebuild, update,
-                         nixflash. lib.nix holds the shared shell fragments
-                         (cloudFlake, pre-rebuild hook loop, local-diverged
-                         warning); it is a plain function, not a module.
+cli/nixos-scripts/       one script per file — rebuild, rebuild-all, trebuild,
+                         update, nixflash. lib.nix holds the shared shell
+                         fragments (cloudFlake, pre-rebuild hook loop,
+                         local-diverged warning, deploy_host); it is a plain
+                         function, not a module.
 cli/packager/            flatpak
 
 desktop/wm/hyprland/     env, input, keybinds, looks, monitors, programs, session,
