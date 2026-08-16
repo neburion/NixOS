@@ -9,9 +9,9 @@
 # things. Nothing here is a dependency of anything there — see the fleet
 # principle in ARCHITECTURE.md.
 #
-# Skeleton only for now: boot, network, tailnet, ssh, secrets, admin user.
+# Base: boot, network, tailnet, ssh, secrets, admin user.
 # Services get added as their own modules under modules/system/, one import
-# line each.
+# line each. Currently: the Elden Ring completion tracker (tailnet-only :8777).
 
 {
   imports = [
@@ -32,6 +32,7 @@
     ../../modules/system/always-on.nix
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix
+    ../../modules/system/elden-ring-tracker
 
     ../../users/server-admin
 

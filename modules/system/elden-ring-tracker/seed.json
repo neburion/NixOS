@@ -1,0 +1,2565 @@
+[
+ {
+  "id": "end",
+  "t": "The Six Endings",
+  "n": "You commit at the very end, in front of Fractured Marika — so gather every Mending Rune you can, then pick. Only three endings carry achievements; the other three all resolve as Elden Lord.",
+  "g": [
+   {
+    "name": "Endings",
+    "x": 1,
+    "items": [
+     "Age of Fracture::The default. Beat Radagon and the Elden Beast, then touch Fractured Marika with no Mending Rune. → \"Elden Lord\"",
+     "Age of the Duskborn::Finish Fia's quest for the Mending Rune of the Death-Prince (requires beating Lichdragon Fortissax). → \"Elden Lord\"",
+     "Blessing of Despair::Finish the Dung Eater's quest for the Mending Rune of the Fell Curse (five Seedbed Curses). → \"Elden Lord\"",
+     "Age of Order::Finish Goldmask and Brother Corhyn's quest for the Mending Rune of Perfect Order. → \"Elden Lord\"",
+     "Lord of Frenzied Flame::Strip naked in the sealed basement under the Cathedral of the Forsaken and touch the Three Fingers. Own achievement.",
+     "Age of the Stars::Complete Ranni's questline, then summon her at Fractured Marika. Own achievement."
+    ]
+   },
+   {
+    "name": "Ending mechanics",
+    "items": [
+     "Undo the Frenzied Flame::The Frenzied Flame locks out every other ending. Reverse it with Miquella's Needle — bring the Unalloyed Gold Needle to Dragonlord Placidusax's arena in Crumbling Farum Azula."
+    ]
+   },
+   {
+    "name": "Ending mechanics — Shadow Realm",
+    "dlc": 1,
+    "items": [
+     "Shadow of the Erdtree has no separate ending::Beating Promised Consort Radahn completes the DLC story and returns you to the base game's ending choice."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ach",
+  "t": "Achievements",
+  "n": "All 42. One platinum, three gold, fourteen silver, twenty-four bronze.",
+  "g": [
+   {
+    "name": "Platinum",
+    "items": [
+     "Elden Ring::Obtain all other trophies."
+    ]
+   },
+   {
+    "name": "Gold — endings",
+    "items": [
+     "Elden Lord",
+     "Age of the Stars",
+     "Lord of Frenzied Flame"
+    ]
+   },
+   {
+    "name": "Silver — shardbearers",
+    "items": [
+     "Shardbearer Godrick",
+     "Shardbearer Radahn",
+     "Shardbearer Morgott",
+     "Shardbearer Rykard",
+     "Shardbearer Malenia",
+     "Shardbearer Mohg"
+    ]
+   },
+   {
+    "name": "Silver — great foes",
+    "items": [
+     "Maliketh the Black Blade",
+     "Hoarah Loux the Warrior",
+     "Dragonlord Placidusax"
+    ]
+   },
+   {
+    "name": "Silver — collections",
+    "items": [
+     "God-Slaying Armament::Upgrade any weapon to its highest tier (+25, or +10 for somber weapons).",
+     "Legendary Armaments::All nine.",
+     "Legendary Ashen Remains::All six.",
+     "Legendary Sorceries and Incantations::All seven.",
+     "Legendary Talismans::All eight."
+    ]
+   },
+   {
+    "name": "Bronze — bosses",
+    "items": [
+     "Margit, the Fell Omen",
+     "Leonine Misbegotten",
+     "Red Wolf of Radagon",
+     "Rennala, Queen of the Full Moon",
+     "Royal Knight Loretta",
+     "Magma Wyrm Makar",
+     "Elemer of the Briar",
+     "Godskin Noble",
+     "Godfrey the First Lord",
+     "Mohg, the Omen",
+     "Commander Niall",
+     "Loretta, Knight of the Haligtree",
+     "Ancestor Spirit",
+     "Regal Ancestor Spirit",
+     "Valiant Gargoyles",
+     "Mimic Tear",
+     "Dragonkin Soldier of Nokstella",
+     "Astel, Naturalborn of the Void",
+     "Lichdragon Fortissax",
+     "Fire Giant",
+     "Godskin Duo"
+    ]
+   },
+   {
+    "name": "Bronze — milestones",
+    "items": [
+     "Roundtable Hold::Arrive at the Roundtable Hold.",
+     "Great Rune::Restore the power of any Great Rune at a Divine Tower.",
+     "Erdtree Aflame::Use kindling to set the Erdtree aflame."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rune",
+  "t": "Great Runes & Divine Towers",
+  "n": "Six Great Runes can be restored at Divine Towers. Rennala's Great Rune of the Unborn is used for rebirth instead.",
+  "g": [
+   {
+    "name": "Great Runes",
+    "items": [
+     "Godrick's Great Rune",
+     "Radahn's Great Rune",
+     "Morgott's Great Rune",
+     "Rykard's Great Rune",
+     "Mohg's Great Rune",
+     "Malenia's Great Rune",
+     "Great Rune of the Unborn::From Rennala. Cannot be restored; used at her Grace to rebirth your character."
+    ]
+   },
+   {
+    "name": "Divine Towers",
+    "items": [
+     "Divine Tower of Limgrave::Godrick's Great Rune",
+     "Divine Tower of Liurnia::Radahn's Great Rune",
+     "Divine Tower of West Altus::Rykard's Great Rune",
+     "Divine Tower of East Altus::Morgott's Great Rune",
+     "Divine Tower of Caelid::Malenia's Great Rune",
+     "Isolated Divine Tower::Mohg's Great Rune"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rem",
+  "t": "Remembrances",
+  "n": "26 in all. Each is exchanged with Enia at the Roundtable Hold for a choice of two rewards (three for the Elden Remembrance). Take one, then duplicate the Remembrance at a Walking Mausoleum — or claim the other in NG+.",
+  "g": [
+   {
+    "name": "Base game — 15",
+    "items": [
+     "Remembrance of the Grafted::Godrick the Grafted",
+     "Remembrance of the Full Moon Queen::Rennala",
+     "Remembrance of the Starscourge::Starscourge Radahn",
+     "Remembrance of the Regal Ancestor::Regal Ancestor Spirit",
+     "Remembrance of the Naturalborn::Astel, Naturalborn of the Void",
+     "Remembrance of the Blasphemous::Rykard, Lord of Blasphemy",
+     "Remembrance of the Fire Giant::Fire Giant",
+     "Remembrance of the Blood Lord::Mohg, Lord of Blood",
+     "Remembrance of the Black Blade::Maliketh",
+     "Remembrance of the Dragonlord::Dragonlord Placidusax",
+     "Remembrance of the Lichdragon::Lichdragon Fortissax",
+     "Remembrance of the Omen King::Morgott",
+     "Remembrance of the Rot Goddess::Malenia",
+     "Remembrance of Hoarah Loux::Godfrey, First Elden Lord",
+     "Elden Remembrance::Radagon / Elden Beast — three rewards"
+    ]
+   },
+   {
+    "name": "Shadow of the Erdtree — 11",
+    "dlc": 1,
+    "items": [
+     "Remembrance of the Dancing Lion::Divine Beast Dancing Lion",
+     "Remembrance of the Twin Moon Knight::Rellana",
+     "Remembrance of Putrescence::Putrescent Knight",
+     "Remembrance of the Wild Boar Rider::Commander Gaius",
+     "Remembrance of the Shadow Sunflower::Scadutree Avatar",
+     "Remembrance of the Impaler::Messmer",
+     "Remembrance of the Saint of the Bud::Romina",
+     "Remembrance of the Mother of Fingers::Metyr",
+     "Remembrance of the Lord of Frenzied Flame::Midra",
+     "Remembrance of the Dread Dragon::Bayle the Dread",
+     "Remembrance of a God and a Lord::Promised Consort Radahn"
+    ]
+   },
+   {
+    "name": "Duplication",
+    "items": [
+     "Use the Walking Mausoleums::Ring the bell inside a Walking Mausoleum to duplicate one Remembrance. Wandering mausoleums require breaking their leg-bells first."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "leg",
+  "t": "The Four Legendary Sets",
+  "n": "Thirty items across four achievements. These are the ones people miss.",
+  "g": [
+   {
+    "name": "Legendary Armaments — 9",
+    "items": [
+     "Grafted Blade Greatsword::Castle Morne, Leonine Misbegotten",
+     "Sword of Night and Flame::Caria Manor, chest in the basement",
+     "Devourer's Scepter::Knight Bernahl's invasion in Crumbling Farum Azula",
+     "Bolt of Gransax::Leyndell, on the giant spear",
+     "Eclipse Shotel::Castle Sol, Mountaintops of the Giants",
+     "Marais Executioner's Sword::Elemer of the Briar, Shaded Castle",
+     "Ruins Greatsword::Misbegotten Crusader & Crucible Knight, Redmane Castle",
+     "Golden Order Greatsword::Cave of the Forlorn, Consecrated Snowfield",
+     "Dark Moon Greatsword::End of Ranni's questline"
+    ]
+   },
+   {
+    "name": "Legendary Ashen Remains — 6",
+    "items": [
+     "Black Knife Tiche::Ringleader's Evergaol, Alecto",
+     "Mimic Tear Ashes::Night's Sacred Ground, Nokron",
+     "Ancient Dragon Knight Kristoff::Sainted Hero's Grave, Altus",
+     "Redmane Knight Ogha::Wyndham Catacombs, Altus",
+     "Lhutel the Headless::Tombsward Catacombs, Weeping Peninsula",
+     "Cleanrot Knight Finlay::Elphael, Brace of the Haligtree"
+    ]
+   },
+   {
+    "name": "Legendary Sorceries & Incantations — 7",
+    "items": [
+     "Comet Azur::Primeval Sorcerer Azur, Mt. Gelmir",
+     "Stars of Ruin::Sellia Hideaway, Caelid — needs the Sellian Sealbreaker",
+     "Founding Rain of Stars::Heretical Rise, Mountaintops — invisible bridge",
+     "Ranni's Dark Moon::Chelona's Rise, Moonlight Altar — three ghost turtles",
+     "Elden Stars::Deeproot Depths",
+     "Flame of the Fell God::Adan, Thief of Fire — Malefactor's Evergaol",
+     "Greyoll's Roar::3 Dragon Hearts at the Cathedral of Dragon Communion"
+    ]
+   },
+   {
+    "name": "Legendary Talismans — 8",
+    "items": [
+     "Godfrey Icon::Godefroy the Grafted, Golden Lineage Evergaol",
+     "Radagon Icon::Raya Lucaria, Debate Parlour",
+     "Radagon's Soreseal::Fort Faroth, Caelid",
+     "Marika's Soreseal::Elphael — sealed room, one Stonesword Key",
+     "Moon of Nokstella::Nokstella, Eternal City",
+     "Old Lord's Talisman::Crumbling Farum Azula",
+     "Dragoncrest Greatshield Talisman::Elphael, Brace of the Haligtree",
+     "Erdtree's Favor +2::Leyndell, Ashen Capital"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "max",
+  "t": "Maxing the Tarnished",
+  "n": "Every permanent upgrade the character can take.",
+  "g": [
+   {
+    "name": "Level & stats",
+    "items": [
+     "Rune Level 713::All eight attributes at 99. Roughly 1.69 billion runes.",
+     "Vigor 99",
+     "Mind 99",
+     "Endurance 99",
+     "Strength 99",
+     "Dexterity 99",
+     "Intelligence 99",
+     "Faith 99",
+     "Arcane 99"
+    ]
+   },
+   {
+    "name": "Flasks & slots",
+    "items": [
+     "14 total flask charges::Requires 30 Golden Seeds.",
+     "Flask potency +12::Requires 12 Sacred Tears.",
+     "10 memory slots::All 8 Memory Stones.",
+     "4 talisman slots::All 3 Talisman Pouches.",
+     "Flask of Wondrous Physick::Third Church of Marika, Limgrave.",
+     "Upgrade a weapon to max::+25 standard or +10 somber — the God-Slaying Armament achievement."
+    ]
+   },
+   {
+    "name": "Shadow Realm blessings",
+    "dlc": 1,
+    "items": [
+     "Scadutree Blessing +20::All 50 Scadutree Fragments.",
+     "Revered Spirit Ash Blessing +10::All 25 Revered Spirit Ashes."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "tear",
+  "t": "Crystal Tears",
+  "n": "37 pickups, 29 unique. Crimson, Cerulean and Ruptured tears each have two copies — combine the pair in the Physick for double strength. All eight DLC tears drop from Furnace Golems.",
+  "g": [
+   {
+    "name": "Base game",
+    "items": [
+     "Crimson Crystal Tear::Third Church of Marika, and again at the Capital Outskirts Minor Erdtree",
+     "Crimsonspill Crystal Tear::Wormface, Altus Plateau",
+     "Crimsonburst Crystal Tear::Weeping Peninsula Minor Erdtree",
+     "Cerulean Crystal Tear::Liurnia, and again at the Mountaintops Minor Erdtree",
+     "Greenspill Crystal Tear::Mistwood Minor Erdtree altar",
+     "Greenburst Crystal Tear::Caelid Minor Erdtree",
+     "Strength-knot Crystal Tear::Stormhill cliffs",
+     "Dexterity-knot Crystal Tear::Island southwest of Boilprawn Shack",
+     "Intelligence-knot Crystal Tear::Road to the Manor, Liurnia",
+     "Faith-knot Crystal Tear::North of Demi-Human Forest Ruins",
+     "Opaline Hardtear::Northeastern Caelid",
+     "Speckled Hardtear::Altus Plateau Minor Erdtree",
+     "Leaden Hardtear::Mt. Gelmir",
+     "Magic-Shrouding Cracked Tear::Liurnia Minor Erdtree",
+     "Flame-Shrouding Cracked Tear::Caelid Minor Erdtree",
+     "Lightning-Shrouding Cracked Tear::Northeastern Liurnia",
+     "Holy-Shrouding Cracked Tear::Northeastern Liurnia",
+     "Stonebarb Cracked Tear::Caelid Minor Erdtree",
+     "Spiked Cracked Tear::Mistwood Minor Erdtree",
+     "Thorny Cracked Tear::Consecrated Snowfield Minor Erdtree",
+     "Twiggy Cracked Tear::Capital Outskirts Minor Erdtree",
+     "Winged Crystal Tear::Capital Outskirts",
+     "Windy Crystal Tear::Southern Aeonia, Caelid",
+     "Crimson Bubbletear::Eastern Mountaintops Minor Erdtree",
+     "Crimsonwhorl Bubbletear::Mountaintops, near Giants' Gravepost",
+     "Opaline Bubbletear::Weeping Peninsula Minor Erdtree",
+     "Cerulean Hidden Tear::Mt. Gelmir Minor Erdtree",
+     "Purifying Crystal Tear::Second Church of Marika, after Bloody Finger Eleonora",
+     "Ruptured Crystal Tear::Liurnia, and again in the Consecrated Snowfield"
+    ]
+   },
+   {
+    "name": "Shadow of the Erdtree — from Furnace Golems",
+    "dlc": 1,
+    "items": [
+     "Crimsonburst Dried Tear::Army campsite outside Shadow Keep",
+     "Deflecting Hardtear::Scorched Ruins, main road",
+     "Crimson-Sapping Cracked Tear::Ancient Ruins of Rauh, west",
+     "Cerulean-Sapping Cracked Tear::Near the Cathedral of Manus Metyr",
+     "Bloodsucking Cracked Tear::Ruins of Unte",
+     "Glovewort Crystal Tear::Charo's Hidden Grave",
+     "Viridian Hidden Tear::Roaming golem, Ellac River",
+     "Oil-Soaked Tear::Ruins of Unte"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "coll",
+  "t": "Collectibles & Tallies",
+  "n": "Counts rather than named lists, where the game gives you far more than you need or the names carry no information.",
+  "g": [
+   {
+    "name": "Progression",
+    "items": [
+     {
+      "n": "Golden Seeds",
+      "max": 45,
+      "d": "Only 30 are needed for 14 flask charges — 45 exist."
+     },
+     {
+      "n": "Sacred Tears",
+      "max": 12,
+      "d": "All 12 for +12 flask potency."
+     },
+     {
+      "n": "Memory Stones",
+      "max": 8,
+      "d": "Ten memory slots at full."
+     },
+     {
+      "n": "Talisman Pouches",
+      "max": 3,
+      "d": "Godrick, Margit's Shackle merchant, and Enia after two Great Runes."
+     },
+     {
+      "n": "Larval Tears",
+      "max": 18,
+      "d": "Respec at Rennala."
+     },
+     {
+      "n": "Deathroot",
+      "max": 9,
+      "d": "Feed to Gurranq at the Bestial Sanctum for his full reward list."
+     }
+    ]
+   },
+   {
+    "name": "Shadow Realm",
+    "dlc": 1,
+    "items": [
+     {
+      "n": "Scadutree Fragments",
+      "max": 50,
+      "d": "Two per blessing level, up to +20."
+     },
+     {
+      "n": "Revered Spirit Ashes",
+      "max": 25,
+      "d": "Summon damage and defence, up to +10."
+     },
+     {
+      "n": "Furnace Golems",
+      "max": 12,
+      "d": "Each drops a Crystal Tear or upgrade material."
+     }
+    ]
+   },
+   {
+    "name": "Odds and ends",
+    "items": [
+     {
+      "n": "Cookbooks",
+      "max": 104,
+      "d": "59 in the base game, 45 in the DLC."
+     },
+     {
+      "n": "Gestures",
+      "max": 47,
+      "d": "12 come with your class; 35 are found or taught."
+     },
+     {
+      "n": "Map Fragments — base",
+      "max": 19
+     },
+     {
+      "n": "Dragon Hearts",
+      "max": 20,
+      "d": "Spent at Cathedrals of Dragon Communion. Farm more from any dragon."
+     }
+    ]
+   },
+   {
+    "name": "Whetblades",
+    "items": [
+     "Whetstone Knife::Gatefront Ruins, Limgrave",
+     "Iron Whetblade::Stormveil Castle",
+     "Glintstone Whetblade::Raya Lucaria Academy",
+     "Red-Hot Whetblade::Redmane Castle, Caelid",
+     "Sanctified Whetblade::Leyndell, Royal Capital",
+     "Black Whetblade::Ainsel River Main"
+    ]
+   },
+   {
+    "name": "Map Fragments — Shadow Realm",
+    "dlc": 1,
+    "items": [
+     "Gravesite Plain",
+     "Scadu Altus",
+     "Southern Shore",
+     "Ancient Ruins of Rauh",
+     "The Abyss"
+    ]
+   },
+   {
+    "name": "Artist's Paintings — base",
+    "items": [
+     "Homing Instinct::Artist's Shack, Limgrave",
+     "Prophecy::Seaside Ruins, Weeping Peninsula",
+     "Champion's Song::Redmane Castle, Caelid",
+     "Redmane::Wyndham Ruins, Altus",
+     "Sorcerer::Academy of Raya Lucaria",
+     "Resurrection::Fourth Church of Marika, Altus",
+     "Flightless Bird::Roundtable Hold"
+    ]
+   },
+   {
+    "name": "Artist's Paintings — Shadow Realm",
+    "dlc": 1,
+    "items": [
+     "Sacred Tower",
+     "Incursion",
+     "Domain of Dragons"
+    ]
+   },
+   {
+    "name": "Legacy Dungeons",
+    "items": [
+     "Stormveil Castle",
+     "Academy of Raya Lucaria",
+     "Volcano Manor",
+     "Leyndell, Royal Capital",
+     "Miquella's Haligtree & Elphael",
+     "Crumbling Farum Azula"
+    ]
+   },
+   {
+    "name": "Legacy Dungeons — Shadow Realm",
+    "dlc": 1,
+    "items": [
+     "Belurat, Tower Settlement",
+     "Shadow Keep & Specimen Storehouse",
+     "Enir-Ilim"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "boss",
+  "t": "Bosses",
+  "n": "Every named and unique encounter, by region. Ordinary field and dungeon repeats aren't listed individually.",
+  "g": [
+   {
+    "name": "Limgrave",
+    "items": [
+     "Grafted Scion",
+     "Soldier of Godrick",
+     "Tree Sentinel",
+     "Margit, the Fell Omen",
+     "Godrick the Grafted",
+     "Flying Dragon Agheel",
+     "Bloodhound Knight Darriwil",
+     "Crucible Knight",
+     "Beastman of Farum Azula",
+     "Demi-Human Chief",
+     "Stonedigger Troll",
+     "Guardian Golem",
+     "Erdtree Burial Watchdog",
+     "Grave Warden Duelist",
+     "Mad Pumpkin Head",
+     "Black Knife Assassin",
+     "Tibia Mariner",
+     "Deathbird",
+     "Night's Cavalry",
+     "Bell Bearing Hunter",
+     "Ulcerated Tree Spirit",
+     "Patches"
+    ]
+   },
+   {
+    "name": "Weeping Peninsula",
+    "items": [
+     "Leonine Misbegotten",
+     "Erdtree Avatar",
+     "Ancient Hero of Zamor",
+     "Cemetery Shade",
+     "Deathbird",
+     "Erdtree Burial Watchdog",
+     "Miranda the Blighted Bloom",
+     "Night's Cavalry",
+     "Runebear",
+     "Scaly Misbegotten"
+    ]
+   },
+   {
+    "name": "Liurnia of the Lakes",
+    "items": [
+     "Rennala, Queen of the Full Moon",
+     "Red Wolf of Radagon",
+     "Royal Knight Loretta",
+     "Magma Wyrm Makar",
+     "Glintstone Dragon Smarag",
+     "Glintstone Dragon Adula",
+     "Adan, Thief of Fire",
+     "Alecto, Black Knife Ringleader",
+     "Bols, Carian Knight",
+     "Omenkiller",
+     "Onyx Lord",
+     "Royal Revenant",
+     "Spirit-Caller Snail",
+     "Cleanrot Knight",
+     "Bloodhound Knight",
+     "Crystalian",
+     "Crystalian Spear & Crystalian Staff",
+     "Black Knife Assassin",
+     "Cemetery Shade",
+     "Erdtree Avatar",
+     "Erdtree Burial Watchdog",
+     "Death Rite Bird",
+     "Deathbird",
+     "Night's Cavalry",
+     "Bell Bearing Hunter",
+     "Tibia Mariner"
+    ]
+   },
+   {
+    "name": "Caelid",
+    "items": [
+     "Starscourge Radahn",
+     "Commander O'Neil",
+     "Decaying Ekzykes",
+     "Fallingstar Beast",
+     "Crucible Knight & Misbegotten Warrior",
+     "Cemetery Shade",
+     "Death Rite Bird",
+     "Erdtree Burial Watchdog Duo",
+     "Frenzied Duelist",
+     "Magma Wyrm",
+     "Mad Pumpkin Heads",
+     "Night's Cavalry",
+     "Nox Swordstress & Nox Monk",
+     "Putrid Avatar"
+    ]
+   },
+   {
+    "name": "Dragonbarrow",
+    "items": [
+     "Elder Dragon Greyoll",
+     "Flying Dragon Greyll",
+     "Black Blade Kindred",
+     "Godskin Apostle",
+     "Battlemage Hugues",
+     "Beastman of Farum Azula Duo",
+     "Cleanrot Knight Duo",
+     "Putrid Crystalian Trio",
+     "Putrid Tree Spirit",
+     "Putrid Avatar",
+     "Night's Cavalry",
+     "Bell Bearing Hunter"
+    ]
+   },
+   {
+    "name": "Altus Plateau",
+    "items": [
+     "Godefroy the Grafted",
+     "Elemer of the Briar",
+     "Ancient Dragon Lansseax",
+     "Fallingstar Beast",
+     "Necromancer Garris",
+     "Sanguine Noble",
+     "Wormface",
+     "Ancient Hero of Zamor",
+     "Black Knife Assassin (Sage's Cave)",
+     "Black Knife Assassin (Sainted Hero's Grave)",
+     "Crystalian Spear & Crystalian Ringblade",
+     "Demi-Human Queen Gilika",
+     "Erdtree Burial Watchdog",
+     "Godskin Apostle",
+     "Omenkiller & Miranda the Blighted Bloom",
+     "Perfumer Tricia & Misbegotten Warrior",
+     "Stonedigger Troll",
+     "Tibia Mariner",
+     "Tree Sentinel Duo",
+     "Night's Cavalry"
+    ]
+   },
+   {
+    "name": "Mt. Gelmir",
+    "items": [
+     "God-Devouring Serpent / Rykard, Lord of Blasphemy",
+     "Full-Grown Fallingstar Beast",
+     "Godskin Noble",
+     "Red Wolf of the Champion",
+     "Abductor Virgins",
+     "Demi-Human Queen Maggie",
+     "Demi-Human Queen Margot",
+     "Kindred of Rot Duo",
+     "Magma Wyrm",
+     "Ulcerated Tree Spirit"
+    ]
+   },
+   {
+    "name": "Capital Outskirts",
+    "items": [
+     "Draconic Tree Sentinel",
+     "Crucible Knight & Crucible Knight Ordovis",
+     "Fell Twins",
+     "Deathbird",
+     "Grave Warden Duelist",
+     "Onyx Lord",
+     "Bell Bearing Hunter"
+    ]
+   },
+   {
+    "name": "Leyndell, Royal Capital",
+    "items": [
+     "Morgott, the Omen King",
+     "Godfrey, First Elden Lord (Golden Shade)",
+     "Mohg, the Omen",
+     "Esgar, Priest of Blood"
+    ]
+   },
+   {
+    "name": "Mountaintops of the Giants",
+    "items": [
+     "Fire Giant",
+     "Commander Niall",
+     "Godskin Apostle & Godskin Noble",
+     "Borealis the Freezing Fog",
+     "Ancient Hero of Zamor",
+     "Death Rite Bird",
+     "Erdtree Avatar",
+     "Ulcerated Tree Spirit",
+     "Vyke, Knight of the Roundtable"
+    ]
+   },
+   {
+    "name": "Consecrated Snowfield",
+    "items": [
+     "Astel, Stars of Darkness",
+     "Great Wyrm Theodorix",
+     "Misbegotten Crusader",
+     "Death Rite Bird",
+     "Night's Cavalry Duo",
+     "Putrid Avatar",
+     "Putrid Grave Warden Duelist"
+    ]
+   },
+   {
+    "name": "Forbidden Lands",
+    "items": [
+     "Black Blade Kindred",
+     "Night's Cavalry",
+     "Stray Mimic Tear"
+    ]
+   },
+   {
+    "name": "Miquella's Haligtree",
+    "items": [
+     "Loretta, Knight of the Haligtree",
+     "Malenia, Blade of Miquella"
+    ]
+   },
+   {
+    "name": "Crumbling Farum Azula",
+    "items": [
+     "Beast Clergyman / Maliketh, the Black Blade",
+     "Dragonlord Placidusax",
+     "Godskin Duo"
+    ]
+   },
+   {
+    "name": "Siofra & Ainsel",
+    "items": [
+     "Ancestor Spirit",
+     "Dragonkin Soldier",
+     "Dragonkin Soldier of Nokstella",
+     "Mohg, Lord of Blood"
+    ]
+   },
+   {
+    "name": "Nokron & Deeproot Depths",
+    "items": [
+     "Mimic Tear",
+     "Regal Ancestor Spirit",
+     "Valiant Gargoyle & Valiant Gargoyle (Twinblade)",
+     "Crucible Knight Siluria",
+     "Fia's Champions",
+     "Lichdragon Fortissax"
+    ]
+   },
+   {
+    "name": "Lake of Rot",
+    "items": [
+     "Astel, Naturalborn of the Void",
+     "Dragonkin Soldier"
+    ]
+   },
+   {
+    "name": "Leyndell, Ashen Capital",
+    "items": [
+     "Godfrey, First Elden Lord / Hoarah Loux",
+     "Sir Gideon Ofnir, the All-Knowing",
+     "Mohg, the Omen",
+     "Esgar, Priest of Blood"
+    ]
+   },
+   {
+    "name": "Elden Throne",
+    "items": [
+     "Radagon of the Golden Order / Elden Beast"
+    ]
+   },
+   {
+    "name": "Gravesite Plain",
+    "dlc": 1,
+    "items": [
+     "Divine Beast Dancing Lion",
+     "Rellana, Twin Moon Knight",
+     "Blackgaol Knight",
+     "Chief Bloodfiend",
+     "Demi-Human Swordmaster Onze",
+     "Ghostflame Dragon",
+     "Red Bear"
+    ]
+   },
+   {
+    "name": "Scadu Altus",
+    "dlc": 1,
+    "items": [
+     "Messmer the Impaler",
+     "Base Serpent Messmer",
+     "Golden Hippopotamus",
+     "Metyr, Mother of Fingers",
+     "Count Ymir, Mother of Fingers",
+     "Black Knight Edredd",
+     "Black Knight Garrew",
+     "Curseblade Labirith",
+     "Death Knight",
+     "Dryleaf Dane",
+     "Ghostflame Dragon",
+     "Rakshasa",
+     "Jori, Elder Inquisitor",
+     "Ralva the Great Red Bear"
+    ]
+   },
+   {
+    "name": "Scaduview & Shadow Keep",
+    "dlc": 1,
+    "items": [
+     "Scadutree Avatar",
+     "Commander Gaius",
+     "Fallingstar Beast",
+     "Tree Sentinel"
+    ]
+   },
+   {
+    "name": "Rauh Base & Ancient Ruins of Rauh",
+    "dlc": 1,
+    "items": [
+     "Romina, Saint of the Bud",
+     "Divine Beast Dancing Lion",
+     "Death Knight",
+     "Rugalea the Great Red Bear"
+    ]
+   },
+   {
+    "name": "Cerulean Coast & Charo's Hidden Grave",
+    "dlc": 1,
+    "items": [
+     "Putrescent Knight",
+     "Dancer of Ranah",
+     "Demi-Human Queen Marigga",
+     "Ghostflame Dragon",
+     "Death Rite Bird",
+     "Lamenter",
+     "Tibia Mariner"
+    ]
+   },
+   {
+    "name": "Jagged Peak",
+    "dlc": 1,
+    "items": [
+     "Bayle the Dread",
+     "Ancient Dragon Senessax",
+     "Jagged Peak Drake",
+     "Jagged Peak Drake (second)",
+     "Ancient Dragon-Man"
+    ]
+   },
+   {
+    "name": "Abyssal Woods",
+    "dlc": 1,
+    "items": [
+     "Midra, Lord of Frenzied Flame"
+    ]
+   },
+   {
+    "name": "Enir-Ilim",
+    "dlc": 1,
+    "items": [
+     "Needle Knight Leda and allies",
+     "Promised Consort Radahn"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "quest",
+  "t": "Quests & Their Branches",
+  "n": "Every questline, with the points where a path closes another off. Anything flagged as a choice cannot be undone in the same save.",
+  "g": [
+   {
+    "name": "Base game",
+    "wide": 1,
+    "items": [
+     "Ranni the Witch::Renna's Rise → Nokron → Fingerslayer Blade → Carian Study Hall → Lake of Rot → Astel → Moonlight Altar. Yields the Dark Moon Greatsword and the Age of the Stars ending.",
+     "Blaidd::Mistwood → runs alongside Ranni. After her quest he goes feral at the Forlorn Hound Evergaol; kill him for Blaidd's Set and the Royal Greatsword.",
+     "Iji the Blacksmith::Sells Somber stones and upgrades. Dies partway through Ranni's questline — buy from him early.",
+     "Preceptor Seluvis:: Choice — give the Amber Starlight to Ranni, or use Seluvis's Potion on Nepheli or the Dung Eater. Puppetizing Nepheli ends her quest for good.",
+     "Sorcerer Rogier::Stormveil → the Black Knife investigation → his death. Gives Rogier's Rapier and the introduction to Ranni.",
+     "Nepheli Loux::Stormveil → Roundtable → Village of the Albinaurics for the Stormhawk King → the throne room. Choice — mutually exclusive with Seluvis's puppet.",
+     "Kenneth Haight::Fort Haight, then Godrick's throne room. Competes with Nepheli for the Lordship of Limgrave.",
+     "Irina & Edgar::Castle Morne. Choice — deliver Irina's letter and Edgar later invades at Revenger's Shack, or leave it and he stays put.",
+     "Boc the Seamster::Choice — use the Prattling Pate \"You're Beautiful\" and he lives, giving the Gold Sewing Needle; give him a Larval Tear instead and he dies.",
+     "Thops::Church of Irith → the Academy Glintstone Key → his body in the Schoolhouse Classroom. Thops's Barrier and Bell Bearing.",
+     "Latenna the Albinauric::Slumbering Wolf's Shack → Lakeside Crystal Cave → carry her to the Apostate Derelict in the Consecrated Snowfield.",
+     "Millicent::Choice — at the Haligtree, fight her four sisters for the Rotten Winged Sword Insignia, or side with the sisters and kill her for Millicent's Prosthesis and the Unalloyed Gold Needle.",
+     "Gowry::Sellia → Gowry's Shack. Drives Millicent's quest; can be killed for Pest Threads.",
+     "Sorceress Sellen::Choice — help Sellen and kill Witch-Hunter Jerren, or help Jerren and kill Sellen. Different rewards; you cannot have both.",
+     "Alexander, Warrior Jar::Limgrave → Gael Tunnel → the Radahn Festival → Mt. Gelmir → a duel in Crumbling Farum Azula. Shard of Alexander.",
+     "Diallos::Roundtable → Volcano Manor → Jarburg, where he dies defending the jars.",
+     "Jar-Bairn::Jarburg, threaded through Diallos. Companion Jar and the Ritual Pot recipe.",
+     "Patches::Murkwater Cave — spare him — then Scenic Isle, Volcano Manor, the Shaded Castle and Mohgwyn Palace.",
+     "Tanith & Volcano Manor::Three assassination contracts: Old Knight Istvan, Rileigh the Idle, Juno Hoslow. Choice — after Rykard dies Tanith turns hostile; kill her for the Consort's Set.",
+     "Knight Bernahl::Volcano Manor, then he invades in Crumbling Farum Azula for the Devourer's Scepter. Choice — killing him early at the Warmaster's Shack forfeits that legendary armament.",
+     "Rya / Zorayas::Liurnia → Volcano Manor. Her true form and the Daedicar's Woe talisman depend on how you handle the Serpent's Amnion.",
+     "Blackguard Big Boggart::Boilprawn Shack → the necklace choice in Rya's quest → Mohgwyn Palace, where he dies.",
+     "White Mask Varré::Choice — soak the Festering Bloody Finger in three Maidens' blood for early access to Mohgwyn Palace, or refuse and kill him for his set.",
+     "Bloody Finger Hunter Yura::Limgrave → Eleonora, Violet Bloody Finger → the Nagakiba. He is later reborn as Shabriri.",
+     "Hyetta::Lake-Facing Cliffs, five Fingerprint Grapes. Tied to the Frenzied Flame path; yields the Frenzied Flame Seal.",
+     "Fia, Deathbed Companion::Roundtable → Deeproot Depths → Fia's Champions → Lichdragon Fortissax → the Mending Rune of the Death-Prince.",
+     "D, Hunter of the Dead::Choice — give D's Bell Bearing and the Twinned Armor to his brother and he slays Fia (Inseparable Sword), or withhold it and keep Fia's rewards.",
+     "The Dung Eater::Choice — feed him five Seedbed Curses for the Mending Rune of the Fell Curse and the Sword of Milos; or purify him with Seluvis's Potion; or simply kill him.",
+     "Brother Corhyn & Goldmask::Altus → the Golden Order Principia → the Mending Rune of Perfect Order. Corhyn can be lost to madness in Leyndell if you delay.",
+     "Gurranq, Beast Clergyman::Nine Deathroot deliveries at the Bestial Sanctum. Stop feeding him when he turns hostile, or pacify him with the Bestial Sanctum bell.",
+     "Sir Gideon Ofnir::Gathers intelligence at the Roundtable, then fights you in Leyndell, Ashen Capital.",
+     "Melina::Accompanies you and kindles the Erdtree — unless you take the Frenzied Flame, at which point she abandons you.",
+     "Roderika::Stormhill Shack → Roundtable Hold, where she becomes the Spirit Tuner and upgrades your ashes.",
+     "Smithing Master Hewg::Roundtable Hold. His arc resolves through Roderika's.",
+     "Enia, Finger Reader::Trades every Remembrance at the Roundtable Hold.",
+     "Witch-Hunter Jerren::Runs the Radahn Festival and closes out Sellen's questline."
+    ]
+   },
+   {
+    "name": "Shadow of the Erdtree",
+    "dlc": 1,
+    "wide": 1,
+    "items": [
+     "Needle Knight Leda::The hub of the DLC's NPC web. The final fight at Enir-Ilim fields a different roster of allies and enemies depending on whose side you took along the way.",
+     "Hornsent::A vengeance quest running through Belurat and Bonny Village. Choice — he can end as an ally or as an enemy at Enir-Ilim.",
+     "Hornsent Grandam::Must be started before you beat Messmer. Wear the Divine Beast Head to speak with her; return after Messmer for a second reward.",
+     "Sir Ansbach::Choice — side with him and he can be summoned for the final boss, or side with Leda and fight him.",
+     "Thiollier & St. Trina::Choice — carry St. Trina's wish back to Thiollier, or take the other path. One route makes him summonable for Promised Consort Radahn.",
+     "Redmane Freyja::Choice — ends as an ally or an enemy at Enir-Ilim depending on your answers.",
+     "Moore::Choice — he can be killed after his despair at Charo's Hidden Grave.",
+     "Igon::Summon him against Bayle the Dread for Igon's Set and Igon's Greatbow. Still doable after the main story.",
+     "Count Ymir, Mother of Fingers::Cathedral of Manus Metyr → the Finger Ruins → Metyr. Choice — kill Ymir, or leave him be.",
+     "Swordhand of Night Jolán::Threaded through Ymir's quest. Outcomes decide whether you get Jolán's ashes alone or Jolán and Anna.",
+     "Dryleaf Dane::A chain of hand-to-hand duels. Dane's Footwork and Dane's Set.",
+     "Fire Knight Queelign::Repeated invasions across the Shadow Realm. Fire Knight's Seal and Queelign's Greatsword. Still doable after the main story."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "tal",
+  "t": "Talismans",
+  "n": "Every talisman including all upgraded variants. The +3 tiers are DLC-only.",
+  "g": [
+   {
+    "name": "All talismans",
+    "items": [
+     "Crimson Amber Medallion",
+     "Crimson Amber Medallion +1",
+     "Crimson Amber Medallion +2",
+     "Crimson Amber Medallion +3",
+     "Crimson Seed Talisman",
+     "Crimson Seed Talisman +1",
+     "Blessed Dew Talisman",
+     "Blessed Blue Dew Talisman",
+     "Cerulean Amber Medallion",
+     "Cerulean Amber Medallion +1",
+     "Cerulean Amber Medallion +2",
+     "Cerulean Amber Medallion +3",
+     "Cerulean Seed Talisman",
+     "Cerulean Seed Talisman +1",
+     "Viridian Amber Medallion",
+     "Viridian Amber Medallion +1",
+     "Viridian Amber Medallion +2",
+     "Viridian Amber Medallion +3",
+     "Green Turtle Talisman",
+     "Two-Headed Turtle Talisman",
+     "Arsenal Charm",
+     "Arsenal Charm +1",
+     "Great-Jar's Arsenal",
+     "Erdtree's Favor",
+     "Erdtree's Favor +1",
+     "Erdtree's Favor +2",
+     "Radagon's Scarseal",
+     "Radagon's Soreseal",
+     "Marika's Scarseal",
+     "Marika's Soreseal",
+     "Starscourge Heirloom",
+     "Prosthesis-Wearer Heirloom",
+     "Stargazer Heirloom",
+     "Two Fingers Heirloom",
+     "Outer God Heirloom",
+     "Talisman of Lord's Bestowal",
+     "Dragoncrest Shield Talisman",
+     "Dragoncrest Shield Talisman +1",
+     "Dragoncrest Shield Talisman +2",
+     "Dragoncrest Greatshield Talisman",
+     "Spelldrake Talisman",
+     "Spelldrake Talisman +1",
+     "Spelldrake Talisman +2",
+     "Spelldrake Talisman +3",
+     "Flamedrake Talisman",
+     "Flamedrake Talisman +1",
+     "Flamedrake Talisman +2",
+     "Flamedrake Talisman +3",
+     "Boltdrake Talisman",
+     "Boltdrake Talisman +1",
+     "Boltdrake Talisman +2",
+     "Boltdrake Talisman +3",
+     "Haligdrake Talisman",
+     "Haligdrake Talisman +1",
+     "Haligdrake Talisman +2",
+     "Pearldrake Talisman",
+     "Pearldrake Talisman +1",
+     "Pearldrake Talisman +2",
+     "Pearldrake Talisman +3",
+     "Immunizing Horn Charm",
+     "Immunizing Horn Charm +1",
+     "Immunizing Horn Charm +2",
+     "Stalwart Horn Charm",
+     "Stalwart Horn Charm +1",
+     "Stalwart Horn Charm +2",
+     "Clarifying Horn Charm",
+     "Clarifying Horn Charm +1",
+     "Clarifying Horn Charm +2",
+     "Mottled Necklace",
+     "Mottled Necklace +1",
+     "Mottled Necklace +2",
+     "Ailment Talisman",
+     "Prince of Death's Pustule",
+     "Prince of Death's Cyst",
+     "Dagger Talisman",
+     "Curved Sword Talisman",
+     "Twinblade Talisman",
+     "Axe Talisman",
+     "Hammer Talisman",
+     "Spear Talisman",
+     "Lance Talisman",
+     "Claw Talisman",
+     "Two-Handed Sword Talisman",
+     "Greatshield Talisman",
+     "Pearl Shield Talisman",
+     "Retaliatory Crossed-Tree",
+     "Lacerating Crossed-Tree",
+     "Arrow's Sting Talisman",
+     "Arrow's Reach Talisman",
+     "Arrow's Soaring Sting Talisman",
+     "Sharpshot Talisman",
+     "Graven-School Talisman",
+     "Graven-Mass Talisman",
+     "Faithful's Canvas Talisman",
+     "Flock's Canvas Talisman",
+     "Primal Glintstone Blade",
+     "Beloved Stardust",
+     "Moon of Nokstella",
+     "Rellana's Cameo",
+     "Old Lord's Talisman",
+     "Radagon Icon",
+     "Roar Medallion",
+     "Companion Jar",
+     "Perfumer's Talisman",
+     "Carian Filigreed Crest",
+     "Warrior Jar Shard",
+     "Shard of Alexander",
+     "Shattered Stone Talisman",
+     "Smithing Talisman",
+     "Godfrey Icon",
+     "Bull-Goat's Talisman",
+     "Blue Dancer Charm",
+     "Magic Scorpion Charm",
+     "Fire Scorpion Charm",
+     "Lightning Scorpion Charm",
+     "Sacred Scorpion Charm",
+     "Enraged Divine Beast",
+     "Talisman of the Dread",
+     "Verdigris Discus",
+     "Crucible Scale Talisman",
+     "Crucible Feather Talisman",
+     "Fine Crucible Feather Talisman",
+     "Crucible Knot Talisman",
+     "Talisman of All Crucibles",
+     "Red-Feathered Branchsword",
+     "Blue-Feathered Branchsword",
+     "Ritual Sword Talisman",
+     "Ritual Shield Talisman",
+     "Assassin's Crimson Dagger",
+     "Assassin's Cerulean Dagger",
+     "Winged Sword Insignia",
+     "Rotten Winged Sword Insignia",
+     "Millicent's Prosthesis",
+     "Godskin Swaddling Cloth",
+     "Kindred of Rot's Exultation",
+     "Lord of Blood's Exultation",
+     "Aged One's Exultation",
+     "Taker's Cameo",
+     "Ancestral Spirit's Horn",
+     "Gold Scarab",
+     "Silver Scarab",
+     "Crepus's Vial",
+     "Concealing Veil",
+     "Longtail Cat Talisman",
+     "Furled Finger's Trick-Mirror",
+     "Golden Braid",
+     "St. Trina's Smile",
+     "Blade of Mercy",
+     "Crusade Insignia",
+     "Dried Bouquet"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ash",
+  "t": "Spirit Ashes",
+  "g": [
+   {
+    "name": "Common ashes",
+    "items": [
+     "Wandering Noble Ashes",
+     "Noble Sorcerer Ashes",
+     "Nomad Ashes",
+     "Putrid Corpse Ashes",
+     "Skeletal Militiaman Ashes",
+     "Skeletal Bandit Ashes",
+     "Albinauric Ashes",
+     "Winged Misbegotten Ashes",
+     "Demi-Human Ashes",
+     "Clayman Ashes",
+     "Oracle Envoy Ashes",
+     "Man-Fly Ashes",
+     "Lone Wolf Ashes",
+     "Rotten Stray Ashes",
+     "Giant Rat Ashes",
+     "Warhawk Ashes",
+     "Land Squirt Ashes",
+     "Spirit Jellyfish Ashes",
+     "Miranda Sprout Ashes",
+     "Spider Scorpion Ashes",
+     "Fingercreeper Ashes",
+     "Fanged Imp Ashes",
+     "Bigmouth Imp Ashes",
+     "Gravebird Ashes",
+     "Soldjars of Fortune Ashes"
+    ]
+   },
+   {
+    "name": "Soldiers & warriors",
+    "items": [
+     "Archer Ashes",
+     "Greatshield Soldier Ashes",
+     "Page Ashes",
+     "Vulgar Militia Ashes",
+     "Marionette Soldier Ashes",
+     "Avionette Soldier Ashes",
+     "Kaiden Sellsword Ashes",
+     "Mad Pumpkin Head Ashes",
+     "Fire Monk Ashes",
+     "Ancestral Follower Ashes",
+     "Horned Warrior Ashes",
+     "Azula Beastman Ashes",
+     "Man-Serpent Ashes",
+     "Crystalian Ashes",
+     "Kindred of Rot Ashes",
+     "Bloodfiend Hexer's Ashes",
+     "Glintstone Sorcerer Ashes",
+     "Twinsage Sorcerer Ashes",
+     "Inquisitor Ashes",
+     "Godrick Soldier Ashes",
+     "Raya Lucaria Soldier Ashes",
+     "Leyndell Soldier Ashes",
+     "Radahn Soldier Ashes",
+     "Haligtree Soldier Ashes",
+     "Mausoleum Soldier Ashes",
+     "Messmer Soldier Ashes"
+    ]
+   },
+   {
+    "name": "Named spirits",
+    "items": [
+     "Stormhawk Deenh",
+     "Banished Knight Oleg",
+     "Banished Knight Engvall",
+     "Bloodhound Knight Floh",
+     "Black Knight Captain Huw",
+     "Black Knight Commander Andreas",
+     "Fire Knight Hilde",
+     "Fire Knight Queelign",
+     "Swordhand of Night Jolán",
+     "Jolán and Anna",
+     "Battlemage Hugues",
+     "Latenna the Albinauric",
+     "Perfumer Tricia",
+     "Depraved Perfumer Carmaan",
+     "Omenkiller Rollo",
+     "Blackflame Monk Amon",
+     "Curseblade Meera",
+     "Demi-Human Swordsman Yosh",
+     "Divine Bird Warrior Ornis",
+     "Taylew the Golem Smith",
+     "Ancient Dragon Florissax",
+     "Mimic Tear Ashes"
+    ]
+   },
+   {
+    "name": "Legendary ashen remains",
+    "items": [
+     "Black Knife Tiche",
+     "Ancient Dragon Knight Kristoff",
+     "Redmane Knight Ogha",
+     "Lhutel the Headless",
+     "Cleanrot Knight Finlay"
+    ]
+   },
+   {
+    "name": "Seluvis's puppets",
+    "items": [
+     "Finger Maiden Therolina Puppet",
+     "Jarwight Puppet",
+     "Dolores the Sleeping Arrow Puppet",
+     "Nepheli Loux Puppet",
+     "Dung Eater Puppet",
+     "Nightmaiden & Swordstress Puppets"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "sor",
+  "t": "Sorceries",
+  "g": [
+   {
+    "name": "Glintstone",
+    "items": [
+     "Glintstone Pebble",
+     "Swift Glintstone Shard",
+     "Great Glintstone Shard",
+     "Glintstone Cometshard",
+     "Comet",
+     "Shard Spiral",
+     "Glintstone Stars",
+     "Star Shower",
+     "Glintstone Arc",
+     "Crystal Barrage",
+     "Crystal Burst",
+     "Cannon of Haima",
+     "Gavel of Haima",
+     "Shatter Earth",
+     "Rock Blaster",
+     "Scholar's Armament",
+     "Scholar's Shield",
+     "Starlight",
+     "Terra Magica",
+     "Thops's Barrier",
+     "Comet Azur",
+     "Stars of Ruin",
+     "Founding Rain of Stars"
+    ]
+   },
+   {
+    "name": "Carian",
+    "items": [
+     "Magic Glintblade",
+     "Glintblade Trio",
+     "Glintblade Phalanx",
+     "Carian Phalanx",
+     "Greatblade Phalanx",
+     "Magic Downpour",
+     "Loretta's Greatbow",
+     "Loretta's Mastery",
+     "Rennala's Full Moon",
+     "Ranni's Dark Moon",
+     "Rellana's Twin Moons",
+     "Carian Slicer",
+     "Carian Greatsword",
+     "Carian Piercer",
+     "Adula's Moonblade",
+     "Lucidity",
+     "Carian Retaliation",
+     "Miriam's Vanishing"
+    ]
+   },
+   {
+    "name": "Night & Gelmir",
+    "items": [
+     "Ambush Shard",
+     "Night Shard",
+     "Night Comet",
+     "Night Maiden's Mist",
+     "Unseen Blade",
+     "Unseen Form",
+     "Eternal Darkness",
+     "Magma Shot",
+     "Roiling Magma",
+     "Gelmir's Fury",
+     "Rykard's Rancor"
+    ]
+   },
+   {
+    "name": "Cold & crystal",
+    "items": [
+     "Glintstone Icecrag",
+     "Freezing Mist",
+     "Frozen Armament",
+     "Zamor Ice Storm",
+     "Shattering Crystal",
+     "Crystal Torrent",
+     "Crystal Release"
+    ]
+   },
+   {
+    "name": "Gravity, fingers & thorns",
+    "items": [
+     "Gravity Well",
+     "Collapsing Stars",
+     "Gravitational Missile",
+     "Rock Sling",
+     "Blades of Stone",
+     "Meteorite",
+     "Meteorite of Astel",
+     "Glintstone Nail",
+     "Glintstone Nails",
+     "Fleeting Microcosm",
+     "Cherishing Fingers",
+     "Oracle Bubbles",
+     "Great Oracular Bubble",
+     "Briars of Sin",
+     "Briars of Punishment",
+     "Mantle of Thorns",
+     "Impenetrable Thorns"
+    ]
+   },
+   {
+    "name": "Death",
+    "items": [
+     "Rancorcall",
+     "Ancient Death Rancor",
+     "Rings of Spectral Light",
+     "Explosive Ghostflame",
+     "Fia's Mist",
+     "Tibia's Summons",
+     "Mass of Putrescence",
+     "Vortex of Putrescence"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "inc",
+  "t": "Incantations",
+  "g": [
+   {
+    "name": "Two Fingers",
+    "items": [
+     "Urgent Heal",
+     "Heal",
+     "Great Heal",
+     "Lord's Heal",
+     "Cure Poison",
+     "Lord's Aid",
+     "Magic Fortification",
+     "Flame Fortification",
+     "Lightning Fortification",
+     "Divine Fortification",
+     "Lord's Divine Fortification",
+     "Rejection",
+     "Shadow Bait",
+     "Darkness",
+     "Assassin's Approach"
+    ]
+   },
+   {
+    "name": "Erdtree & Golden Order",
+    "items": [
+     "Golden Vow",
+     "Barrier of Gold",
+     "Golden Lightning Fortification",
+     "Protection of the Erdtree",
+     "Wrath of Gold",
+     "Wrath from Afar",
+     "Heal from Afar",
+     "Erdtree Heal",
+     "Blessing's Boon",
+     "Blessing of the Erdtree",
+     "Minor Erdtree",
+     "Land of Shadow",
+     "Elden Stars",
+     "Black Blade",
+     "Discus of Light",
+     "Triple Rings of Light",
+     "Radagon's Rings of Light",
+     "Multilayered Ring of Light",
+     "Litany of Proper Death",
+     "Order Healing",
+     "Order's Blade",
+     "Immutable Shield",
+     "Law of Causality",
+     "Law of Regression",
+     "Light of Miquella"
+    ]
+   },
+   {
+    "name": "Crucible",
+    "items": [
+     "Aspects of the Crucible: Breath",
+     "Aspects of the Crucible: Tail",
+     "Aspects of the Crucible: Horns",
+     "Aspects of the Crucible: Thorns",
+     "Aspects of the Crucible: Bloom"
+    ]
+   },
+   {
+    "name": "Dragon cult lightning",
+    "items": [
+     "Lightning Spear",
+     "Knight's Lightning Spear",
+     "Lightning Strike",
+     "Honed Bolt",
+     "Ancient Dragons' Lightning Spear",
+     "Ancient Dragons' Lightning Strike",
+     "Lansseax's Glaive",
+     "Fortissax's Lightning Spear",
+     "Frozen Lightning Spear",
+     "Death Lightning",
+     "Electrify Armament",
+     "Electrocharge",
+     "Dragonbolt Blessing",
+     "Vyke's Dragonbolt",
+     "Dragonbolt of Florissax"
+    ]
+   },
+   {
+    "name": "Spiral & divine beast",
+    "items": [
+     "Golden Arcs",
+     "Giant Golden Arc",
+     "Spira",
+     "Watchful Spirit",
+     "Divine Bird Feathers",
+     "Divine Beast Tornado"
+    ]
+   },
+   {
+    "name": "Fire giants & Messmer",
+    "items": [
+     "Catch Flame",
+     "O, Flame!",
+     "Flame Sling",
+     "Giantsflame Take Thee",
+     "Flame, Fall Upon Them",
+     "Flame of the Fell God",
+     "Surge, O Flame!",
+     "Whirl, O Flame!",
+     "Burn, O Flame!",
+     "Flame, Cleanse Me",
+     "Flame, Protect Me",
+     "Flame, Grant Me Strength",
+     "Fire's Deadly Sin",
+     "Fire Serpent",
+     "Rain of Fire",
+     "Messmer's Orb"
+    ]
+   },
+   {
+    "name": "Godslayer & bestial",
+    "items": [
+     "Black Flame",
+     "Scouring Black Flame",
+     "Black Flame Ritual",
+     "Black Flame Blade",
+     "Black Flame's Protection",
+     "Noble Presence",
+     "Beast Claw",
+     "Gurranq's Beast Claw",
+     "Bestial Sling",
+     "Stone of Gurranq",
+     "Bestial Constitution",
+     "Bestial Vitality",
+     "Roar of Rugalea"
+    ]
+   },
+   {
+    "name": "Blood & rot",
+    "items": [
+     "Swarm of Flies",
+     "Bloodflame Talons",
+     "Furious Blade of Ansbach",
+     "Bloodboon",
+     "Bloodflame Blade",
+     "Poison Mist",
+     "Poison Armament",
+     "Pest Threads",
+     "Pest-Thread Spears",
+     "Scarlet Aeonia",
+     "Rotten Butterflies"
+    ]
+   },
+   {
+    "name": "Frenzied Flame",
+    "items": [
+     "The Flame of Frenzy",
+     "Unendurable Frenzy",
+     "Midra's Flame of Frenzy",
+     "Frenzied Burst",
+     "Howl of Shabriri",
+     "Inescapable Frenzy"
+    ]
+   },
+   {
+    "name": "Dragon communion",
+    "items": [
+     "Dragonfire",
+     "Agheel's Flame",
+     "Magma Breath",
+     "Theodorix's Magma",
+     "Glintstone Breath",
+     "Smarag's Glintstone Breath",
+     "Rotten Breath",
+     "Ekzykes's Decay",
+     "Dragonice",
+     "Borealis's Mist",
+     "Placidusax's Ruin",
+     "Dragonclaw",
+     "Dragonmaw",
+     "Greyoll's Roar",
+     "Ghostflame Breath",
+     "Bayle's Tyranny",
+     "Bayle's Flame Lightning"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "aow",
+  "t": "Ashes of War",
+  "n": "Grouped by the affinity each one comes with by default.",
+  "g": [
+   {
+    "name": "Heavy",
+    "items": [
+     "Stamp (Upward Cut)",
+     "Stamp (Sweep)",
+     "Wild Strikes",
+     "Lion's Claw",
+     "Savage Lion's Claw",
+     "Cragblade",
+     "Spinning Gravity Thrust",
+     "Kick",
+     "Endure",
+     "Ground Slam",
+     "Earthshaker",
+     "Hoarah Loux's Earthshaker",
+     "War Cry",
+     "Barbaric Roar",
+     "Braggart's Roar",
+     "Troll's Roar"
+    ]
+   },
+   {
+    "name": "Keen",
+    "items": [
+     "Spinning Slash",
+     "Impaling Thrust",
+     "Blind Spot",
+     "Swift Slash",
+     "Piercing Fang",
+     "Repeating Thrust",
+     "Double Slash",
+     "Sword Dance",
+     "Unsheathe",
+     "Overhead Stance",
+     "Quickstep",
+     "Bloodhound's Step",
+     "Raptor of the Mists",
+     "Beast's Roar",
+     "Savage Claws",
+     "Raging Beast",
+     "Piercing Throw",
+     "Scattershot Throw"
+    ]
+   },
+   {
+    "name": "Quality",
+    "items": [
+     "Square Off",
+     "Wing Stance",
+     "Charge Forth",
+     "Spinning Strikes",
+     "Giant Hunt",
+     "Storm Blade",
+     "Storm Assault",
+     "Stormcaller",
+     "Storm Stomp",
+     "Vacuum Slice",
+     "Phantom Slash",
+     "Determination",
+     "Royal Knight's Resolve"
+    ]
+   },
+   {
+    "name": "Magic",
+    "items": [
+     "Glintstone Pebble",
+     "Glintblade Phalanx",
+     "Carian Greatsword",
+     "Carian Grandeur",
+     "Carian Sovereignty",
+     "Spinning Weapon",
+     "Loretta's Slash",
+     "Gravitas",
+     "Waves of Darkness"
+    ]
+   },
+   {
+    "name": "Fire, Flame Art & Lightning",
+    "items": [
+     "Flaming Strike",
+     "Flame of the Redmanes",
+     "Eruption",
+     "Prelate's Charge",
+     "Black Flame Tornado",
+     "Flame Skewer",
+     "Flame Spear",
+     "Thunderbolt",
+     "Lightning Slash",
+     "Blinkbolt",
+     "Lightning Ram"
+    ]
+   },
+   {
+    "name": "Sacred",
+    "items": [
+     "Sacred Blade",
+     "Prayerful Strike",
+     "Sacred Ring of Light",
+     "Sacred Order",
+     "Shared Order",
+     "Golden Land",
+     "Golden Slam",
+     "Golden Vow",
+     "Vow of the Indomitable",
+     "Holy Ground",
+     "Aspects of the Crucible: Wings"
+    ]
+   },
+   {
+    "name": "Poison, Blood & Cold",
+    "items": [
+     "Poisonous Mist",
+     "Poison Moth Flight",
+     "The Poison Flower Blooms Twice",
+     "Blood Blade",
+     "Bloody Slash",
+     "Blood Tax",
+     "Seppuku",
+     "Ice Spear",
+     "Chilling Mist",
+     "Ghostflame Call",
+     "Hoarfrost Stomp",
+     "Divine Beast Frost Stomp"
+    ]
+   },
+   {
+    "name": "Occult",
+    "items": [
+     "Spectral Lance",
+     "Lifesteal Fist",
+     "White Shadow's Lure",
+     "Assassin's Gambit",
+     "Shriek of Sorrow"
+    ]
+   },
+   {
+    "name": "Hand-to-hand & perfume",
+    "items": [
+     "Palm Blast",
+     "Dryleaf Whirlwind",
+     "Wall of Sparks",
+     "Rolling Sparks"
+    ]
+   },
+   {
+    "name": "Bows",
+    "items": [
+     "Mighty Shot",
+     "Through and Through",
+     "Igon's Drake Hunt",
+     "Barrage",
+     "Sky Shot",
+     "Enchanted Shot",
+     "Rain of Arrows"
+    ]
+   },
+   {
+    "name": "Shields",
+    "items": [
+     "Parry",
+     "Golden Parry",
+     "Storm Wall",
+     "Shield Bash",
+     "Shield Crash",
+     "Barricade Shield",
+     "Thops's Barrier",
+     "Carian Retaliation",
+     "Shield Strike",
+     "No Skill"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "wep",
+  "t": "Weapons",
+  "n": "Every armament by class. Categories introduced by Shadow of the Erdtree are flagged; mixed categories contain DLC entries too.",
+  "g": [
+   {
+    "name": "Daggers",
+    "items": [
+     "Dagger",
+     "Parrying Dagger",
+     "Misericorde",
+     "Great Knife",
+     "Bloodstained Dagger",
+     "Erdsteel Dagger",
+     "Wakizashi",
+     "Main-gauche",
+     "Celebrant's Sickle",
+     "Ivory Sickle",
+     "Crystal Knife",
+     "Scorpion's Stinger",
+     "Cinquedea",
+     "Glintstone Kris",
+     "Reduvia",
+     "Blade of Calling",
+     "Black Knife",
+     "Fire Knight's Shortsword"
+    ]
+   },
+   {
+    "name": "Throwing Blades",
+    "dlc": 1,
+    "items": [
+     "Smithscript Dagger"
+    ]
+   },
+   {
+    "name": "Straight Swords",
+    "items": [
+     "Short Sword",
+     "Longsword",
+     "Broadsword",
+     "Weathered Straight Sword",
+     "Lordsworn's Straight Sword",
+     "Noble's Slender Sword",
+     "Cane Sword",
+     "Stone-Sheathed Sword",
+     "Warhawk's Talon",
+     "Lazuli Glintstone Sword",
+     "Carian Knight's Sword",
+     "Crystal Sword",
+     "Rotten Crystal Sword",
+     "Miquellan Knight's Sword",
+     "Ornamental Straight Sword",
+     "Golden Epitaph",
+     "Sword of St. Trina",
+     "Velvet Sword of St. Trina",
+     "Regalia of Eochaid",
+     "Coded Sword",
+     "Sword of Night and Flame",
+     "Sword of Light",
+     "Sword of Darkness"
+    ]
+   },
+   {
+    "name": "Light Greatswords",
+    "dlc": 1,
+    "items": [
+     "Milady",
+     "Leda's Sword",
+     "Rellana's Twin Blades"
+    ]
+   },
+   {
+    "name": "Greatswords",
+    "items": [
+     "Bastard Sword",
+     "Claymore",
+     "Iron Greatsword",
+     "Lordsworn's Greatsword",
+     "Knight's Greatsword",
+     "Banished Knight's Greatsword",
+     "Forked Greatsword",
+     "Lizard Greatsword",
+     "Flamberge",
+     "Gargoyle's Greatsword",
+     "Gargoyle's Blackblade",
+     "Inseparable Sword",
+     "Sword of Milos",
+     "Marais Executioner's Sword",
+     "Greatsword of Solitude",
+     "Ordovis's Greatsword",
+     "Alabaster Lord's Sword",
+     "Death's Poker",
+     "Helphen's Steeple",
+     "Blasphemous Blade",
+     "Golden Order Greatsword",
+     "Dark Moon Greatsword",
+     "Greatsword of Damnation",
+     "Sacred Relic Sword"
+    ]
+   },
+   {
+    "name": "Colossal Swords",
+    "items": [
+     "Zweihander",
+     "Greatsword",
+     "Watchdog's Greatsword",
+     "Fire Knight's Greatsword",
+     "Troll's Golden Sword",
+     "Troll Knight's Sword",
+     "Moonrithyll's Knight Sword",
+     "Royal Greatsword",
+     "Grafted Blade Greatsword",
+     "Ruins Greatsword",
+     "Ancient Meteoric Ore Greatsword",
+     "Starscourge Greatsword",
+     "Greatsword of Radahn (Lord)",
+     "Greatsword of Radahn (Light)",
+     "Godslayer's Greatsword",
+     "Maliketh's Black Blade"
+    ]
+   },
+   {
+    "name": "Thrusting Swords",
+    "items": [
+     "Rapier",
+     "Estoc",
+     "Noble's Estoc",
+     "Cleanrot Knight's Sword",
+     "Rogier's Rapier",
+     "Antspur Rapier",
+     "Frozen Needle",
+     "Carian Sorcery Sword"
+    ]
+   },
+   {
+    "name": "Heavy Thrusting Swords",
+    "items": [
+     "Great Épée",
+     "Godskin Stitcher",
+     "Queelign's Greatsword",
+     "Bloody Helice",
+     "Dragon King's Cragblade",
+     "Sword Lance"
+    ]
+   },
+   {
+    "name": "Curved Swords",
+    "items": [
+     "Scimitar",
+     "Falchion",
+     "Shamshir",
+     "Grossmesser",
+     "Bandit's Curved Sword",
+     "Shotel",
+     "Scavenger's Curved Sword",
+     "Mantis Blade",
+     "Beastman's Curved Sword",
+     "Flowing Curved Sword",
+     "Serpent-God's Curved Sword",
+     "Magma Blade",
+     "Spirit Sword",
+     "Nox Flowing Sword",
+     "Wing of Astel",
+     "Falx",
+     "Dancing Blade of Ranah",
+     "Horned Warrior's Sword",
+     "Eclipse Shotel"
+    ]
+   },
+   {
+    "name": "Curved Greatswords",
+    "items": [
+     "Dismounter",
+     "Omen Cleaver",
+     "Monk's Flameblade",
+     "Beastman's Cleaver",
+     "Freyja's Greatsword",
+     "Bloodhound's Fang",
+     "Onyx Lord's Greatsword",
+     "Zamor Curved Sword",
+     "Magma Wyrm's Scalesword",
+     "Horned Warrior's Greatsword",
+     "Morgott's Cursed Sword"
+    ]
+   },
+   {
+    "name": "Backhand Blades",
+    "dlc": 1,
+    "items": [
+     "Backhand Blade",
+     "Smithscript Cirque",
+     "Curseblade's Cirque"
+    ]
+   },
+   {
+    "name": "Katanas",
+    "items": [
+     "Uchigatana",
+     "Nagakiba",
+     "Serpentbone Blade",
+     "Meteoric Ore Blade",
+     "Moonveil",
+     "Sword of Night",
+     "Rivers of Blood",
+     "Dragonscale Blade",
+     "Star-Lined Sword",
+     "Hand of Malenia"
+    ]
+   },
+   {
+    "name": "Great Katanas",
+    "dlc": 1,
+    "items": [
+     "Great Katana",
+     "Dragon-Hunter's Great Katana",
+     "Rakshasa's Great Katana"
+    ]
+   },
+   {
+    "name": "Twinblades",
+    "items": [
+     "Twinblade",
+     "Twinned Knight Swords",
+     "Black Steel Twinblade",
+     "Godskin Peeler",
+     "Gargoyle's Twinblade",
+     "Gargoyle's Black Blades",
+     "Eleonora's Poleblade",
+     "Euporia"
+    ]
+   },
+   {
+    "name": "Axes",
+    "items": [
+     "Hand Axe",
+     "Forked Hatchet",
+     "Forked-Tongue Hatchet",
+     "Battle Axe",
+     "Messmer Soldier's Axe",
+     "Warped Axe",
+     "Jawbone Axe",
+     "Iron Cleaver",
+     "Highland Axe",
+     "Smithscript Axe",
+     "Celebrant's Cleaver",
+     "Sacrificial Axe",
+     "Icerind Hatchet",
+     "Ripple Blade",
+     "Stormhawk Axe",
+     "Rosus' Axe",
+     "Death Knight's Twin Axes"
+    ]
+   },
+   {
+    "name": "Greataxes",
+    "items": [
+     "Greataxe",
+     "Crescent Moon Axe",
+     "Longhaft Axe",
+     "Executioner's Greataxe",
+     "Great Omenkiller Cleaver",
+     "Rusted Anchor",
+     "Butchering Knife",
+     "Bonny Butchering Knife",
+     "Gargoyle's Great Axe",
+     "Gargoyle's Black Axe",
+     "Death Knight's Longhaft Axe",
+     "Winged Greathorn",
+     "Axe of Godrick",
+     "Putrescence Cleaver"
+    ]
+   },
+   {
+    "name": "Hammers",
+    "items": [
+     "Club",
+     "Curved Club",
+     "Spiked Club",
+     "Stone Club",
+     "Mace",
+     "Morning Star",
+     "Warpick",
+     "Hammer",
+     "Monk's Flamemace",
+     "Varré's Bouquet",
+     "Envoy's Horn",
+     "Nox Flowing Hammer",
+     "Ringed Finger",
+     "Scepter of the All-Knowing",
+     "Flowerstone Gavel",
+     "Marika's Hammer"
+    ]
+   },
+   {
+    "name": "Flails",
+    "items": [
+     "Flail",
+     "Nightrider Flail",
+     "Chainlink Flail",
+     "Family Heads",
+     "Serpent Flail",
+     "Bastard's Stars"
+    ]
+   },
+   {
+    "name": "Great Hammers",
+    "items": [
+     "Large Club",
+     "Curved Great Club",
+     "Great Mace",
+     "Pickaxe",
+     "Brick Hammer",
+     "Battle Hammer",
+     "Rotten Battle Hammer",
+     "Celebrant's Skull",
+     "Great Stars",
+     "Black Steel Greathammer",
+     "Smithscript Greathammer",
+     "Greathorn Hammer",
+     "Envoy's Long Horn",
+     "Cranial Vessel Candlestand",
+     "Beastclaw Greathammer",
+     "Devourer's Scepter"
+    ]
+   },
+   {
+    "name": "Colossal Weapons",
+    "items": [
+     "Duelist Greataxe",
+     "Rotten Greataxe",
+     "Golem's Halberd",
+     "Giant-Crusher",
+     "Prelate's Inferno Crozier",
+     "Great Club",
+     "Troll's Hammer",
+     "Dragon Greatclaw",
+     "Bloodfiend's Arm",
+     "Watchdog's Staff",
+     "Staff of the Avatar",
+     "Rotten Staff",
+     "Envoy's Greathorn",
+     "Ghiza's Wheel",
+     "Fallingstar Beast Jaw",
+     "Anvil Hammer",
+     "Devonia's Hammer",
+     "Axe of Godfrey",
+     "Shadow Sunflower Blossom",
+     "Gazing Finger"
+    ]
+   },
+   {
+    "name": "Spears",
+    "items": [
+     "Short Spear",
+     "Iron Spear",
+     "Spear",
+     "Partisan",
+     "Pike",
+     "Swift Spear",
+     "Spiked Spear",
+     "Cross-Naginata",
+     "Clayman's Harpoon",
+     "Bloodfiend's Fork",
+     "Celebrant's Rib-Rake",
+     "Torchpole",
+     "Smithscript Spear",
+     "Inquisitor's Girandole",
+     "Crystal Spear",
+     "Rotten Crystal Spear",
+     "Cleanrot Spear",
+     "Death Ritual Spear",
+     "Bolt of Gransax"
+    ]
+   },
+   {
+    "name": "Great Spears",
+    "items": [
+     "Lance",
+     "Messmer Soldier's Spear",
+     "Treespear",
+     "Serpent-Hunter",
+     "Siluria's Tree",
+     "Vyke's War Spear",
+     "Barbed Staff-Spear",
+     "Bloodfiend's Sacred Spear",
+     "Mohgwyn's Sacred Spear",
+     "Spear of the Impaler"
+    ]
+   },
+   {
+    "name": "Halberds",
+    "items": [
+     "Halberd",
+     "Banished Knight's Halberd",
+     "Lucerne",
+     "Glaive",
+     "Vulgar Militia Shotel",
+     "Vulgar Militia Saw",
+     "Guardian's Swordspear",
+     "Gargoyle's Halberd",
+     "Gargoyle's Black Halberd",
+     "Nightrider Glaive",
+     "Pest's Glaive",
+     "Ripple Crescent Halberd",
+     "Golden Halberd",
+     "Dragon Halberd",
+     "Loretta's War Sickle",
+     "Commander's Standard",
+     "Spirit Glaive",
+     "Poleblade of the Bud"
+    ]
+   },
+   {
+    "name": "Reapers",
+    "items": [
+     "Scythe",
+     "Grave Scythe",
+     "Halo Scythe",
+     "Winged Scythe",
+     "Obsidian Lamina"
+    ]
+   },
+   {
+    "name": "Whips",
+    "items": [
+     "Whip",
+     "Thorned Whip",
+     "Urumi",
+     "Hoslow's Petal Whip",
+     "Tooth Whip",
+     "Magma Whip Candlestick",
+     "Giant's Red Braid"
+    ]
+   },
+   {
+    "name": "Fists",
+    "items": [
+     "Caestus",
+     "Spiked Caestus",
+     "Katar",
+     "Pata",
+     "Iron Ball",
+     "Star Fist",
+     "Clinging Bone",
+     "Veteran's Prosthesis",
+     "Cipher Pata",
+     "Poisoned Hand",
+     "Madding Hand",
+     "Thiollier's Hidden Needle",
+     "Golem Fist",
+     "Grafted Dragon"
+    ]
+   },
+   {
+    "name": "Claws",
+    "items": [
+     "Hookclaws",
+     "Bloodhound Claws",
+     "Venomous Fang",
+     "Raptor Talons"
+    ]
+   },
+   {
+    "name": "Beast Claws",
+    "dlc": 1,
+    "items": [
+     "Beast Claw",
+     "Red Bear's Claw"
+    ]
+   },
+   {
+    "name": "Hand-to-Hand Arts",
+    "dlc": 1,
+    "items": [
+     "Dryleaf Arts",
+     "Dane's Footwork"
+    ]
+   },
+   {
+    "name": "Perfume Bottles",
+    "dlc": 1,
+    "items": [
+     "Firespark Perfume Bottle",
+     "Chilling Perfume Bottle",
+     "Frenzyflame Perfume Bottle",
+     "Lightning Perfume Bottle",
+     "Deadly Poison Perfume Bottle"
+    ]
+   },
+   {
+    "name": "Light Bows",
+    "items": [
+     "Shortbow",
+     "Composite Bow",
+     "Red Branch Shortbow",
+     "Misbegotten Shortbow",
+     "Harp Bow",
+     "Bone Bow"
+    ]
+   },
+   {
+    "name": "Bows",
+    "items": [
+     "Longbow",
+     "Albinauric Bow",
+     "Black Bow",
+     "Pulley Bow",
+     "Horn Bow",
+     "Serpent Bow",
+     "Erdtree Bow",
+     "Ansbach's Longbow"
+    ]
+   },
+   {
+    "name": "Greatbows",
+    "items": [
+     "Greatbow",
+     "Golem Greatbow",
+     "Erdtree Greatbow",
+     "Lion Greatbow",
+     "Igon's Greatbow"
+    ]
+   },
+   {
+    "name": "Crossbows",
+    "items": [
+     "Soldier's Crossbow",
+     "Light Crossbow",
+     "Heavy Crossbow",
+     "Arbalest",
+     "Crepus's Black-Key Crossbow",
+     "Pulley Crossbow",
+     "Full Moon Crossbow",
+     "Repeating Crossbow",
+     "Spread Crossbow"
+    ]
+   },
+   {
+    "name": "Ballistae",
+    "items": [
+     "Hand Ballista",
+     "Jar Cannon"
+    ]
+   },
+   {
+    "name": "Glintstone Staves",
+    "items": [
+     "Astrologer's Staff",
+     "Glintstone Staff",
+     "Academy Glintstone Staff",
+     "Digger's Staff",
+     "Demi-Human Queen's Staff",
+     "Azur's Glintstone Staff",
+     "Lusat's Glintstone Staff",
+     "Carian Glintstone Staff",
+     "Carian Glintblade Staff",
+     "Carian Regal Scepter",
+     "Albinauric Staff",
+     "Staff of Loss",
+     "Gelmir Glintstone Staff",
+     "Crystal Staff",
+     "Rotten Crystal Staff",
+     "Meteorite Staff",
+     "Staff of the Guilty",
+     "Prince of Death's Staff",
+     "Maternal Staff",
+     "Staff of the Great Beyond"
+    ]
+   },
+   {
+    "name": "Sacred Seals",
+    "items": [
+     "Finger Seal",
+     "Erdtree Seal",
+     "Golden Order Seal",
+     "Gravel Stone Seal",
+     "Giant's Seal",
+     "Godslayer's Seal",
+     "Clawmark Seal",
+     "Frenzied Flame Seal",
+     "Dragon Communion Seal",
+     "Dryleaf Seal",
+     "Fire Knight's Seal",
+     "Spiraltree Seal"
+    ]
+   },
+   {
+    "name": "Torches",
+    "items": [
+     "Torch",
+     "Beast-Repellent Torch",
+     "Steel-Wire Torch",
+     "Sentry's Torch",
+     "Ghostflame Torch",
+     "St. Trina's Torch",
+     "Torchpole",
+     "Lamenting Visage",
+     "Nanaya's Torch"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "shl",
+  "t": "Shields",
+  "g": [
+   {
+    "name": "Small Shields",
+    "items": [
+     "Rickety Shield",
+     "Riveted Wooden Shield",
+     "Blue-White Wooden Shield",
+     "Scripture Wooden Shield",
+     "Red Thorn Roundshield",
+     "Pillory Shield",
+     "Buckler",
+     "Iron Roundshield",
+     "Gilded Iron Shield",
+     "Man-Serpent's Shield",
+     "Ice Crest Shield",
+     "Rift Shield",
+     "Perfumer's Shield",
+     "Shield of the Guilty",
+     "Spiralhorn Shield",
+     "Smoldering Shield",
+     "Coil Shield",
+     "Smithscript Shield",
+     "Shield of Night"
+    ]
+   },
+   {
+    "name": "Medium Shields",
+    "items": [
+     "Hawk Crest Wooden Shield",
+     "Horse Crest Wooden Shield",
+     "Candletree Wooden Shield",
+     "Flame Crest Wooden Shield",
+     "Marred Wooden Shield",
+     "Sun Realm Shield",
+     "Round Shield",
+     "Large Leather Shield",
+     "Black Leather Shield",
+     "Marred Leather Shield",
+     "Heater Shield",
+     "Blue Crest Heater Shield",
+     "Red Crest Heater Shield",
+     "Beast Crest Heater Shield",
+     "Inverted Hawk Heater Shield",
+     "Eclipse Crest Heater Shield",
+     "Kite Shield",
+     "Blue-Gold Kite Shield",
+     "Scorpion Kite Shield",
+     "Twinbird Kite Shield",
+     "Brass Shield",
+     "Messmer Soldier Shield",
+     "Banished Knight's Shield",
+     "Wolf Crest Shield",
+     "Serpent Crest Shield",
+     "Albinauric Shield",
+     "Beastman's Jar-Shield",
+     "Carian Knight's Shield",
+     "Silver Mirrorshield",
+     "Great Turtle Shell",
+     "Golden Lion Shield"
+    ]
+   },
+   {
+    "name": "Greatshields",
+    "items": [
+     "Wooden Greatshield",
+     "Lordsworn's Shield",
+     "Briar Greatshield",
+     "Spiked Palisade Shield",
+     "Icon Shield",
+     "Golden Beast Crest Shield",
+     "Manor Towershield",
+     "Crossed-Tree Towershield",
+     "Inverted Hawk Towershield",
+     "Dragon Towershield",
+     "Distinguished Greatshield",
+     "Gilded Greatshield",
+     "Cuckoo Greatshield",
+     "Redmane Greatshield",
+     "Golden Greatshield",
+     "Haligtree Crest Greatshield",
+     "Black Steel Greatshield",
+     "Crucible Hornshield",
+     "Dragonclaw Shield",
+     "Fingerprint Stone Shield",
+     "Eclipse Crest Greatshield",
+     "Ant's Skull Plate",
+     "Erdtree Greatshield",
+     "Jellyfish Shield",
+     "Visage Shield",
+     "One-Eyed Shield",
+     "Verdigris Greatshield"
+    ]
+   },
+   {
+    "name": "Thrusting Shields",
+    "dlc": 1,
+    "items": [
+     "Dueling Shield",
+     "Carian Thrusting Shield"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "arm",
+  "t": "Armor Sets",
+  "n": "156 sets. Tick a set when you hold every piece of it — several sets are missing a helm or gauntlets by design.",
+  "g": [
+   {
+    "name": "All sets",
+    "items": [
+     "Alberich's Set",
+     "Albinauric Set",
+     "All-Knowing Set",
+     "Ansbach's Set",
+     "Aristocrat Set",
+     "Ascetic's Set",
+     "Astrologer Set",
+     "Azur's Glintstone Set",
+     "Bandit Set",
+     "Banished Knight Set",
+     "Battlemage Set",
+     "Beast Champion Set",
+     "Black Knife Set",
+     "Black Knight Set",
+     "Blackflame Monk Set",
+     "Blaidd's Set",
+     "Bloodhound Knight Set",
+     "Bloodsoaked Set",
+     "Blue Cloth Set",
+     "Blue Festive Set",
+     "Blue Silver Set",
+     "Briar Set",
+     "Bull-Goat Set",
+     "Carian Knight Set",
+     "Chain Set",
+     "Champion Set",
+     "Cleanrot Set",
+     "Common Soldier Set",
+     "Commoner's Set",
+     "Confessor Set",
+     "Consort's Set",
+     "Crucible Axe Set",
+     "Crucible Tree Set",
+     "Cuckoo Knight Set",
+     "Dancer's Set",
+     "Dane's Set",
+     "Death Knight Set",
+     "Depraved Perfumer Set",
+     "Divine Beast Warrior Set",
+     "Divine Bird Warrior Set",
+     "Drake Knight Set",
+     "Duelist Set",
+     "Eccentric's Set",
+     "Elden Lord Set",
+     "Errant Sorcerer Set",
+     "Exile Set",
+     "Festive Set",
+     "Fia's Set",
+     "Finger Maiden Set",
+     "Fingerprint Set",
+     "Fire Knight Set",
+     "Fire Monk Set",
+     "Fire Prelate Set",
+     "Freyja's Set",
+     "Fur Set",
+     "Gaius's Set",
+     "Gelmir Knight Set",
+     "Godrick Foot Soldier Set",
+     "Godrick Knight Set",
+     "Godrick Soldier Set",
+     "Godskin Apostle Set",
+     "Godskin Noble Set",
+     "Goldmask's Set",
+     "Gravebird Set",
+     "Guardian Set",
+     "Guilty Set",
+     "Haligtree Foot Soldier Set",
+     "Haligtree Knight Set",
+     "Haligtree Soldier Set",
+     "High Page Set",
+     "High Priest Set",
+     "Highland Warrior Set",
+     "Highwayman Set",
+     "Horned Warrior Set",
+     "Hornsent Set",
+     "Hoslow's Set",
+     "Igon's Set",
+     "Iron Rivet Set",
+     "Iron Set",
+     "Juvenile Scholar Set",
+     "Kaiden Set",
+     "Knight Set",
+     "Land of Reeds Set",
+     "Lazuli Sorcerer Set",
+     "Leather Set",
+     "Leyndell Foot Soldier Set",
+     "Leyndell Knight Set",
+     "Leyndell Soldier Set",
+     "Lionel's Set",
+     "Lusat's Set",
+     "Malenia's Set",
+     "Malformed Dragon Set",
+     "Maliketh's Set",
+     "Marais Set",
+     "Marionette Soldier Set",
+     "Mausoleum Foot Soldier Set",
+     "Mausoleum Knight Set",
+     "Mausoleum Soldier Set",
+     "Messmer Soldier Set",
+     "Messmer's Set",
+     "Mushroom Set",
+     "Night Maiden Set",
+     "Night Set",
+     "Night's Cavalry Set",
+     "Noble's Traveling Set",
+     "Nomadic Merchant's Set",
+     "Nox Monk Set",
+     "Nox Swordstress Set",
+     "Oathseeker Knight Set",
+     "Old Aristocrat Set",
+     "Omen Set",
+     "Omenkiller Set",
+     "Page Set",
+     "Perfumer's Set",
+     "Perfumer's Traveling Set",
+     "Preceptor's Set",
+     "Prisoner Set",
+     "Prophet Set",
+     "Queen's Set",
+     "Radahn Foot Soldier Set",
+     "Radahn Soldier Set",
+     "Radahn's Set",
+     "Raging Wolf Set",
+     "Rakshasa Set",
+     "Raptor's Set",
+     "Raya Lucaria Foot Soldier Set",
+     "Raya Lucaria Soldier Set",
+     "Raya Lucaria Set",
+     "Redmane Knight Set",
+     "Rellana's Set",
+     "Ronin's Set",
+     "Rotten Duelist Set",
+     "Royal Knight Set",
+     "Royal Remains Set",
+     "Ruler's Set",
+     "Sage Set",
+     "Sanguine Noble Set",
+     "Scaled Set",
+     "Shadow Militiaman Set",
+     "Shaman Set",
+     "Snow Witch Set",
+     "Solitude Set",
+     "Spellblade's Set",
+     "Thiollier's Set",
+     "Traveler's Set",
+     "Traveling Maiden Set",
+     "Tree Sentinel Set",
+     "Twinned Set",
+     "Vagabond Knight Set",
+     "Verdigris Set",
+     "Veteran's Set",
+     "Vulgar Militia Set",
+     "War Surgeon Set",
+     "White Reed Set",
+     "Young Lion's Set",
+     "Zamor Set"
+    ]
+   }
+  ]
+ }
+]

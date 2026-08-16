@@ -78,16 +78,18 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 |-------------------|--------------------------------------------------------|-----------------|---------------------|
 | `pod042`          | Main laptop                                            | `limine`        | `neburion`          |
 | `home-server`     | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
-| `personal-server` | Headless personal server: my own self-hosted services  | `systemd-boot`  | `server-admin`      |
+| `personal-server` | Headless personal server: Elden Ring tracker           | `systemd-boot`  | `server-admin`      |
 | `installer`       | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
 
 `home-server` and `personal-server` are the same *class* of machine (old laptop,
 headless, `server-admin`, always-on) split by *audience*: the family depends on
 one, so it stays boring; the other is mine to break. Per the fleet principle
 neither depends on the other — the split is about blast radius, not topology.
-`personal-server` currently declares no services; it's a skeleton with the
-Cloudflare tunnel wiring pre-attached so exposing something later is one line in
-its `cloudflare-layout.nix`.
+`personal-server` runs one service so far, the Elden Ring tracker, reachable at
+`http://personal-server:8777` from anywhere on the tailnet. Its Cloudflare tunnel
+wiring stays pre-attached but unused, so exposing something publicly later is one
+line in its `cloudflare-layout.nix` — plus an Access policy, because the tracker
+has no auth of its own.
 
 ### The `installer` host
 
@@ -116,6 +118,11 @@ bluetooth.nix
 flatpak.nix
 power-profiles.nix
 always-on.nix            keep host awake: no lid handling, no sleep targets
+
+elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracker
+                         + web UI on :8777, tailnet-only firewall rule; seed.py
+                         runs as ExecStartPre and migrates the DB in place,
+                         re-attaching progress by natural key)
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend
