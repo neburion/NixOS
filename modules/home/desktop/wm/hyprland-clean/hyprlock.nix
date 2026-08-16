@@ -66,7 +66,6 @@ let
         check_color       = ${hex t.fg "ff"}
         fail_color        = rgba(cc4444ff)
         fail_text         = AUTHENTICATION FAILED
-        fail_transition   = 200
         placeholder_text  =
         dots_size         = 0.22
         dots_spacing      = 0.20
