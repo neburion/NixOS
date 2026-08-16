@@ -20,8 +20,14 @@ in
         [[ ! -b "$DEVICE" ]] && { printf 'Error: %s is not a block device\n' "$DEVICE"; exit 1; }
 
         printf 'Building NixOS installer ISO (this may take a while)...\n'
+        # --refresh forces nix to re-fetch the flake source (bypasses the
+        # 1-hour tarball cache) so a `git push` immediately followed by
+        # `nixflash` uses the just-pushed commit. Same reasoning as rebuild.
+        # Without it, nix reuses its cached ref→revision resolution and can
+        # silently build the PREVIOUS HEAD, printing a perfectly normal
+        # "Built: ..." line for an ISO that predates the change you just made.
         ISO_DIR=$(nix build "${cloudFlake}#nixosConfigurations.installer.config.system.build.isoImage" \
-          --no-link --print-out-paths)
+          --refresh --no-link --print-out-paths)
 
         # Glob rather than `ls` so a filename with spaces can't split, and so
         # an empty result is caught explicitly instead of yielding "$ISO_DIR/iso/".
