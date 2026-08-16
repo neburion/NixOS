@@ -32,15 +32,42 @@ rec {
     done
   '';
 
-  # Warns if the local repo has commits ahead of origin/master. Doesn't
-  # block — you might have uncommitted-but-intentional dev config that
-  # you meant to deploy via trebuild. Just makes it visible.
-  warnIfLocalAhead = ''
+  # Warns when the local repo differs from what `rebuild` actually deploys
+  # (origin/master). There are two independent ways to diverge — a dirty
+  # working tree and unpushed commits — and only the second used to be
+  # checked. So editing a file and running `rebuild` deployed the cloud
+  # version silently, with a fresh store path and a convincing "Done."
+  #
+  # Doesn't block: you may knowingly redeploy the cloud version while
+  # carrying unrelated local dev config. It just can't be missed anymore.
+  #
+  # `sed -n '1,10p'` rather than `head -10` on purpose: head closes the pipe
+  # early, which under `set -o pipefail` surfaces as SIGPIPE (141) and trips
+  # errexit. sed drains stdin, so the pipeline always exits 0.
+  warnIfLocalDiverged = ''
     if [[ -d "$HOME/NixOS/.git" ]]; then
+      diverged=0
+
+      dirty=$(git -C "$HOME/NixOS" status --porcelain 2>/dev/null || true)
+      if [[ -n "$dirty" ]]; then
+        diverged=1
+        echo "⚠ ~/NixOS has uncommitted changes:" >&2
+        echo "$dirty" | sed -n '1,10{s/^/      /;p;}' >&2
+        extra=$(( $(echo "$dirty" | wc -l) - 10 ))
+        if [[ "$extra" -gt 0 ]]; then
+          echo "      … and $extra more" >&2
+        fi
+      fi
+
       ahead=$(git -C "$HOME/NixOS" rev-list --count '@{upstream}..HEAD' 2>/dev/null || echo 0)
       if [[ "$ahead" -gt 0 ]]; then
-        echo "⚠ Local ~/NixOS is $ahead commit(s) ahead of origin — rebuild deploys the CLOUD version" >&2
-        echo "  (use \`trebuild\` if you want your local uncommitted changes deployed)" >&2
+        diverged=1
+        echo "⚠ ~/NixOS has $ahead unpushed commit(s)." >&2
+      fi
+
+      if [[ "$diverged" -eq 1 ]]; then
+        echo "  → rebuild deploys ${cloudFlake} — the above is NOT included." >&2
+        echo "    Use \`trebuild\` to deploy locally, or commit and push first." >&2
       fi
     fi
   '';

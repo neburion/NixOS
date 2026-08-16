@@ -44,9 +44,20 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 
 ### Operating rules (for me, Claude)
 
-- **Test every change.** After editing anything under this tree, run `rebuild` (the bash wrapper in `modules/home/cli/nixos-scripts/`, on PATH as `/etc/profiles/per-user/neburion/bin/rebuild`). Don't hand off untested work.
+- **Test every change with `trebuild`, not `rebuild`.** After editing anything under this tree, run `trebuild` (the bash wrappers live in `modules/home/cli/nixos-scripts/`, on PATH under `/etc/profiles/per-user/neburion/bin/`). Don't hand off untested work. See the next rule for why `rebuild` is the wrong tool here.
+- **`rebuild` deploys the CLOUD, so push before you rebuild.** As of commit 4c57131 the two scripts read from different places, and this is the single easiest way to think a change landed when it didn't:
+
+  | Script | Flake source | Sees uncommitted edits? |
+  |---|---|---|
+  | `trebuild` | `path:$HOME/NixOS` | **Yes** — local working tree |
+  | `rebuild` | `github:neburion/NixOS` | **No** — origin/master only |
+
+  So `rebuild` only deploys work that is **committed *and* pushed**. Local edits that are merely committed are just as invisible as uncommitted ones. Either `git push` first, or use `trebuild`.
+
+  `warnIfLocalDiverged` in `nixos-scripts/lib.nix` guards this: it checks a dirty working tree (`git status --porcelain`) *and* unpushed commits (`git rev-list --count '@{upstream}..HEAD'`), listing the offending files. It warns, it doesn't block — you may knowingly redeploy the cloud version while carrying unrelated dev config.
+
+  Until 2026-08-15 it only checked the second condition, so a dirty tree scored 0 and passed silently — `rebuild` printed a fresh store path and `Done.` while deploying the cloud version, a wholly convincing success message for a no-op. The lesson outlives the fix: **`Done.` is not proof.** Verify the generated artifact (e.g. `grep` the value you changed in `~/.config/hypr/hyprland.conf`). Both scripts pass `--refresh` to bypass nix's 1-hour tarball cache, so `git push && rebuild` does pick up the just-pushed commit.
 - **Research online when in doubt.** If a NixOS option, home-manager module, or upstream package behavior isn't obvious, look it up (WebSearch / WebFetch) before committing. Two failed attempts at the same problem means stop and search.
-- **`path:` scheme, not github URL.** The scripts already hardcode `path:$HOME/NixOS#$(hostname -s)`. As of 2026-07-19 both pod042 and home-server have their hardware-config committed, so `github:...` is technically safe now — but `path:` remains preferred (picks up uncommitted local edits, no round-trip to GitHub).
 - **Remote deploys to any host.** `rebuild <hostname>` from any fleet workstation: uses `nixos-rebuild --target-host` over SSH, no rsync. Fleet SSH config (modules/system/networking/ssh.nix) maps hostnames to `server-admin` for server-class hosts. Passwordless wheel on servers means non-interactive activation.
 
 ## Entry points
@@ -119,7 +130,7 @@ cli/                     shell/fish, neovim/*, btop, tree, fastfetch, superfile,
 cli/ai/                  claude-code (pinned to pkgs.unstable via flake overlay)
 cli/nixos-scripts/       one script per file — rebuild, trebuild, update,
                          nixflash. lib.nix holds the shared shell fragments
-                         (cloudFlake, pre-rebuild hook loop, ahead-of-origin
+                         (cloudFlake, pre-rebuild hook loop, local-diverged
                          warning); it is a plain function, not a module.
 cli/packager/            flatpak
 
@@ -130,7 +141,7 @@ desktop/theming/gtk/     per-theme GTK packages + config/dconf/glib/css
 desktop/clipboard/       wl-clipboard
 desktop/terminal/        ghostty
 desktop/tray-apps/       libnotify (nm-applet/blueman replaced by native quickshell widgets)
-desktop/presets/         aggregator presets — clean.nix (NieR sepia
+desktop/presets/         aggregator presets — clean.nix (sepia terminal
                          rice), simple.nix (plain quickshell),
                          hyprland-minimal.nix (waybar legacy/fallback)
 desktop/bar/quickshell/  Bar, BarClock, BarWorkspaces, BarBattery, BarHardwareGroup,

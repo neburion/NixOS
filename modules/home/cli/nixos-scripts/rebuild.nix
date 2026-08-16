@@ -4,13 +4,13 @@
 
 let
   inherit (import ./lib.nix { inherit osConfig; })
-    cloudFlake runHooks warnIfLocalAhead;
+    cloudFlake runHooks warnIfLocalDiverged;
 in
 {
   home.packages = [
     (pkgs.writeShellApplication {
       name = "rebuild";
-      runtimeInputs = with pkgs; [ nixos-rebuild nettools openssh git ];
+      runtimeInputs = with pkgs; [ nixos-rebuild nettools openssh git coreutils gnused ];
       text = ''
         # Prime sudo BEFORE running hooks — hooks (e.g. cf-reconcile) shell out
         # to `sudo sops --decrypt` for reading the age key, and need the cached
@@ -18,7 +18,7 @@ in
         # cache survives the subshell (see modules/system/security/sudo.nix).
         sudo -Sv
 
-        ${warnIfLocalAhead}
+        ${warnIfLocalDiverged}
         ${runHooks}
 
         # First non-flag arg (if any) is treated as a target hostname.
