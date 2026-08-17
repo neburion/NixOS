@@ -1,182 +1,194 @@
 # Reading tracker
 
-A web UI over the **Reading-Ob** Obsidian vault. Stdlib Python only — no Flask,
-no pip, and no database.
+SQLite + a small web UI. Stdlib Python only — no Flask, no pip.
 
-Deployed by `service.nix` on `pod042`: **http://pod042:8778**, tailnet only.
-See the module tree entry in `ARCHITECTURE.md`.
+Deployed by `service.nix` on `personal-server`: **http://personal-server:8778**,
+tailnet only. See the module tree entry in `ARCHITECTURE.md`.
 
-## The one decision everything else follows from
-
-**The vault is the database.** There is no SQLite mirror. `vault.py` reads and
-writes the YAML frontmatter of the notes under `Series/` in place, so this app
-and Obsidian are looking at the same bytes. A second store would need syncing,
-and two sources of truth for a reading list means one of them is wrong.
-
-That is what makes this different from `elden-ring-tracker`, which owns its
-data and seeds it from `seed.json`. Here the data is somebody else's — 300
-notes written by hand over years — and the app is a guest in it.
-
-Three consequences:
-
-- **It runs on `pod042`,** because that is where the vault is and where Obsidian
-  edits it. Putting it on a server would mean a copy.
-- **It runs as `neburion`,** because the notes are that user's files.
-  `ProtectHome` is therefore off, and the vault is the only writable path the
-  unit is granted.
-- **Writes are surgical.** Setting a field splices the lines for that one
-  frontmatter key. Every other byte survives: unknown keys, key order, comments,
-  blank lines, the note body, and whether the file ends with a newline.
+300 series, 13,316 chapters, imported once from the **Reading-Ob** Obsidian
+vault on pod042.
 
 ## Files
 
 | file | what it is |
 |---|---|
 | `service.nix` | systemd unit, cover-warming timer, tailnet firewall rule |
-| `vault.py` | the storage layer — frontmatter parser, surgical writer |
-| `app.py` | HTTP server, JSON API, cover cache |
+| `schema.sql` | tables, views, FTS5 index |
+| `seed.json` | the 300-series origin snapshot |
+| `seed.py` | builds the database; **additive**, never overwrites your edits |
+| `app.py` | HTTP server + JSON API + cover cache |
 | `ui.html` | the UI |
+| `import-vault.py` | hand-run, one-way: Obsidian vault → `seed.json` |
 
-## Not clobbering Obsidian
+## The vault is gone from the loop
 
-Two editors on one file needs an answer, and "last write wins" is not it.
+`seed.json` was produced once by `import-vault.py` reading
+`~/Media/Books/Reading-Ob` on pod042. That is a **snapshot, not a link**:
 
-Every write **re-reads the note immediately beforehand** and applies only the
-fields that request changed. An edit made in Obsidian between the page loading
-and the Save landing is merged rather than overwritten. The page also re-reads
-the whole vault whenever the tab regains focus.
+- The vault is not a dependency of this service. It lives on a laptop; this runs
+  on a server, and it works with that laptop shut.
+- Edits made here **do not travel back** to the markdown notes.
+- Edits made in Obsidian **do not arrive here** unless you re-run
+  `import-vault.py`, and even then only as *new* series (see below).
 
-A field whose value did not actually change is **never written**. `Rating: 3.0`
-and `Rating: 3` are the same rating, and normalising one into the other would
-have put a diff into 90 notes the first time anything saved. This also leaves
-mtimes alone, which keeps syncthing and the index cache quiet.
+So pick one. Keeping both is how you end up with two half-right shelves.
+`import-vault.py` is deliberately read-only — there is no write path in the
+file — so the direction of travel cannot be got wrong by accident.
 
-The parser understands a deliberately small subset of YAML — `Key: scalar`, and
-`Key:` followed by `  - item` lines — which is all 300 notes use. It is not a
-general YAML implementation and does not need to be, because it never
-re-serialises a document: it only ever replaces the lines belonging to one key.
-Anything it does not recognise is passed through untouched and surfaced in the
-UI read-only under **Other frontmatter**.
+## Seeding is additive
 
-Both spellings of the tag key are handled. Forty-three notes use `tags:` and the
-rest use `Tags:`; a note keeps whichever it already has.
+`seed.py` runs as `ExecStartPre` on every start, like the Elden Ring tracker's
+seeder, but it does a different job.
 
-## Deleting
+There, `seed.json` is the game's reference checklist: the reference tables are
+dropped and rebuilt every start, and only your ticks are preserved. Here
+everything in `seed.json` — chapter, rating, status — *is* the mutable state the
+app exists to edit. Rebuilding it on every start would hand back the reading you
+did last week.
 
-`POST /api/delete` moves the note to the vault's `.trash/`, which is Obsidian's
-own convention, so it is recoverable from inside Obsidian. Nothing here unlinks
-a file.
+| seed entry | what happens |
+|---|---|
+| never imported before | inserted, and recorded in `seed_applied` |
+| already imported | skipped, whatever became of it |
+| not from `seed.json` at all | left completely alone |
+
+**Why `seed_applied` exists.** The obvious version of an additive seeder asks
+"is this title already in `series`?" — and it is wrong, because a title is not
+stable. Rename a series in the app and the next restart sees its original title
+missing and imports it a second time, so a duplicate quietly appears after a
+reboot. Delete one on purpose and it comes back. Recording what was imported
+instead of inferring it closes both holes; the key is the title *as it appears
+in `seed.json`*, which never changes because that file is in the read-only
+store.
+
+Verified: rename one series and delete another, re-seed twice, and the count
+stays at 299 with neither resurrected. A hand-made series that happens to share
+a seeded title is adopted rather than duplicated.
+
+`--force-import` re-applies `seed.json` over the rows it originally created.
+The vocabularies are the one thing upserted every start, so fixing an ordering
+or adding a status is an edit and a redeploy.
+
+## What the database buys
+
+The vault could only ever describe the present: one note per series, each
+frontmatter key overwritten in place. Two things follow from owning a real
+schema.
+
+**History.** `reading_log` and `status_log` append on every chapter and status
+change, so the shelf can answer *what have I actually been reading lately* —
+which the notes threw away every time it was answered. The **history** view and
+the "this week / this month" figures come from there.
+
+**Integrity.** Status, publication and medium are three closed vocabularies with
+foreign keys rather than free text, which is how the vault ended up with one
+note reading `Publication Status: Hold` where every other says Hiatus. Tags are
+a real many-to-many, so merging two spellings is one `UPDATE` on the join table
+instead of rewriting eleven files.
+
+One check is deliberately loose. **Mushoku Tensei is rated −10.** That is not
+corrupt data, it is an opinion, and clamping it to fit a 0–10 scale would be
+editing a verdict to suit a schema — so the range admits it and the UI slider
+goes down to −10.
 
 ## Tag spellings
 
-The vault has the same tag in more than one form — `HunterFantasy` and
-`Hunter Fantasy`, `SchoolLife` and `School Life`, `Video Game` and `VideoGame`.
-They mean one thing and filter as two.
+The vault was hand-written over years, so the same tag arrived in more than one
+form: `HunterFantasy` / `Hunter Fantasy`, `SchoolLife` / `School Life`,
+`Video Game` / `VideoGame`. They mean one thing and filter as two.
 
-Merging them automatically would edit notes nobody asked to edit, so the
-**Tags** view surfaces them as a suggestion and the merge is a button press.
-It rewrites only the notes carrying the losing spelling — verified: merging
-`Hunter Fantasy` touched 11 notes, one line each, and left the other 289 byte
-for byte identical.
-
-`tag_key()` decides what counts as the same tag: case-folded, with everything
-non-alphanumeric removed.
+Folding them automatically would decide for you which spelling was the mistake,
+so the **Tags** view surfaces them and the merge is a button press. `tag_key()`
+decides what counts as the same tag: case-folded, non-alphanumerics stripped.
+The merge inserts before it deletes, because a series carrying *both* spellings
+has to end up with one row rather than a primary-key violation.
 
 ## Cover artwork
 
-The `Cover` values are DuckDuckGo image-proxy URLs pointing at a dozen
-different hosts. Hotlinking 300 of them on every page load is slow, leaks the
-shelf to whoever is on the other end, and breaks the day a host disappears.
+The cover URLs came across from the vault as DuckDuckGo image-proxy links
+pointing at a dozen hosts. Hotlinking 300 of them on every page load is slow,
+leaks the shelf to whoever is on the other end, and breaks the day a host
+disappears — so each is cached under `/var/lib/reading-tracker/covers/`, keyed
+by a hash of the URL. Change a series' cover and the key changes with it, so
+there is no cache to bust.
 
-So the server caches each one under `/var/lib/reading-tracker/covers/`, keyed by
-a hash of the URL — which means changing a note's `Cover` changes the key, and
-the new image is fetched with no cache to bust. Unlike `elden-ring-tracker`'s
-`icons/`, this is **not** committed: the covers are a property of the vault,
-not of this repo, and the vault is not in git.
+Unlike `elden-ring-tracker`'s `icons/`, these are **not committed**: they are
+artwork for whatever happens to be on this shelf, not a fixed reference set.
 
-**180 of the 213 notes that have a `Cover` resolve. 33 do not**, and are not
-worth engineering around — the hosts are gone or have started refusing
-hotlinks. Those cards draw a tinted plate with the title set on it, the tint
-derived from the title itself so a book still looks like itself. The other 87
-notes have no `Cover` at all and get the same treatment.
+**180 of the 213 series with a cover resolve. 33 do not**, and are not worth
+engineering around — those hosts are gone or have started refusing hotlinks.
+Those cards draw a tinted plate with the title set on it, the tint derived from
+the title so a book still looks like itself. The 87 series with no cover at all
+get the same treatment.
 
-Two cheap recoveries are attempted before giving up. A `Referer` of
-`duckduckgo.com` satisfies their proxy in some cases; and when the proxy returns
-400 because its `ipt` signature has expired, the real image URL is sitting in
-the `u=` query parameter, so `unproxy()` pulls it out and fetches that instead.
-Expect the second path to matter more over time as more signatures age out.
+Two cheap recoveries run before giving up: a `Referer` of `duckduckgo.com`
+satisfies their proxy sometimes, and when the proxy returns 400 because its
+`ipt` signature has expired, the real image URL is sitting in the `u=` query
+parameter, so `unproxy()` fetches that instead. Expect the second to matter more
+over time as signatures age out.
 
 Failures are remembered for six hours so a dead host is not retried on every
 page load. `reading-tracker-covers.timer` warms the cache three minutes after
-boot and weekly after that, purely so the first page load is not the slow one.
+boot and weekly after, purely so the first page load is not the slow one.
+
+## Where the data lives
+
+`/var/lib/reading-tracker/reading.db` — a `StateDirectory`, so it survives
+deploys and reboots. The covers beside it are a cache and cost one re-download
+each.
+
+Back it up with the export, which is keyed on title rather than row id and so
+survives a rebuilt database:
+
+```bash
+curl -su reader:PASSWORD 'http://personal-server:8778/api/export' > reading-backup.json
+```
 
 ## Running it from a checkout
 
-Paths fall back to sensible defaults, so a plain checkout works with no
+Paths fall back to beside the script, so a plain checkout works with no
 arguments:
 
 ```bash
 cd modules/system/reading-tracker
-python3 app.py --open          # 127.0.0.1:8778, vault at ~/Media/Books/Reading-Ob
-python3 app.py --stats         # print the shelf and exit
-python3 app.py --warm-covers   # fetch every cover, then exit
-python3 app.py --vault /path/to/a/copy
+python3 seed.py && python3 app.py --open   # 127.0.0.1:8778, db in this directory
+python3 app.py --stats                     # print the shelf and exit
+python3 app.py --warm-covers
 ```
 
-Overrides: `RT_VAULT`, `RT_UI`, `RT_FONTS`, `RT_CACHE`, `RT_HOST`, `RT_PORT`,
-`RT_USERNAME`, `RT_PASSWORD`.
+Overrides: `RT_DB`, `RT_SEED`, `RT_SCHEMA`, `RT_UI`, `RT_FONTS`, `RT_CACHE`,
+`RT_HOST`, `RT_PORT`, `RT_USERNAME`, `RT_PASSWORD`.
 
-`reading-tracker` is also on `PATH` system-wide, so `reading-tracker --stats`
-works from any terminal on `pod042`.
-
-**Point it at a copy before testing anything that writes.** `--vault` exists for
-exactly that.
+`reading-tracker --stats` is also on `PATH` on the host.
 
 ## API
 
 | method | path | body / query |
 |---|---|---|
-| GET | `/api/library` | every series, plus stats, meta and the tag report |
-| GET | `/api/export` | the series list alone |
-| GET | `/api/note?name=…` | the raw markdown of one note |
-| POST | `/api/update` | `{name, fields}` — partial; returns which fields changed |
-| POST | `/api/bump` | `{name, by, resume}` — chapter +1, optionally un-shelving it |
-| POST | `/api/create` | `{name, fields}` — writes a new note |
-| POST | `/api/rename` | `{name, to}` — renames the file |
-| POST | `/api/delete` | `{name}` — moves it to `.trash/` |
-| POST | `/api/tags/merge` | `{from:[…], to}` |
+| GET | `/api/library` | every series, plus stats, vocabularies, tags, history |
+| GET | `/api/search?q=…` | FTS5 prefix search over title, tags, type, notes |
+| GET | `/api/history` | the last 200 chapter changes |
+| GET | `/api/export` | portable JSON keyed on title |
+| POST | `/api/update` | `{id, fields}` — partial; returns which fields changed |
+| POST | `/api/bump` | `{id, by, resume}` — chapter +1, optionally un-shelving it |
+| POST | `/api/create` | `{title, fields}` |
+| POST | `/api/delete` | `{id}` — cascades tags and both logs |
+| POST | `/api/tags/merge` | `{from:[tag ids], to: tag id}` |
 
-`name` is the note's filename without `.md`. It is resolved against `Series/`
-and anything that escapes that directory is refused, so `../../etc/passwd` is a
-400 rather than a write.
-
-## What the UI shows that Obsidian's card view cannot
-
-`Reading.base` already gives cards per status. The two things worth opening this
-for instead:
-
-- **A `+` on every cover.** One click is a chapter read and a note written. If
-  the series was on Hold or Later it moves to Reading in the same click, with an
-  Undo in the toast.
-- **Two lists derived from the pair of status fields.** *Shelved, and now
-  complete* — 42 series you put down while they were still running that have
-  since finished, so there is an ending waiting. And *on hold, still publishing*
-  — 77 where the author never stopped and chapters have piled up.
+A field whose value did not change is not written and does not appear in
+`changed`, so the logs record real edits rather than every Save.
 
 ## Security
 
 HTTP Basic Auth, on whenever a password is present — the systemd credential
-`password` (the `reading-tracker-password` sops secret, in `secrets/pod042.yaml`)
-or `$RT_PASSWORD`. Without one the app refuses to bind anything but loopback, so
-a misconfigured deploy fails to start rather than putting a vault-editing API on
-the network.
-
-The username is `reader` and lives in `service.nix`, since it is not a secret.
+`password` (the `reading-tracker-password` sops secret in
+`secrets/personal-server.yaml`) or `$RT_PASSWORD`. Without one the app refuses
+to bind anything but loopback, so a misconfigured deploy fails to start rather
+than putting a writable API on the network. The username is `reader` and lives
+in `service.nix`, since it is not a secret.
 
 That is a second gate, not the only one: the `tailscale0`-scoped firewall rule
-in `service.nix` limits who can reach :8778. That matters more here than on a
-server — `pod042` is a laptop and joins whatever wifi it is pointed at, so the
-port is deliberately not opened on the LAN.
-
-This is the first thing in `secrets/pod042.yaml`; before it, `pod042` had no
-host secrets file at all.
+in `service.nix` limits who can reach :8778. Unlike the Elden Ring tracker this
+has **no public hostname** — no Cloudflare tunnel, no Access policy to forget.
+If it ever gets one, cloudflared reaches it over loopback and needs no firewall
+rule, and the Basic Auth gate is what would stand behind a missing policy.

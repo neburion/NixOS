@@ -1,33 +1,27 @@
 { config, pkgs, ... }:
 
-# Reading tracker — a web UI over the Reading-Ob Obsidian vault, on :8778,
-# reachable over the tailnet.
+# Reading tracker — SQLite + a small web UI on :8778, tailnet only.
 #
-# Stdlib Python only: no Flask, no pip, and no database. The vault's markdown
-# notes *are* the database — vault.py reads and writes their frontmatter in
-# place. That is the whole design decision here and it drives everything else:
+# Stdlib Python only: no Flask, no pip. `sqlite3` ships with pkgs.python3 and
+# nixpkgs builds it with FTS5, which the search endpoint needs. Same shape as
+# elden-ring-tracker, deliberately: schema.sql + seed.json + seed.py as an
+# ExecStartPre, app.py serving the API, ui.html as the UI.
 #
-#   * It runs on pod042 rather than a server, because pod042 is where the vault
-#     is and where Obsidian edits it. A copy on personal-server would be a
-#     second source of truth, and two sources of truth for a reading list means
-#     one of them is wrong.
-#   * It runs as `neburion`, not a system user, because the notes are that
-#     user's files. ProtectHome is therefore off and the vault is the only
-#     writable path granted.
-#   * Writes are surgical and merge-on-write, so having the app and Obsidian
-#     open at once is fine.
+# One important difference from that module. There, seed.json is the game's
+# reference checklist, so the seeder drops and rebuilds the reference tables on
+# every start and only your ticks are preserved. Here seed.json is a snapshot of
+# an Obsidian vault, and *everything* in it — chapter, rating, status — is the
+# mutable state the app exists to edit. So seeding is additive and keyed on
+# title: new titles are inserted, existing rows are never touched. First start
+# imports 300 series; every start after that is a no-op.
 #
-# The only state it owns is the cover-image cache, which is derived data and
-# safe to lose.
+# Store vs. state. app.py/seed.py/seed.json live in the read-only store; the
+# database and the cover cache do not. Both read RT_* from the environment and
+# fall back to paths next to the script, so the same files run straight out of a
+# git checkout with no arguments.
 
 let
   port = 8778;
-
-  # The vault. A host fact rather than a behaviour knob — this module exists to
-  # serve this directory, and a second vault would be a second import.
-  vault = "/home/neburion/Media/Books/Reading-Ob";
-
-  user = "neburion";
 
   stateDir = "/var/lib/reading-tracker";
 
@@ -35,9 +29,9 @@ let
 
   # Self-hosted webfonts, converted once at build time. Literata is Google's
   # e-reader typeface and the right serif for a shelf of books; Public Sans
-  # carries the interface and Plex Mono the figures, so chapter counts line up
-  # in a column. nixpkgs ships all three as TTF/OTF only, so compress here and
-  # hand the results out under /fonts/.
+  # carries the interface and Plex Mono the figures, so chapter counts and
+  # ratings line up in a column. No CDN is reachable from a tunnel-only host
+  # anyway, and a default system-sans stack is the loudest "generated page" tell.
   fonts = pkgs.runCommand "reading-tracker-fonts" { } ''
     mkdir -p $out
     lit=${pkgs.literata}/share/fonts/truetype
@@ -60,67 +54,81 @@ let
   '';
 
   env = {
-    RT_VAULT = vault;
+    RT_DB = "${stateDir}/reading.db";
+    RT_SEED = "${src}/seed.json";
+    RT_SCHEMA = "${src}/schema.sql";
     RT_UI = "${src}/ui.html";
     RT_FONTS = "${fonts}";
     RT_CACHE = stateDir;
     RT_HOST = "0.0.0.0";
     RT_PORT = toString port;
-    # The half of the login that is not secret. Its password is the sops
-    # secret below; keeping both halves in one file beats splitting them.
+    # The half of the login that is not secret. Its password is the sops secret
+    # below; keeping both halves in one file beats splitting them across two.
     RT_USERNAME = "reader";
   };
 
-  # `${src}/app.py`, not `${./app.py}`: app.py imports vault.py from beside
-  # itself, so the whole directory has to land in the store, not one file.
+  python = pkgs.python3;
+
+  # `${src}/…`, not `${./app.py}`: app.py imports seed.py from beside itself, so
+  # the whole directory has to land in the store rather than one file.
+  seedDb = pkgs.writeShellApplication {
+    name = "reading-tracker-seed";
+    runtimeInputs = [ python ];
+    text = ''exec python3 ${src}/seed.py "$@"'';
+  };
+
   tracker = pkgs.writeShellApplication {
     name = "reading-tracker";
-    runtimeInputs = [ pkgs.python3 ];
+    runtimeInputs = [ python ];
     text = ''exec python3 ${src}/app.py "$@"'';
   };
 in
 {
+  users.users.reading = {
+    isSystemUser = true;
+    group = "reading";
+  };
+  users.groups.reading = { };
+
   # HTTP Basic Auth password for the UI. Rotate with:
-  #   sops secrets/pod042.yaml   (edit reading-tracker-password)
-  #   git commit && git push && rebuild pod042
+  #   sops secrets/personal-server.yaml   (edit reading-tracker-password)
+  #   git commit && git push && rebuild personal-server
   sops.secrets.reading-tracker-password = {
-    sopsFile = ../../../secrets/pod042.yaml;
+    sopsFile = ../../../secrets/personal-server.yaml;
     mode = "0400";
   };
 
   systemd.services.reading-tracker = {
-    description = "Reading tracker over the Reading-Ob vault";
+    description = "Reading tracker";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
     environment = env;
 
     serviceConfig = {
+      ExecStartPre = "${seedDb}/bin/reading-tracker-seed";
       ExecStart = "${tracker}/bin/reading-tracker";
 
-      # Read as root at unit start and handed to the service at
-      # $CREDENTIALS_DIRECTORY/password after the User= drop — same approach as
-      # the Elden Ring tracker and the print server. Keeps the password out of
-      # the process environment table and sidesteps EnvironmentFile ordering.
+      # Read as root at unit start, handed to the service at
+      # $CREDENTIALS_DIRECTORY/password after the User= drop. Same approach as
+      # the Elden Ring tracker and the print server: avoids EnvironmentFile's
+      # ordering problem and keeps the password out of the process environment.
       LoadCredential = "password:${config.sops.secrets.reading-tracker-password.path}";
 
       Restart = "on-failure";
       RestartSec = "5s";
-      User = user;
-      Group = "users";
+      User = "reading";
+      Group = "reading";
 
-      # Cover cache only. Losing it costs one re-download per image.
+      # Creates and chowns /var/lib/reading-tracker and keeps it across deploys
+      # and reboots. The database is the only thing here worth backing up; the
+      # covers beside it are a cache and cost one re-download each.
       StateDirectory = "reading-tracker";
-      StateDirectoryMode = "0700";
+      StateDirectoryMode = "0750";
 
-      # ProtectHome would hide the very directory this service exists to serve,
-      # so it is off and ProtectSystem=strict does the work instead: the whole
-      # filesystem is read-only except the state directory and the vault. The
-      # blast radius of a bug in app.py is therefore exactly the vault it is
-      # already allowed to edit.
+      # Nothing here touches hardware or other users' files. It does reach the
+      # network, but only outbound, to fetch cover images.
       ProtectSystem = "strict";
-      ProtectHome = false;
-      ReadWritePaths = [ vault ];
-
+      ProtectHome = true;
       PrivateTmp = true;
       PrivateDevices = true;
       NoNewPrivileges = true;
@@ -136,11 +144,11 @@ in
     };
   };
 
-  # Covers are fetched lazily on first view and then cached forever, which
+  # Covers are fetched lazily on first view and cached forever after, which
   # makes exactly one page load slow — the first. This warms the cache instead,
-  # shortly after boot and weekly thereafter to pick up newly added series.
-  # It is a convenience, not a dependency: the service works with it disabled,
-  # switched off, or the image hosts gone.
+  # shortly after boot and weekly thereafter to pick up newly added series. It
+  # is a convenience, not a dependency: the tracker works with it switched off
+  # or with every image host gone, drawing a tinted plate with the title on it.
   systemd.services.reading-tracker-covers = {
     description = "Warm the reading tracker's cover cache";
     after = [ "network-online.target" "reading-tracker.service" ];
@@ -149,11 +157,11 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${tracker}/bin/reading-tracker --warm-covers";
-      User = user;
-      Group = "users";
+      User = "reading";
+      Group = "reading";
       StateDirectory = "reading-tracker";
       ProtectSystem = "strict";
-      ProtectHome = false;
+      ProtectHome = true;
       PrivateTmp = true;
       NoNewPrivileges = true;
       RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
@@ -169,14 +177,13 @@ in
     };
   };
 
-  # `reading-tracker --stats` prints the shelf from a terminal.
+  # `reading-tracker --stats` prints the shelf from a terminal on the host.
   environment.systemPackages = [ tracker ];
 
-  # The listener binds 0.0.0.0 but the port is only opened on tailscale0, so
-  # nothing on the local network can reach it — which matters more here than on
-  # a server, because a laptop joins whatever café wifi it is pointed at. The
-  # Basic Auth gate in app.py is the second layer, and app.py refuses to bind a
-  # non-loopback address without a password, so a credential failure produces a
-  # restart loop rather than an unauthenticated service on a public network.
+  # The listener binds 0.0.0.0, but the only interface the port is opened on is
+  # tailscale0 — nothing on the LAN can reach it. If this ever gets a public
+  # hostname the way eldenring.azuresalt.app did, cloudflared reaches it over
+  # loopback from inside the host and needs no firewall rule at all; the Basic
+  # Auth gate above is what would stand behind a missing Access policy.
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ port ];
 }

@@ -32,7 +32,6 @@
     ../../modules/system/flatpak.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/desktop
-    ../../modules/system/reading-tracker
 
     ../../users/neburion
 
