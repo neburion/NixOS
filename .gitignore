@@ -2,3 +2,6 @@
 notes/.obsidian/workspace.json
 notes/.obsidian/workspace-mobile.json
 result
+
+# Python bytecode from running the reading tracker out of a checkout
+__pycache__/

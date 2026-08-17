@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F4F1E9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14130F" media="(prefers-color-scheme: dark)">
+<title>The Reading Room</title>
+<style>
+/* ── typefaces ──────────────────────────────────────────────────────────
+   Self-hosted, converted to woff2 in the Nix store by service.nix. Literata
+   is Google's e-reader face — it is the right serif for a shelf of books.
+   Public Sans carries the interface, Plex Mono the figures, because chapter
+   counts and ratings should line up in a column.                          */
+@font-face{font-family:Lit;src:url(/fonts/literata.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Lit;src:url(/fonts/literata-semibold.woff2) format("woff2");
+  font-weight:600;font-display:swap}
+@font-face{font-family:Lit;src:url(/fonts/literata-italic.woff2) format("woff2");
+  font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:Pub;src:url(/fonts/publicsans.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Pub;src:url(/fonts/publicsans-medium.woff2) format("woff2");
+  font-weight:500;font-display:swap}
+@font-face{font-family:Pub;src:url(/fonts/publicsans-semibold.woff2) format("woff2");
+  font-weight:600;font-display:swap}
+@font-face{font-family:Mono;src:url(/fonts/mono.woff2) format("woff2");
+  font-weight:400;font-display:swap}
+
+/* ── tokens ─────────────────────────────────────────────────────────────
+   Light is paper; dark is a lamplit room. The chrome stays close to neutral
+   on purpose — three hundred manhwa covers supply all the colour this page
+   can survive, and a tinted interface would fight every one of them.      */
+:root{
+  --paper:#F4F1E9;
+  --card:#FBF9F3;
+  --sunk:#EAE6DB;
+  --ink:#1B1A16;
+  --ink-2:#4C4A42;
+  --ink-3:#807D72;
+  --rule:#D9D5C7;
+  --rule-2:#E7E3D7;
+  --accent:#8C3A2B;        /* bookbinding red, used sparingly */
+  --accent-lit:#A84634;
+
+  --reading:#4A7A3B;
+  --later:#3C6480;
+  --hold:#96701E;
+  --read:#6A4B86;
+  --dropped:#8A8578;
+
+  --gap:16px;
+  --tap:44px;
+  --shadow:0 1px 2px rgba(27,26,22,.07), 0 6px 18px rgba(27,26,22,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
+  --ink:#EDE9DC; --ink-2:#B7B3A5; --ink-3:#847F72;
+  --rule:#33312A; --rule-2:#26241E;
+  --accent:#E08A76; --accent-lit:#EFA491;
+  --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
+  --read:#B79BD4; --dropped:#7C776B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme=dark]{
+  --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
+  --ink:#EDE9DC; --ink-2:#B7B3A5; --ink-3:#847F72;
+  --rule:#33312A; --rule-2:#26241E;
+  --accent:#E08A76; --accent-lit:#EFA491;
+  --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
+  --read:#B79BD4; --dropped:#7C776B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:Pub,system-ui,sans-serif;font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-wrap:break-word;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.mono{font-family:Mono,ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.serif{font-family:Lit,Georgia,serif}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600}
+
+/* ── masthead ───────────────────────────────────────────────────────── */
+header{
+  position:sticky;top:0;z-index:40;background:var(--card);
+  border-bottom:1px solid var(--rule);
+  padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));
+}
+.bar{display:flex;align-items:center;gap:12px;min-height:36px}
+h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
+  white-space:nowrap;letter-spacing:-.01em}
+h1 span{color:var(--ink-3);font-weight:400}
+.tally{margin-left:auto;display:flex;align-items:baseline;gap:10px;flex:none}
+.tally b{font-family:Mono,monospace;font-size:16px;font-weight:400}
+.tally i{font-style:normal;font-size:11px;color:var(--ink-3);letter-spacing:.06em;
+  text-transform:uppercase}
+
+.ico{flex:none;width:36px;height:36px;display:grid;place-items:center;
+  background:none;border:1px solid transparent;color:var(--ink-2);border-radius:3px}
+.ico:hover{color:var(--accent);border-color:var(--rule)}
+.ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.ico.on{color:var(--accent);border-color:var(--rule);background:var(--sunk)}
+
+.seek{display:flex;align-items:center;gap:8px;margin:8px 0;
+  border:1px solid var(--rule);background:var(--paper);padding:0 10px;
+  height:38px;border-radius:3px}
+.seek svg{width:15px;height:15px;flex:none;color:var(--ink-3);fill:none;
+  stroke:currentColor;stroke-width:1.7}
+.seek input{flex:1;min-width:0;border:0;background:none;outline:none;height:100%;
+  font-size:16px}   /* 16px stops iOS zooming on focus */
+.seek button{border:0;background:none;color:var(--ink-3);padding:0 2px}
+
+/* status tabs — the primary navigation, because a shelf is sorted by
+   what you are doing with a book, not by its title */
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -4px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:none;background:none;border:0;border-bottom:2px solid transparent;
+  padding:7px 10px 8px;color:var(--ink-3);font-size:13px;font-weight:500;
+  display:flex;align-items:baseline;gap:6px;white-space:nowrap;
+}
+.tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.75}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--dot,var(--accent))}
+.tab[data-s=Reading]{--dot:var(--reading)} .tab[data-s=Later]{--dot:var(--later)}
+.tab[data-s=Hold]{--dot:var(--hold)}      .tab[data-s=Read]{--dot:var(--read)}
+.tab[data-s=Dropped]{--dot:var(--dropped)}
+
+/* filter drawer */
+.drawer{display:none;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:10px 0;border-top:1px solid var(--rule-2)}
+.drawer.open{display:flex}
+select,.chip{
+  height:32px;border:1px solid var(--rule);background:var(--paper);
+  color:var(--ink-2);padding:0 9px;border-radius:3px;font-size:13px;
+}
+select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--card)}
+
+/* ── shelf ──────────────────────────────────────────────────────────── */
+main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
+  max(14px,env(safe-area-inset-left));max-width:1500px;margin:0 auto}
+.grid{display:grid;gap:18px 14px;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+@media (max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
+  gap:14px 10px}}
+
+.book{position:relative;display:flex;flex-direction:column;gap:7px;
+  background:none;border:0;padding:0;text-align:left;color:inherit}
+.plate{
+  position:relative;aspect-ratio:2/3;background:var(--sunk);overflow:hidden;
+  border:1px solid var(--rule-2);border-radius:2px;box-shadow:var(--shadow);
+}
+.plate img{width:100%;height:100%;object-fit:cover;display:block}
+.book:hover .plate{border-color:var(--accent)}
+/* No artwork: set the title on a tinted ground rather than leave a hole. The
+   hue comes from the title itself, so a book always looks like itself. */
+.fallback{position:absolute;inset:0;display:grid;place-items:center;padding:10px;
+  font-family:Lit,Georgia,serif;font-size:13px;line-height:1.3;text-align:center;
+  color:var(--ink-2);background:
+    linear-gradient(160deg,hsl(var(--h) 26% 88%),hsl(var(--h) 18% 79%))}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .fallback{
+  background:linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}}
+:root[data-theme=dark] .fallback{
+  background:linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}
+
+.mark{position:absolute;top:0;left:0;width:4px;height:34px;background:var(--dot)}
+.book[data-s=Reading]{--dot:var(--reading)} .book[data-s=Later]{--dot:var(--later)}
+.book[data-s=Hold]{--dot:var(--hold)}       .book[data-s=Read]{--dot:var(--read)}
+.book[data-s=Dropped]{--dot:var(--dropped)} .book{--dot:var(--ink-3)}
+
+.score{position:absolute;top:6px;right:6px;padding:2px 6px;border-radius:2px;
+  background:rgba(12,11,8,.72);color:#F4F1E9;font-family:Mono,monospace;
+  font-size:11px;backdrop-filter:blur(3px)}
+.foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;
+  gap:6px;padding:22px 6px 6px;
+  background:linear-gradient(transparent,rgba(12,11,8,.82))}
+.ch{font-family:Mono,monospace;font-size:12px;color:#F4F1E9;
+  text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ch b{font-weight:400;font-size:9px;opacity:.7;letter-spacing:.06em}
+.plus{
+  margin-left:auto;width:28px;height:28px;flex:none;border-radius:2px;
+  border:1px solid rgba(244,241,233,.35);background:rgba(12,11,8,.6);
+  color:#F4F1E9;font-size:15px;line-height:1;display:grid;place-items:center;
+  opacity:0;transition:opacity .12s;backdrop-filter:blur(3px);
+}
+.book:hover .plus,.plus:focus-visible{opacity:1}
+.plus:hover{background:var(--accent);border-color:var(--accent)}
+@media (hover:none){.plus{opacity:1}}
+
+.name{font-family:Lit,Georgia,serif;font-size:13.5px;line-height:1.32;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden}
+.sub{font-size:11px;color:var(--ink-3);display:flex;gap:6px;margin-top:-3px}
+.sub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.empty{padding:60px 20px;text-align:center;color:var(--ink-3);
+  font-family:Lit,Georgia,serif;font-size:16px}
+
+/* ── panels (stats, tags) ───────────────────────────────────────────── */
+.panel{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+.slab{background:var(--card);border:1px solid var(--rule);border-radius:3px;
+  padding:18px}
+.slab h2{font-family:Lit,Georgia,serif;font-size:16px;font-weight:600;margin:0 0 14px}
+.figs{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.fig b{display:block;font-family:Mono,monospace;font-size:26px;font-weight:400;
+  line-height:1.1}
+.fig span{font-size:11px;color:var(--ink-3);letter-spacing:.07em;
+  text-transform:uppercase;font-weight:600}
+.rows{display:flex;flex-direction:column;gap:9px}
+.row{display:grid;grid-template-columns:118px 1fr 46px;align-items:center;gap:10px;
+  font-size:13px}
+.row i{font-style:normal;color:var(--ink-2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.row u{text-decoration:none;height:9px;background:var(--sunk);display:block;
+  border-radius:1px;overflow:hidden}
+.row u b{display:block;height:100%;background:var(--bar,var(--accent))}
+.row em{font-style:normal;font-family:Mono,monospace;font-size:12px;
+  color:var(--ink-3);text-align:right}
+.list{display:flex;flex-direction:column;gap:1px}
+.list button{display:flex;gap:10px;align-items:baseline;text-align:left;width:100%;
+  background:none;border:0;padding:7px 8px;border-radius:2px;font-size:13.5px}
+.list button:hover{background:var(--sunk)}
+.list button em{font-style:normal;margin-left:auto;font-family:Mono,monospace;
+  font-size:11px;color:var(--ink-3);flex:none}
+.hint{font-size:13px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.55}
+.cloud{display:flex;flex-wrap:wrap;gap:6px}
+.cloud button{border:1px solid var(--rule);background:var(--paper);border-radius:2px;
+  padding:4px 8px;font-size:12.5px;color:var(--ink-2)}
+.cloud button:hover{border-color:var(--accent);color:var(--ink)}
+.cloud button em{font-style:normal;font-family:Mono,monospace;font-size:10px;
+  color:var(--ink-3);margin-left:5px}
+.merge{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;
+  border-bottom:1px solid var(--rule-2);font-size:13px}
+.merge:last-child{border-bottom:0}
+.merge code{font-family:Mono,monospace;font-size:12px;background:var(--sunk);
+  padding:2px 6px;border-radius:2px}
+.merge .go{margin-left:auto}
+
+/* ── the sheet ──────────────────────────────────────────────────────── */
+.veil{position:fixed;inset:0;z-index:50;background:rgba(12,11,8,.5);
+  opacity:0;pointer-events:none;transition:opacity .16s}
+.veil.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;z-index:51;background:var(--card);display:flex;
+  flex-direction:column;box-shadow:var(--shadow);
+  top:0;right:0;bottom:0;width:min(440px,100%);
+  border-left:1px solid var(--rule);
+  transform:translateX(101%);transition:transform .2s cubic-bezier(.3,.8,.4,1);
+}
+.sheet.open{transform:none}
+@media (max-width:640px){
+  .sheet{top:auto;left:0;width:100%;height:min(92vh,860px);
+    border-left:0;border-top:1px solid var(--rule);border-radius:10px 10px 0 0;
+    transform:translateY(101%)}
+}
+.sheet-top{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px;
+  border-bottom:1px solid var(--rule-2)}
+.sheet-top h2{font-family:Lit,Georgia,serif;font-size:17px;font-weight:600;
+  margin:0;line-height:1.3;flex:1}
+.sheet-body{flex:1;overflow-y:auto;padding:16px 14px 24px;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.field{margin-bottom:18px}
+.field>.lbl{display:block;margin-bottom:6px}
+.field input[type=text],.field input[type=number],.field select,.field textarea{
+  width:100%;height:38px;border:1px solid var(--rule);background:var(--paper);
+  border-radius:3px;padding:0 10px;font-size:16px;outline:none}
+.field textarea{height:auto;padding:8px 10px;font-size:13px;resize:vertical;
+  font-family:Mono,monospace}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.stepper{display:flex;gap:8px;align-items:center}
+.stepper input{text-align:center;font-family:Mono,monospace}
+.stepper button{width:var(--tap);height:38px;border:1px solid var(--rule);
+  background:var(--paper);border-radius:3px;font-size:17px;flex:none}
+.stepper button:hover{border-color:var(--accent);color:var(--accent)}
+.stars{display:flex;align-items:center;gap:10px}
+.stars input[type=range]{flex:1;accent-color:var(--accent);height:38px}
+.stars output{font-family:Mono,monospace;font-size:17px;width:38px;text-align:right}
+.picks{display:flex;flex-wrap:wrap;gap:6px}
+.pick{height:32px;padding:0 11px;border:1px solid var(--rule);background:var(--paper);
+  border-radius:3px;font-size:13px;color:var(--ink-2)}
+.pick:hover{border-color:var(--accent)}
+.pick[aria-pressed=true]{background:var(--tone,var(--accent));
+  border-color:var(--tone,var(--accent));color:var(--card);font-weight:500}
+.pick[data-v=Reading]{--tone:var(--reading)} .pick[data-v=Later]{--tone:var(--later)}
+.pick[data-v=Hold]{--tone:var(--hold)}      .pick[data-v=Read]{--tone:var(--read)}
+.pick[data-v=Dropped]{--tone:var(--dropped)}
+.tagbox{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.tagbox span{display:inline-flex;align-items:center;gap:6px;height:28px;
+  padding:0 4px 0 9px;border:1px solid var(--rule);border-radius:2px;
+  font-size:12.5px;color:var(--ink-2)}
+.tagbox span button{border:0;background:none;color:var(--ink-3);font-size:15px;
+  line-height:1;padding:0 4px}
+.tagbox span button:hover{color:var(--accent)}
+.sheet-foot{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--rule-2);
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));background:var(--card)}
+.btn{height:var(--tap);padding:0 16px;border:1px solid var(--rule);
+  background:var(--paper);border-radius:3px;font-size:14px;font-weight:500}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card);
+  flex:1}
+.btn.primary:hover{background:var(--accent-lit);border-color:var(--accent-lit);
+  color:var(--card)}
+.btn.danger:hover{border-color:#B4342A;color:#B4342A}
+.thumb{width:74px;flex:none;aspect-ratio:2/3;object-fit:cover;border-radius:2px;
+  border:1px solid var(--rule-2);background:var(--sunk)}
+
+/* ── toast ──────────────────────────────────────────────────────────── */
+#toast{position:fixed;z-index:60;left:50%;transform:translate(-50%,20px);
+  bottom:calc(18px + env(safe-area-inset-bottom));background:var(--ink);
+  color:var(--paper);padding:10px 14px;border-radius:4px;font-size:13.5px;
+  display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;
+  max-width:calc(100vw - 28px)}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{background:none;border:0;color:var(--accent-lit);font-weight:600;
+  font-size:13px;padding:0;flex:none}
+
+/* ── new-entry dialog ───────────────────────────────────────────────── */
+dialog{border:1px solid var(--rule);border-radius:4px;background:var(--card);
+  color:var(--ink);padding:0;width:min(400px,calc(100vw - 28px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(12,11,8,.5)}
+dialog form{padding:18px}
+dialog h2{font-family:Lit,Georgia,serif;font-size:17px;margin:0 0 14px;font-weight:600}
+dialog .sheet-foot{border-top:0;padding:6px 0 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <h1>The Reading Room</h1>
+    <div class="tally">
+      <span><b id="t-count">—</b> <i>series</i></span>
+      <span><b id="t-ch">—</b> <i>chapters</i></span>
+    </div>
+    <button class="ico" id="b-filter" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg></button>
+    <button class="ico" id="b-stats" title="Statistics" aria-label="Statistics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+    <button class="ico" id="b-tags" title="Tags" aria-label="Tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></button>
+    <button class="ico" id="b-new" title="Add a series" aria-label="Add a series"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="ico" id="b-theme" title="Light or dark" aria-label="Light or dark"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+  </div>
+
+  <div class="seek">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search titles and tags" autocomplete="off" spellcheck="false">
+    <button id="q-clear" hidden aria-label="Clear search">✕</button>
+  </div>
+
+  <div class="drawer" id="drawer">
+    <select id="f-type"><option value="">Any medium</option></select>
+    <select id="f-pub"><option value="">Any publication</option></select>
+    <select id="f-tag"><option value="">Any tag</option></select>
+    <select id="f-sort">
+      <option value="updated">Recently touched</option>
+      <option value="rating">Highest rated</option>
+      <option value="chapter">Furthest along</option>
+      <option value="name">Title A–Z</option>
+    </select>
+    <button class="chip" id="f-clear">Reset</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<main id="main"><div class="empty">Reading the shelf…</div></main>
+
+<div class="veil" id="veil"></div>
+<aside class="sheet" id="sheet" aria-hidden="true"></aside>
+
+<div id="toast"><span id="toast-msg"></span><button id="toast-do" hidden></button></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlg-form">
+    <h2>Add a series</h2>
+    <div class="field">
+      <label class="lbl" for="n-name">Title</label>
+      <input type="text" id="n-name" required placeholder="Exactly as the note should be named">
+    </div>
+    <div class="field">
+      <label class="lbl" for="n-type">Medium</label>
+      <select id="n-type"></select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="n-status">Shelf</label>
+      <select id="n-status"></select>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" value="cancel" type="submit" formnovalidate>Cancel</button>
+      <button class="btn primary" id="n-go" value="ok">Create note</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+/* ══ helpers ══════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => (v === null || v === undefined || v === '') ? null : Number(v);
+const fmt = v => v === null ? '' : (Number.isInteger(v) ? String(v) : String(v));
+
+/* A stable hue per title, so a book with no artwork still looks like itself
+   rather than like every other book with no artwork. */
+function hue(s){ let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+
+let TIMER;
+function toast(msg, action){
+  $('#toast-msg').textContent = msg;
+  const b = $('#toast-do');
+  b.hidden = !action;
+  if (action){ b.textContent = action.label; b.onclick = () => { hideToast(); action.run(); }; }
+  $('#toast').classList.add('show');
+  clearTimeout(TIMER);
+  TIMER = setTimeout(hideToast, action ? 7000 : 3000);
+}
+const hideToast = () => $('#toast').classList.remove('show');
+
+async function api(path, body){
+  const r = await fetch(path, body ? {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  } : undefined);
+  const t = await r.text();
+  let j = {};
+  try { j = t ? JSON.parse(t) : {}; } catch { j = { error: t.slice(0,200) }; }
+  if (!r.ok) throw new Error(j.error || `${r.status} ${r.statusText}`);
+  return j;
+}
+
+/* ══ state ════════════════════════════════════════════════════════════ */
+const S = {
+  data:null, view:'shelf', shelf:'Reading', q:'',
+  type:'', pub:'', tag:'', sort:'updated', open:null,
+};
+const byName = n => S.data.series.find(s => s.name === n);
+
+/* ══ load ═════════════════════════════════════════════════════════════ */
+async function load(){
+  try {
+    S.data = await api('/api/library');
+    if (!S.data.series.some(s => s.status === S.shelf)) S.shelf = 'All';
+    fillFilters();
+    render();
+  } catch (e) {
+    $('#main').innerHTML = `<div class="empty">Could not read the vault.<br>${esc(e.message)}</div>`;
+  }
+}
+
+function fillFilters(){
+  const m = S.data.meta;
+  const opt = (sel, items, blank) => {
+    const keep = sel.value;
+    sel.innerHTML = `<option value="">${blank}</option>` +
+      items.map(v => `<option>${esc(v)}</option>`).join('');
+    sel.value = items.includes(keep) ? keep : '';
+  };
+  opt($('#f-type'), m.types, 'Any medium');
+  opt($('#f-pub'), m.pubs, 'Any publication');
+  opt($('#f-tag'), S.data.tags.counts.map(t => t.tag), 'Any tag');
+  $('#f-sort').value = S.sort;
+
+  $('#n-type').innerHTML = '<option value="">—</option>' +
+    m.types.map(v => `<option>${esc(v)}</option>`).join('');
+  $('#n-status').innerHTML = m.statusOrder
+    .map(v => `<option${v === 'Later' ? ' selected' : ''}>${esc(v)}</option>`).join('');
+}
+
+/* ══ selection ════════════════════════════════════════════════════════ */
+function shown(){
+  let list = S.data.series;
+  if (S.shelf !== 'All') list = list.filter(s => s.status === S.shelf);
+  if (S.type) list = list.filter(s => s.type === S.type);
+  if (S.pub)  list = list.filter(s => s.pub === S.pub);
+  if (S.tag)  list = list.filter(s => s.tags.includes(S.tag));
+  if (S.q){
+    const q = S.q.toLowerCase();
+    list = list.filter(s => s.name.toLowerCase().includes(q)
+      || s.tags.some(t => t.toLowerCase().includes(q))
+      || s.type.toLowerCase().includes(q));
+  }
+  const cmp = {
+    updated: (a,b) => b.mtime - a.mtime,
+    rating:  (a,b) => (b.rating ?? -1) - (a.rating ?? -1) || a.name.localeCompare(b.name),
+    chapter: (a,b) => (b.chapter ?? -1) - (a.chapter ?? -1) || a.name.localeCompare(b.name),
+    name:    (a,b) => a.name.localeCompare(b.name),
+  }[S.sort];
+  return [...list].sort(cmp);
+}
+
+/* ══ render ═══════════════════════════════════════════════════════════ */
+function render(){
+  const st = S.data.stats;
+  $('#t-count').textContent = st.total;
+  $('#t-ch').textContent = st.chapters.toLocaleString();
+
+  const counts = Object.fromEntries(st.byStatus.map(r => [r.name, r.count]));
+  $('#tabs').innerHTML = [...S.data.meta.statusOrder, 'All'].map(s => {
+    const n = s === 'All' ? st.total : (counts[s] || 0);
+    return `<button class="tab" data-s="${esc(s)}" role="tab"
+      aria-selected="${S.view === 'shelf' && S.shelf === s}">${esc(s)} <em>${n}</em></button>`;
+  }).join('');
+
+  $('#b-stats').classList.toggle('on', S.view === 'stats');
+  $('#b-tags').classList.toggle('on', S.view === 'tags');
+  $('#b-filter').classList.toggle('on',
+    !!(S.type || S.pub || S.tag || S.sort !== 'updated'));
+
+  if (S.view === 'stats') return renderStats();
+  if (S.view === 'tags')  return renderTags();
+  renderShelf();
+}
+
+function renderShelf(){
+  const list = shown();
+  if (!list.length){
+    $('#main').innerHTML = `<div class="empty">Nothing on this shelf.</div>`;
+    return;
+  }
+  $('#main').innerHTML = `<div class="grid">${list.map(card).join('')}</div>`;
+}
+
+function card(s){
+  const art = s.coverId
+    ? `<img src="/cover/${s.coverId}" alt="" loading="lazy" decoding="async"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),
+           {className:'fallback',textContent:this.dataset.n}))"
+         data-n="${esc(s.name)}">`
+    : `<div class="fallback">${esc(s.name)}</div>`;
+  const sub = [s.type, s.pub].filter(Boolean);
+  return `
+  <div class="book" data-s="${esc(s.status)}" style="--h:${hue(s.name)}">
+    <div class="plate" data-open="${esc(s.name)}" role="button" tabindex="0">
+      ${art}
+      <div class="mark"></div>
+      ${s.rating !== null ? `<div class="score">${esc(fmt(s.rating))}</div>` : ''}
+      <div class="foot">
+        <div class="ch">${s.chapter !== null
+          ? `<b>CH</b> ${esc(fmt(s.chapter))}` : '<b>UNREAD</b>'}</div>
+        <button class="plus" data-bump="${esc(s.name)}" title="Read one more chapter"
+          aria-label="Read one more chapter of ${esc(s.name)}">+</button>
+      </div>
+    </div>
+    <div>
+      <div class="name" data-open="${esc(s.name)}" role="button" tabindex="-1">${esc(s.name)}</div>
+      ${sub.length ? `<div class="sub"><span>${sub.map(esc).join(' · ')}</span></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function bars(rows, total, tone){
+  return `<div class="rows">${rows.map(r => `
+    <div class="row"${tone ? ` style="--bar:var(--${r.name.toLowerCase()},var(--accent))"` : ''}>
+      <i>${esc(r.name)}</i>
+      <u><b style="width:${(100 * r.count / Math.max(1, total)).toFixed(1)}%"></b></u>
+      <em>${r.count}</em>
+    </div>`).join('')}</div>`;
+}
+
+function renderStats(){
+  const st = S.data.stats;
+  const jump = (arr, title, note) => !arr.length ? '' : `
+    <div class="slab">
+      <h2>${esc(title)} <span class="mono" style="color:var(--ink-3);font-size:13px">${arr.length}</span></h2>
+      <p class="hint">${note}</p>
+      <div class="list">${arr.map(n => {
+        const s = byName(n);
+        return `<button data-open="${esc(n)}">${esc(n)}
+          <em>${s && s.chapter !== null ? 'ch ' + esc(fmt(s.chapter)) : '—'}</em></button>`;
+      }).join('')}</div>
+    </div>`;
+
+  $('#main').innerHTML = `<div class="panel">
+    <div class="slab">
+      <div class="figs">
+        <div class="fig"><b>${st.total}</b><span>series</span></div>
+        <div class="fig"><b>${st.chapters.toLocaleString()}</b><span>chapters read</span></div>
+        <div class="fig"><b>${st.avg ?? '—'}</b><span>mean rating</span></div>
+        <div class="fig"><b>${st.rated}</b><span>rated</span></div>
+      </div>
+    </div>
+    <div class="slab"><h2>By shelf</h2>${bars(st.byStatus, st.total, true)}</div>
+    <div class="slab"><h2>By medium</h2>${bars(st.byType, st.total)}</div>
+    <div class="slab"><h2>By publication</h2>${bars(st.byPub, st.total)}</div>
+    <div class="slab"><h2>Ratings given</h2>
+      ${bars(st.ratings.map(r => ({name:String(r.score), count:r.count})),
+             Math.max(...st.ratings.map(r => r.count), 1))}</div>
+    ${jump(st.finishable, 'Shelved, and now complete',
+      'You put these down while they were still running. They have since finished, so there is an ending waiting.')}
+    ${jump(st.stalled, 'On hold, still publishing',
+      'These are on the Hold shelf but the author never stopped. Chapters have piled up.')}
+  </div>`;
+}
+
+function renderTags(){
+  const t = S.data.tags;
+  const variants = !t.variants.length
+    ? '<p class="hint">Every tag is spelled one way. Nothing to merge.</p>'
+    : t.variants.map(v => `
+      <div class="merge">
+        ${v.spellings.map(s => `<code>${esc(s.tag)}</code><em style="font-style:normal;
+          color:var(--ink-3);font-size:11px">${s.count}</em>`).join('<span style="color:var(--ink-3)">/</span>')}
+        <button class="chip go" data-merge="${esc(JSON.stringify(v))}">Merge into ${esc(v.canon)}</button>
+      </div>`).join('');
+
+  $('#main').innerHTML = `<div class="panel">
+    <div class="slab">
+      <h2>Spelled more than one way</h2>
+      <p class="hint">The vault has been written by hand over years, so a few tags exist
+      in two forms. They mean the same thing but filter as two. Merging rewrites the
+      frontmatter of every note using the losing spelling.</p>
+      ${variants}
+    </div>
+    <div class="slab">
+      <h2>Every tag <span class="mono" style="color:var(--ink-3);font-size:13px">${t.counts.length}</span></h2>
+      <div class="cloud">${t.counts.map(c =>
+        `<button data-tag="${esc(c.tag)}">${esc(c.tag)}<em>${c.count}</em></button>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+/* ══ the sheet ════════════════════════════════════════════════════════ */
+function openSheet(name){
+  const s = byName(name);
+  if (!s) return;
+  S.open = name;
+  const m = S.data.meta;
+  const picks = (id, vals, cur) => vals.map(v =>
+    `<button class="pick" data-${id}="${esc(v)}" data-v="${esc(v)}"
+       aria-pressed="${v === cur}">${esc(v)}</button>`).join('');
+
+  $('#sheet').innerHTML = `
+    <div class="sheet-top">
+      ${s.coverId ? `<img class="thumb" src="/cover/${s.coverId}" alt="">`
+                  : `<div class="thumb"></div>`}
+      <h2>${esc(s.name)}</h2>
+      <button class="ico" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <span class="lbl">Chapter</span>
+        <div class="stepper">
+          <button data-step="-1" aria-label="Back one chapter">−</button>
+          <input type="number" id="e-chapter" inputmode="numeric" min="0"
+                 value="${s.chapter === null ? '' : esc(fmt(s.chapter))}" placeholder="—">
+          <button data-step="1" aria-label="On one chapter">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Rating</span>
+        <div class="stars">
+          <input type="range" id="e-rating" min="0" max="10" step="0.5"
+                 value="${s.rating ?? 0}">
+          <output id="e-rating-out">${s.rating === null ? '—' : esc(fmt(s.rating))}</output>
+          <button class="pick" id="e-rating-clear">Clear</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Shelf</span>
+        <div class="picks">${picks('status', m.statusOrder, s.status)}</div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Publication</span>
+        <div class="picks">${picks('pub', m.pubs, s.pub)}</div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Medium</span>
+        <div class="picks">${picks('type', m.types, s.type)}</div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Tags</span>
+        <div class="tagbox" id="e-tagbox"></div>
+        <input type="text" id="e-tag-add" list="taglist" placeholder="Add a tag, then Enter">
+        <datalist id="taglist">${S.data.tags.counts
+          .map(c => `<option value="${esc(c.tag)}">`).join('')}</datalist>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Cover image URL</span>
+        <input type="text" id="e-cover" value="${esc(s.cover)}" placeholder="https://…">
+      </div>
+
+      <div class="field">
+        <span class="lbl">Title</span>
+        <input type="text" id="e-name" value="${esc(s.name)}">
+        <p class="hint" style="margin:6px 0 0">Renames the note file in the vault.</p>
+      </div>
+
+      ${s.body ? `<div class="field"><span class="lbl">Note body</span>
+        <textarea rows="3" readonly>${esc(s.body)}</textarea>
+        <p class="hint" style="margin:6px 0 0">Edited in Obsidian, shown here so it is not forgotten.</p></div>` : ''}
+
+      ${Object.keys(s.extras).length ? `<div class="field">
+        <span class="lbl">Other frontmatter</span>
+        <textarea rows="${Object.keys(s.extras).length}" readonly>${
+          esc(Object.entries(s.extras).map(([k,v]) =>
+            `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n'))}</textarea>
+        <p class="hint" style="margin:6px 0 0">Kept exactly as written. This app never touches these keys.</p></div>` : ''}
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger" data-trash>Trash</button>
+      <button class="btn primary" data-save>Save</button>
+    </div>`;
+
+  sheetTags = [...s.tags];
+  drawTags();
+  $('#veil').classList.add('open');
+  $('#sheet').classList.add('open');
+  $('#sheet').setAttribute('aria-hidden', 'false');
+}
+
+let sheetTags = [];
+function drawTags(){
+  const box = $('#e-tagbox');
+  if (!box) return;
+  box.innerHTML = sheetTags.map((t, i) =>
+    `<span>${esc(t)}<button data-untag="${i}" aria-label="Remove ${esc(t)}">×</button></span>`
+  ).join('') || '<span style="border:0;color:var(--ink-3);padding:0">none</span>';
+}
+
+function closeSheet(){
+  S.open = null;
+  $('#veil').classList.remove('open');
+  $('#sheet').classList.remove('open');
+  $('#sheet').setAttribute('aria-hidden', 'true');
+}
+
+async function saveSheet(){
+  const name = S.open;
+  const s = byName(name);
+  if (!s) return;
+  const rating = $('#e-rating-out').textContent === '—'
+    ? null : Number($('#e-rating').value);
+  const chapRaw = $('#e-chapter').value.trim();
+  const fields = {
+    chapter: chapRaw === '' ? null : Number(chapRaw),
+    rating,
+    status: $('#sheet [data-status][aria-pressed=true]')?.dataset.status || '',
+    pub:    $('#sheet [data-pub][aria-pressed=true]')?.dataset.pub || '',
+    type:   $('#sheet [data-type][aria-pressed=true]')?.dataset.type || '',
+    tags:   sheetTags,
+    cover:  $('#e-cover').value.trim(),
+  };
+  const newName = $('#e-name').value.trim();
+  try {
+    const r = await api('/api/update', { name, fields });
+    if (newName && newName !== name) await api('/api/rename', { name, to: newName });
+    closeSheet();
+    await load();
+    toast(r.changed.length || newName !== name ? 'Saved to the vault' : 'Nothing changed');
+  } catch (e) { toast(e.message); }
+}
+
+/* ══ actions ══════════════════════════════════════════════════════════ */
+async function bump(name){
+  const s = byName(name);
+  if (!s) return;
+  const before = { chapter: s.chapter, status: s.status };
+  try {
+    const r = await api('/api/bump', { name, by: 1, resume: true });
+    const now = r.series;
+    S.data.series = S.data.series.map(x => x.name === name ? { ...x, ...now } : x);
+    S.data.stats = r.stats;
+    render();
+    const moved = now.status !== before.status;
+    toast(`${name} — chapter ${fmt(now.chapter)}${moved ? ` · moved to ${now.status}` : ''}`,
+      { label:'Undo', run: async () => {
+          try { await api('/api/update', { name, fields: before }); await load();
+                toast('Put back'); }
+          catch (e) { toast(e.message); }
+        }});
+  } catch (e) { toast(e.message); }
+}
+
+async function mergeTags(v){
+  const losers = v.spellings.map(s => s.tag).filter(t => t !== v.canon);
+  try {
+    const r = await api('/api/tags/merge', { from: losers, to: v.canon });
+    S.data = { series:r.series, stats:r.stats, meta:r.meta, tags:r.tags };
+    fillFilters();
+    render();
+    toast(`Merged into ${v.canon} across ${r.notes} note${r.notes === 1 ? '' : 's'}`);
+  } catch (e) { toast(e.message); }
+}
+
+/* ══ wiring ═══════════════════════════════════════════════════════════ */
+document.addEventListener('click', async ev => {
+  const t = ev.target;
+  const hit = sel => t.closest(sel);
+
+  const bumpBtn = hit('[data-bump]');
+  if (bumpBtn){ ev.stopPropagation(); return bump(bumpBtn.dataset.bump); }
+
+  const opener = hit('[data-open]');
+  if (opener) return openSheet(opener.dataset.open);
+
+  const tab = hit('.tab');
+  if (tab){ S.view = 'shelf'; S.shelf = tab.dataset.s; return render(); }
+
+  const tag = hit('[data-tag]');
+  if (tag){ S.tag = tag.dataset.tag; S.view = 'shelf'; S.shelf = 'All';
+            $('#f-tag').value = S.tag; $('#drawer').classList.add('open');
+            return render(); }
+
+  const merge = hit('[data-merge]');
+  if (merge) return mergeTags(JSON.parse(merge.dataset.merge));
+
+  if (hit('[data-close]') || t.id === 'veil') return closeSheet();
+  if (hit('[data-save]')) return saveSheet();
+
+  if (hit('[data-trash]')){
+    const name = S.open;
+    if (!confirm(`Move “${name}” to the vault's .trash folder?\n\nObsidian can restore it.`)) return;
+    try { await api('/api/delete', { name }); closeSheet(); await load();
+          toast(`“${name}” moved to .trash`); }
+    catch (e) { toast(e.message); }
+    return;
+  }
+
+  const step = hit('[data-step]');
+  if (step){
+    const el = $('#e-chapter');
+    el.value = Math.max(0, (Number(el.value) || 0) + Number(step.dataset.step));
+    return;
+  }
+
+  const untag = hit('[data-untag]');
+  if (untag){ sheetTags.splice(Number(untag.dataset.untag), 1); return drawTags(); }
+
+  // Single-choice pill groups: pressing the pressed one clears the field.
+  for (const key of ['status','pub','type']){
+    const p = hit(`[data-${key}]`);
+    if (p && p.classList.contains('pick')){
+      const was = p.getAttribute('aria-pressed') === 'true';
+      p.closest('.picks').querySelectorAll('.pick')
+        .forEach(x => x.setAttribute('aria-pressed', 'false'));
+      p.setAttribute('aria-pressed', was ? 'false' : 'true');
+      return;
+    }
+  }
+});
+
+document.addEventListener('input', ev => {
+  if (ev.target.id === 'e-rating')
+    $('#e-rating-out').textContent = fmt(Number(ev.target.value));
+});
+
+document.addEventListener('keydown', ev => {
+  if (ev.target.id === 'e-tag-add' && ev.key === 'Enter'){
+    ev.preventDefault();
+    const v = ev.target.value.trim();
+    if (v && !sheetTags.includes(v)) sheetTags.push(v);
+    ev.target.value = '';
+    return drawTags();
+  }
+  if (ev.key === 'Enter' && ev.target.closest('.sheet') &&
+      ev.target.tagName === 'INPUT' && ev.target.type !== 'range'){
+    ev.preventDefault(); return saveSheet();
+  }
+  if (ev.key === 'Escape'){ if (S.open) closeSheet(); else hideToast(); }
+  if (ev.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)){
+    ev.preventDefault(); $('#q').focus();
+  }
+});
+
+/* The rating slider cannot express "unrated" — 0 is a real score — so the
+   output element carries that state and Clear puts it back. */
+document.addEventListener('click', ev => {
+  if (ev.target.id === 'e-rating-clear'){
+    $('#e-rating').value = 0;
+    $('#e-rating-out').textContent = '—';
+  }
+});
+
+$('#q').addEventListener('input', e => {
+  S.q = e.target.value.trim();
+  $('#q-clear').hidden = !S.q;
+  if (S.view !== 'shelf') S.view = 'shelf';
+  render();
+});
+$('#q-clear').addEventListener('click', () => {
+  $('#q').value = ''; S.q = ''; $('#q-clear').hidden = true; render();
+});
+
+$('#b-filter').addEventListener('click', () => $('#drawer').classList.toggle('open'));
+$('#b-stats').addEventListener('click', () => {
+  S.view = S.view === 'stats' ? 'shelf' : 'stats'; render();
+});
+$('#b-tags').addEventListener('click', () => {
+  S.view = S.view === 'tags' ? 'shelf' : 'tags'; render();
+});
+$('#b-new').addEventListener('click', () => $('#dlg').showModal());
+
+for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-tag','tag'],['#f-sort','sort']])
+  $(id).addEventListener('change', e => {
+    S[key] = e.target.value;
+    if (S.view !== 'shelf') S.view = 'shelf';
+    render();
+  });
+$('#f-clear').addEventListener('click', () => {
+  S.type = S.pub = S.tag = ''; S.sort = 'updated';
+  $('#f-type').value = $('#f-pub').value = $('#f-tag').value = '';
+  $('#f-sort').value = 'updated';
+  render();
+});
+
+$('#dlg-form').addEventListener('submit', async ev => {
+  if (ev.submitter && ev.submitter.value !== 'ok') return;
+  const name = $('#n-name').value.trim();
+  if (!name) return;
+  try {
+    await api('/api/create', { name, fields: {
+      type: $('#n-type').value, status: $('#n-status').value } });
+    $('#n-name').value = '';
+    await load();
+    openSheet(name);
+    toast(`Created “${name}”`);
+  } catch (e) { toast(e.message); }
+});
+
+/* Theme: follow the system until told otherwise, then remember. */
+const THEME = 'reading-room-theme';
+if (localStorage.getItem(THEME))
+  document.documentElement.dataset.theme = localStorage.getItem(THEME);
+$('#b-theme').addEventListener('click', () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const now = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
+  const next = now === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem(THEME, next);
+});
+
+/* Obsidian is the other editor of this data. Re-read when the tab comes back
+   into focus so the page never argues with a change made there. */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && !S.open) load();
+});
+
+load();
+</script>
+</body>
+</html>

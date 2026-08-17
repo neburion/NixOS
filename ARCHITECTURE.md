@@ -76,7 +76,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 
 | Host              | Purpose                                                | Boot            | User(s)             |
 |-------------------|--------------------------------------------------------|-----------------|---------------------|
-| `pod042`          | Main laptop                                            | `limine`        | `neburion`          |
+| `pod042`          | Main laptop; reading tracker over the Obsidian vault   | `limine`        | `neburion`          |
 | `home-server`     | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
 | `personal-server` | Headless personal server: Elden Ring tracker           | `systemd-boot`  | `server-admin`      |
 | `installer`       | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
@@ -130,6 +130,17 @@ elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracke
                          achievement/Remembrance/Great Rune; seed.py runs as
                          ExecStartPre, migrates the DB in place, re-attaches
                          progress by natural key, and aborts on a bad link)
+
+reading-tracker/         aggregator → service.nix (stdlib-Python web UI over the
+                         Reading-Ob Obsidian vault on :8778, pod042 only). The
+                         vault's markdown IS the database — no mirror, no seed.
+                         Runs as `neburion` with ProtectHome off and the vault
+                         as its only ReadWritePath, because the notes are that
+                         user's files. Writes splice single frontmatter keys and
+                         re-read before writing, so Obsidian can be open at the
+                         same time; a field whose value did not change is never
+                         written. Covers are cached under /var/lib, not
+                         committed — they belong to the vault, not the repo.
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend
