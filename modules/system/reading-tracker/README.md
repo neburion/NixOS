@@ -2,8 +2,10 @@
 
 SQLite + a small web UI. Stdlib Python only — no Flask, no pip.
 
-Deployed by `service.nix` on `personal-server`: **http://personal-server:8778**,
-tailnet only. See the module tree entry in `ARCHITECTURE.md`.
+Deployed by `service.nix` on `personal-server`: **http://personal-server:8778**
+on the tailnet, and publicly at **https://reading.azuresalt.app** through the
+Cloudflare tunnel declared in the host's `cloudflare-layout.nix`.
+See the module tree entry in `ARCHITECTURE.md`.
 
 300 series, 13,316 chapters, imported once from the **Reading-Ob** Obsidian
 vault on pod042.
@@ -141,7 +143,7 @@ Back it up with the export, which is keyed on title rather than row id and so
 survives a rebuilt database:
 
 ```bash
-curl -su reader:PASSWORD 'http://personal-server:8778/api/export' > reading-backup.json
+curl -su tracker:PASSWORD 'http://personal-server:8778/api/export' > reading-backup.json
 ```
 
 ## Running it from a checkout
@@ -184,11 +186,25 @@ HTTP Basic Auth, on whenever a password is present — the systemd credential
 `password` (the `reading-tracker-password` sops secret in
 `secrets/personal-server.yaml`) or `$RT_PASSWORD`. Without one the app refuses
 to bind anything but loopback, so a misconfigured deploy fails to start rather
-than putting a writable API on the network. The username is `reader` and lives
-in `service.nix`, since it is not a secret.
+than putting a writable API on the network. The username is `tracker` and lives
+in `service.nix`, since it is not a secret. Failed attempts are rate-limited to
+20 per hour per client IP, read from `CF-Connecting-IP` so the tunnel does not
+bucket the whole internet into one key.
 
-That is a second gate, not the only one: the `tailscale0`-scoped firewall rule
-in `service.nix` limits who can reach :8778. Unlike the Elden Ring tracker this
-has **no public hostname** — no Cloudflare tunnel, no Access policy to forget.
-If it ever gets one, cloudflared reaches it over loopback and needs no firewall
-rule, and the Basic Auth gate is what would stand behind a missing policy.
+Three layers gate `reading.azuresalt.app`, and two of them are set by hand:
+
+1. **Cloudflare Access policy** — dashboard only, *not* managed by cf-reconcile,
+   so it can silently go missing.
+2. **HTTP Basic Auth** in app.py, from the sops secret above.
+3. **app.py refuses to bind a non-loopback address with no password**, so a
+   credential failure is a restart loop and a 502 rather than an open service.
+
+The `tailscale0`-scoped firewall rule stays as it is; cloudflared dials
+127.0.0.1:8778 from inside the host and needs no rule of its own, so the LAN
+still cannot reach the port.
+
+**Set the Access policy.** This hostname deserves it more than
+`eldenring.azuresalt.app` does: a wiped playthrough is re-seedable from
+`seed.json`, whereas `POST /api/delete` drops a series and its chapter history
+with no undo. The Basic Auth password is also only eight characters, which is
+fine behind Access and thin without it.

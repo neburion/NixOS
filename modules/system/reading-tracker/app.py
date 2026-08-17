@@ -62,7 +62,7 @@ def _load_password():
 
 
 PASSWORD = _load_password()
-USERNAME = os.environ.get("RT_USERNAME", "reader")
+USERNAME = os.environ.get("RT_USERNAME", "tracker")
 AUTH_ON = bool(PASSWORD)
 
 RATE_WINDOW = 3600

@@ -64,7 +64,7 @@ let
     RT_PORT = toString port;
     # The half of the login that is not secret. Its password is the sops secret
     # below; keeping both halves in one file beats splitting them across two.
-    RT_USERNAME = "reader";
+    RT_USERNAME = "tracker";
   };
 
   python = pkgs.python3;

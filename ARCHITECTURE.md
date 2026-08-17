@@ -91,9 +91,11 @@ through a Cloudflare tunnel; it is the first host to expose something whose gate
 is not solely a Cloudflare Access policy — the app carries HTTP Basic Auth from
 the `elden-ring-password` sops secret and refuses to bind a non-loopback address
 without it, so a missing Access policy weakens the gate rather than removing it.
-Set the policy anyway. The **reading tracker** is at `http://personal-server:8778`,
-tailnet-only with no public hostname and so no Access policy to forget, behind
-the same Basic Auth and fail-closed bind check.
+Set the policy anyway. The **reading tracker** is at `http://personal-server:8778`
+and `https://reading.azuresalt.app`, behind the same Basic Auth and fail-closed
+bind check. It wants an Access policy more than the Elden Ring tracker does: a
+wiped playthrough is re-seedable, a deleted series takes its chapter history
+with it.
 
 ### The `installer` host
 
@@ -135,8 +137,9 @@ elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracke
 
 reading-tracker/         aggregator → service.nix (stdlib-Python SQLite tracker
                          + web UI on :8778, personal-server; 300 series imported
-                         once from the Reading-Ob Obsidian vault. tailnet-only,
-                         no public hostname. HTTP Basic Auth from a sops secret
+                         once from the Reading-Ob Obsidian vault. Tailnet, plus
+                         reading.azuresalt.app via the Cloudflare tunnel.
+                         HTTP Basic Auth from a sops secret
                          via LoadCredential, same fail-closed bind check as the
                          Elden Ring tracker).
                          Unlike that module, seeding is ADDITIVE, not a rebuild:
