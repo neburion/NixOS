@@ -75,6 +75,9 @@
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+/* While the bottom sheet is up, the shelf behind it must not scroll —
+   otherwise a drag that misses the sheet pans 300 covers out from under it. */
+body.locked{overflow:hidden}
 body{
   margin:0;background:var(--paper);color:var(--ink);
   font-family:Pub,system-ui,sans-serif;font-size:15px;line-height:1.5;
@@ -94,16 +97,28 @@ header{
   padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));
 }
 .bar{display:flex;align-items:center;gap:12px;min-height:36px}
+/* min-width:0 so the title truncates instead of shoving the toolbar off the
+   right edge — without it a long name makes the whole page scroll sideways. */
 h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
-  white-space:nowrap;letter-spacing:-.01em}
+  white-space:nowrap;letter-spacing:-.01em;
+  min-width:0;overflow:hidden;text-overflow:ellipsis}
+h1 i{font-style:normal}
+/* "The" is decorative; the name is "Reading Room". Dropping it beats
+   truncating to "The Readin…", which is what happens at 360px otherwise. */
+@media (max-width:420px){h1 i{display:none}}
 .tally{margin-left:auto;display:flex;align-items:baseline;gap:10px;flex:none}
 .tally b{font-family:Mono,monospace;font-size:16px;font-weight:400}
 .tally i{font-style:normal;font-size:11px;color:var(--ink-3);letter-spacing:.06em;
   text-transform:uppercase}
 @media (max-width:560px){.tally span:nth-child(2){display:none}}
+/* Below this the tally is what pushes the title into an ellipsis, and it is
+   redundant anyway — the tab strip right underneath carries a count per shelf
+   plus the total on "All". */
+@media (max-width:460px){.tally{display:none}}
 
 .ico{flex:none;width:36px;height:36px;display:grid;place-items:center;
   background:none;border:1px solid transparent;color:var(--ink-2);border-radius:3px}
+@media (max-width:640px){.ico{width:var(--tap);height:var(--tap)}}
 .ico:hover{color:var(--accent);border-color:var(--rule)}
 .ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round}
@@ -127,6 +142,7 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
   padding:7px 10px 8px;color:var(--ink-3);font-size:13px;font-weight:500;
   display:flex;align-items:baseline;gap:6px;white-space:nowrap;
 }
+@media (max-width:640px){.tab{min-height:var(--tap);padding:0 12px;align-items:center}}
 .tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.75}
 .tab:hover{color:var(--ink)}
 .tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--dot,var(--accent))}
@@ -144,9 +160,41 @@ select,.chip{
 select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--card)}
 
+/* ── bottom dock (phones) ───────────────────────────────────────────────
+   Six icons plus a title and a tally do not fit across a 390px phone: the
+   toolbar overflowed and took the whole page into a sideways scroll, with Add
+   and the theme toggle pushed off the right edge entirely.
+   So on narrow screens the view switches move down here, where a thumb can
+   actually reach them, and the header keeps only search, filter and theme. */
+.dock{display:none}
+@media (max-width:640px){
+  .dock{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;
+    background:var(--card);border-top:1px solid var(--rule);
+    padding:0 max(4px,env(safe-area-inset-right)) env(safe-area-inset-bottom)
+              max(4px,env(safe-area-inset-left));
+  }
+  .dock button{
+    flex:1;min-width:0;min-height:56px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;
+    background:none;border:0;color:var(--ink-3);padding:6px 2px;
+  }
+  .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round}
+  .dock span{font-size:10px;letter-spacing:.02em;font-weight:500}
+  .dock button.on{color:var(--accent)}
+  /* These live in the dock now; keeping both would be two ways to do one thing. */
+  header .bar [data-view],header .bar [data-act=new]{display:none}
+}
+
 /* ── shelf ──────────────────────────────────────────────────────────── */
 main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   max(14px,env(safe-area-inset-left));max-width:1500px;margin:0 auto}
+/* clear the dock, plus the home indicator on gesture-nav phones */
+@media (max-width:640px){
+  main{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(74px + env(safe-area-inset-bottom))}
+}
 .grid{display:grid;gap:18px 14px;
   grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
 @media (max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
@@ -195,7 +243,9 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 }
 .book:hover .plus,.plus:focus-visible{opacity:1}
 .plus:hover{background:var(--accent);border-color:var(--accent)}
-@media (hover:none){.plus{opacity:1}}
+/* No hover to reveal it on a touch screen, and 28px is too small to hit while
+   holding a phone — so it is always visible and grows to a real tap target. */
+@media (hover:none){.plus{opacity:1;width:38px;height:38px;font-size:19px}}
 
 .name{font-family:Lit,Georgia,serif;font-size:13.5px;line-height:1.32;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
@@ -260,9 +310,14 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 }
 .sheet.open{transform:none}
 @media (max-width:640px){
-  .sheet{top:auto;left:0;width:100%;height:min(92vh,860px);
+  .sheet{top:auto;left:0;width:100%;
     border-left:0;border-top:1px solid var(--rule);border-radius:10px 10px 0 0;
-    transform:translateY(101%)}
+    transform:translateY(101%);
+    /* dvh tracks the shrinking/growing browser toolbar; vh does not, and a
+       sheet sized in vh has its footer under the address bar half the time. */
+    height:min(92vh,860px);
+    height:min(92dvh,860px);
+  }
 }
 .sheet-top{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px;
   border-bottom:1px solid var(--rule-2)}
@@ -326,6 +381,36 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 #toast button{background:none;border:0;color:var(--accent-lit);font-weight:600;
   font-size:13px;padding:0;flex:none}
 
+/* ── touch sizing ───────────────────────────────────────────────────────
+   Everything above is sized for a mouse, where 32px is a comfortable target.
+   A finger is not a cursor: these are the controls an audit at 390px found
+   under 40px, raised in one place so the desktop layout is untouched. */
+@media (max-width:640px){
+  .seek{height:var(--tap)}
+  .field input[type=text],.field input[type=number],.field select{height:var(--tap)}
+  .field textarea{min-height:88px}
+  .stepper button{height:var(--tap)}
+  .stars input[type=range]{height:var(--tap)}
+  .picks .pick,#e-rating-clear{height:40px;padding:0 13px}
+  .drawer select,.drawer .chip{height:40px}
+  .cloud button{min-height:40px;padding:8px 11px}
+  .merge .chip{height:40px}
+  .tagbox span{height:34px;padding-left:11px}
+  /* The × has to fill the chip's height or it measures 25x17 — a target you
+     miss, on a control whose whole job is removing the wrong tag. */
+  .tagbox span button{height:100%;padding:0 9px;font-size:18px;display:grid;
+    place-items:center}
+  .list button{padding:11px 8px}
+  /* The cover is the obvious target; the title under it is a courtesy, but a
+     two-line clamp can be 18px tall, so give it something to hit. */
+  .name{padding:3px 0 5px}
+
+  /* iOS Safari zooms the whole page when a focused field is under 16px, and
+     then leaves you scrolled sideways into a layout that was fine. Range
+     inputs are exempt — you never type into one. */
+  .drawer select,.field textarea,dialog select,dialog input{font-size:16px}
+}
+
 dialog{border:1px solid var(--rule);border-radius:4px;background:var(--card);
   color:var(--ink);padding:0;width:min(400px,calc(100vw - 28px));box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(12,11,8,.5)}
@@ -338,17 +423,17 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 
 <header>
   <div class="bar">
-    <h1>The Reading Room</h1>
+    <h1><i>The </i>Reading Room</h1>
     <div class="tally">
       <span><b id="t-count">—</b> <i>series</i></span>
       <span><b id="t-ch">—</b> <i>chapters</i></span>
     </div>
-    <button class="ico" id="b-filter" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg></button>
-    <button class="ico" id="b-stats" title="Statistics" aria-label="Statistics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
-    <button class="ico" id="b-history" title="Reading history" aria-label="Reading history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></button>
-    <button class="ico" id="b-tags" title="Tags" aria-label="Tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></button>
-    <button class="ico" id="b-new" title="Add a series" aria-label="Add a series"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-    <button class="ico" id="b-theme" title="Light or dark" aria-label="Light or dark"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+    <button class="ico" data-act="filter" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg></button>
+    <button class="ico" data-view="stats" title="Statistics" aria-label="Statistics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+    <button class="ico" data-view="history" title="Reading history" aria-label="Reading history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></button>
+    <button class="ico" data-view="tags" title="Tags" aria-label="Tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></button>
+    <button class="ico" data-act="new" title="Add a series" aria-label="Add a series"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="ico" data-act="theme" title="Light or dark" aria-label="Light or dark"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
   </div>
 
   <div class="seek">
@@ -374,6 +459,14 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 </header>
 
 <main id="main"><div class="empty">Opening the shelf…</div></main>
+
+<nav class="dock" aria-label="Views">
+  <button data-view="shelf"><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4zM16.5 5.2l3.4 15.1"/></svg><span>Shelf</span></button>
+  <button data-view="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Stats</span></button>
+  <button data-view="history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>History</span></button>
+  <button data-view="tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg><span>Tags</span></button>
+  <button data-act="new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+</nav>
 
 <div class="veil" id="veil"></div>
 <aside class="sheet" id="sheet" aria-hidden="true"></aside>
@@ -527,11 +620,11 @@ function render(){
       aria-selected="${S.view === 'shelf' && S.shelf === s}">${esc(s)} <em>${n}</em></button>`;
   }).join('');
 
-  $('#b-stats').classList.toggle('on', S.view === 'stats');
-  $('#b-tags').classList.toggle('on', S.view === 'tags');
-  $('#b-history').classList.toggle('on', S.view === 'history');
-  $('#b-filter').classList.toggle('on',
-    !!(S.type || S.pub || S.tag || S.sort !== 'updated'));
+  // Header and dock carry the same data-view hooks, so one pass lights both.
+  for (const b of document.querySelectorAll('[data-view]'))
+    b.classList.toggle('on', b.dataset.view === S.view);
+  for (const b of document.querySelectorAll('[data-act=filter]'))
+    b.classList.toggle('on', !!(S.type || S.pub || S.tag || S.sort !== 'updated'));
 
   if (S.view === 'stats')   return renderStats();
   if (S.view === 'tags')    return renderTags();
@@ -763,6 +856,8 @@ function openSheet(id){
   $('#veil').classList.add('open');
   $('#sheet').classList.add('open');
   $('#sheet').setAttribute('aria-hidden', 'false');
+  document.body.classList.add('locked');
+  $('#sheet .sheet-body').scrollTop = 0;
 }
 
 function drawTags(){
@@ -778,6 +873,7 @@ function closeSheet(){
   $('#veil').classList.remove('open');
   $('#sheet').classList.remove('open');
   $('#sheet').setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('locked');
 }
 
 async function saveSheet(){
@@ -937,12 +1033,23 @@ $('#q-clear').addEventListener('click', () => {
   $('#q').value = ''; S.q = ''; $('#q-clear').hidden = true; render();
 });
 
-$('#b-filter').addEventListener('click', () => $('#drawer').classList.toggle('open'));
-for (const [id, view] of [['#b-stats','stats'],['#b-tags','tags'],['#b-history','history']])
-  $(id).addEventListener('click', () => {
-    S.view = S.view === view ? 'shelf' : view; render();
-  });
-$('#b-new').addEventListener('click', () => $('#dlg').showModal());
+/* One delegated handler for both the header toolbar and the phone dock. */
+document.addEventListener('click', ev => {
+  const view = ev.target.closest('[data-view]');
+  if (view){
+    // Tapping the active view returns to the shelf, except from the shelf
+    // itself — the dock's Shelf button should never toggle to nothing.
+    const want = view.dataset.view;
+    S.view = (S.view === want && want !== 'shelf') ? 'shelf' : want;
+    scrollTo({ top: 0 });
+    return render();
+  }
+  const act = ev.target.closest('[data-act]');
+  if (!act) return;
+  if (act.dataset.act === 'filter') $('#drawer').classList.toggle('open');
+  if (act.dataset.act === 'new') $('#dlg').showModal();
+  if (act.dataset.act === 'theme') toggleTheme();
+});
 
 for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-tag','tag'],['#f-sort','sort']])
   $(id).addEventListener('change', e => {
@@ -975,13 +1082,13 @@ $('#dlg-form').addEventListener('submit', async ev => {
 const THEME = 'reading-room-theme';
 if (localStorage.getItem(THEME))
   document.documentElement.dataset.theme = localStorage.getItem(THEME);
-$('#b-theme').addEventListener('click', () => {
+function toggleTheme(){
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   const now = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
   const next = now === 'dark' ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
   localStorage.setItem(THEME, next);
-});
+}
 
 /* Another tab, another device, or a phone left open on the shelf. Re-read when
    this one comes back into focus rather than showing a stale count. */
