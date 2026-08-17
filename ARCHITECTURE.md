@@ -76,7 +76,7 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 
 | Host              | Purpose                                                | Boot            | User(s)             |
 |-------------------|--------------------------------------------------------|-----------------|---------------------|
-| `pod042`          | Main laptop; reading tracker over the Obsidian vault   | `limine`        | `neburion`          |
+| `pod042`          | Main laptop                                            | `limine`        | `neburion`          |
 | `home-server`     | Headless family server: print/scan web UI              | `systemd-boot`  | `server-admin`      |
 | `personal-server` | Headless personal server: Elden Ring tracker           | `systemd-boot`  | `server-admin`      |
 | `installer`       | Live USB ISO                                           | isoImage output | (built via `iso/`)  |
@@ -85,13 +85,15 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 headless, `server-admin`, always-on) split by *audience*: the family depends on
 one, so it stays boring; the other is mine to break. Per the fleet principle
 neither depends on the other — the split is about blast radius, not topology.
-`personal-server` runs one service so far, the Elden Ring tracker: on the tailnet
-at `http://personal-server:8777`, and publicly at `https://eldenring.azuresalt.app`
-through a Cloudflare tunnel. It is the first host to expose something whose gate
+`personal-server` runs two services. The **Elden Ring tracker** is on the tailnet
+at `http://personal-server:8777` and publicly at `https://eldenring.azuresalt.app`
+through a Cloudflare tunnel; it is the first host to expose something whose gate
 is not solely a Cloudflare Access policy — the app carries HTTP Basic Auth from
 the `elden-ring-password` sops secret and refuses to bind a non-loopback address
 without it, so a missing Access policy weakens the gate rather than removing it.
-Set the policy anyway.
+Set the policy anyway. The **reading tracker** is at `http://personal-server:8778`,
+tailnet-only with no public hostname and so no Access policy to forget, behind
+the same Basic Auth and fail-closed bind check.
 
 ### The `installer` host
 
@@ -131,16 +133,23 @@ elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracke
                          ExecStartPre, migrates the DB in place, re-attaches
                          progress by natural key, and aborts on a bad link)
 
-reading-tracker/         aggregator → service.nix (stdlib-Python web UI over the
-                         Reading-Ob Obsidian vault on :8778, pod042 only). The
-                         vault's markdown IS the database — no mirror, no seed.
-                         Runs as `neburion` with ProtectHome off and the vault
-                         as its only ReadWritePath, because the notes are that
-                         user's files. Writes splice single frontmatter keys and
-                         re-read before writing, so Obsidian can be open at the
-                         same time; a field whose value did not change is never
-                         written. Covers are cached under /var/lib, not
-                         committed — they belong to the vault, not the repo.
+reading-tracker/         aggregator → service.nix (stdlib-Python SQLite tracker
+                         + web UI on :8778, personal-server; 300 series imported
+                         once from the Reading-Ob Obsidian vault. tailnet-only,
+                         no public hostname. HTTP Basic Auth from a sops secret
+                         via LoadCredential, same fail-closed bind check as the
+                         Elden Ring tracker).
+                         Unlike that module, seeding is ADDITIVE, not a rebuild:
+                         every field in seed.json is mutable state the app
+                         edits, so a rebuild would hand back last week's
+                         reading. It keys on a seed_applied table rather than on
+                         "is this title in series?", because titles are
+                         renameable and the naive version resurrects renamed
+                         rows and undoes deletions on the next restart.
+                         import-vault.py is hand-run and read-only: the vault is
+                         a snapshot, not a link, and nothing flows back to it.
+                         reading_log/status_log are what the markdown notes
+                         could never hold — they only ever stored the present.
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend
