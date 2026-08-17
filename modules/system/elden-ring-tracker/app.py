@@ -32,6 +32,7 @@ HERE = Path(__file__).resolve().parent
 DB = Path(os.environ.get("ER_DB") or HERE / "eldenring.db")
 UI = Path(os.environ.get("ER_UI") or HERE / "ui.html")
 FONTS = Path(os.environ["ER_FONTS"]) if os.environ.get("ER_FONTS") else None
+ICONS = Path(os.environ.get("ER_ICONS") or HERE / "icons")
 DEFAULT_HOST = os.environ.get("ER_HOST", "127.0.0.1")
 DEFAULT_PORT = int(os.environ.get("ER_PORT", "8777"))
 
@@ -233,6 +234,7 @@ def tree(db, profile_id):
             "value": vals.get(iid, 0), "runs": runs.get(iid, 0),
             "derived": iid in graph,
             "from": labels.get(iid, ""),
+            "icon": r["icon"],
         })
     return sections
 
@@ -416,6 +418,16 @@ class Handler(BaseHTTPRequestHandler):
         qs = parse_qs(u.query)
         if u.path in ("/", "/index.html"):
             return self._file(UI, "text/html; charset=utf-8")
+
+        # Artwork. Behind the auth gate, unlike the fonts above: these are game
+        # assets that spell out what the ledger tracks, not public typefaces.
+        # The filename pattern is what seed.py wrote into item.icon, so there
+        # is nothing here for ".." to do.
+        if u.path.startswith("/img/"):
+            name = u.path[len("/img/"):]
+            if re.fullmatch(r"[a-z0-9-]+\.webp", name):
+                return self._file(ICONS / name, "image/webp", cache=True)
+            return self.send_error(404, "no such image")
 
         if not u.path.startswith("/api/"):
             return self.send_error(404, "not found")

@@ -184,6 +184,18 @@ ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-faint
 .row input:checked::after{content:"";position:absolute;left:5px;top:1px;
   width:4px;height:9px;border:solid var(--field);border-width:0 2px 2px 0;
   transform:rotate(43deg)}
+/* Artwork. Two shapes: equipment is a transparent square icon straight from
+   the game, people are landscape screenshots and get cropped to a plate.
+   Width and height are set here as well as on the element so a slow image
+   never reflows the list under your thumb. Decorative — the name beside it
+   is already the label, so they stay out of the accessibility tree. */
+.row .pic{flex:none;width:32px;height:32px;object-fit:contain;margin-top:-3px}
+.row .pic.face{width:46px;height:30px;object-fit:cover;margin-top:-1px;
+  border:1px solid var(--rule-faint)}
+.row input:checked ~ .pic{opacity:.35;filter:grayscale(1)}
+.row[data-auto] .pic{opacity:.5}
+.count .pic{flex:none;width:28px;height:28px;object-fit:contain}
+
 .row .what{min-width:0;font-size:15px;line-height:1.4}
 .row .where{display:block;font-family:Garamond,serif;font-size:15px;line-height:1.35;
   color:var(--ink-faint);margin-top:2px}
@@ -345,9 +357,16 @@ function draw(){
       const tags = (b.dlc?'<span class="tag dlc">Shadow</span>':"")
                  + (b.choice?'<span class="tag forked">either / or</span>':"");
       let rows="";
+      // Bosses and quest NPCs are photographed, everything else is an icon.
+      const face = p.slug==="boss" || p.slug==="quest";
       for (const it of b.items){
         const hay = (it.name+" "+it.detail).toLowerCase();
         const at = `data-id="${it.id}" data-dlc="${b.dlc}" data-cap="${it.target}" data-hay="${esc(hay)}"`;
+        const pic = it.icon
+          ? `<img class="pic${face?" face":""}" src="/img/${esc(it.icon)}" alt=""
+               aria-hidden="true" loading="lazy" decoding="async"
+               width="${face?46:32}" height="${face?30:32}">`
+          : "";
         if (it.kind === "tally"){
           rows += `<li class="row" ${at} data-kind="tally">
             <div class="count${it.value>=it.target?" done":""}">
@@ -355,6 +374,7 @@ function draw(){
                 aria-label="Fewer ${esc(it.name)}">&minus;</button>
               <button type="button" data-step="1" data-id="${it.id}"
                 aria-label="More ${esc(it.name)}">+</button>
+              ${pic}
               <span class="what"><span class="name">${esc(it.name)}</span>
                 ${it.detail?`<span class="where">${esc(it.detail)}</span>`:""}</span>
               <span class="num"><b>${it.value}</b>/${it.target}</span>
@@ -366,6 +386,7 @@ function draw(){
             : (it.detail?`<span class="where">${esc(it.detail)}</span>`:"");
           rows += `<li class="row" ${at}${auto?' data-auto="1"':""} data-kind="check"><label>
             <input type="checkbox" data-id="${it.id}"${it.value?" checked":""}${auto?" disabled":""}>
+            ${pic}
             <span class="what"><span class="name">${esc(it.name)}</span>${
               auto?' <span class="tag settled">auto</span>':""}${
               it.runs>1?`<span class="seen">${it.runs}&times;</span>`:""}${note}</span>

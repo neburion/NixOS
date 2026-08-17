@@ -20,6 +20,7 @@ DB = Path(os.environ.get("ER_DB") or HERE / "eldenring.db")
 SEED = Path(os.environ.get("ER_SEED") or HERE / "seed.json")
 SCHEMA = Path(os.environ.get("ER_SCHEMA") or HERE / "schema.sql")
 LINKS = Path(os.environ.get("ER_LINKS") or HERE / "links.json")
+ICONS = Path(os.environ.get("ER_ICON_MAP") or HERE / "icons.json")
 
 
 def split_detail(raw):
@@ -30,10 +31,40 @@ def split_detail(raw):
     return head, tail if sep else "", "check", 1
 
 
+def load_icons():
+    """{section id + item name: filename} from fetch-icons.py.
+
+    Keyed on section and name rather than the full ukey, which carries a
+    position that shifts whenever the list is edited. The same name in the
+    same section is the same picture, so this survives reordering for free
+    and lets one file serve every place a name appears.
+
+    Optional: the tracker runs fine with no artwork at all.
+    """
+    if not ICONS.exists():
+        return {}
+    return json.loads(ICONS.read_text(encoding="utf-8"))
+
+
+def migrate_columns(db):
+    """Add columns this schema has gained since the database was created.
+
+    schema.sql uses CREATE TABLE IF NOT EXISTS, so an existing item table is
+    left exactly as it was — a new column has to be added by hand or every
+    insert below fails on a database that predates it.
+    """
+    have = {r[1] for r in db.execute("PRAGMA table_info(item)")}
+    if have and "icon" not in have:
+        db.execute("ALTER TABLE item ADD COLUMN icon TEXT NOT NULL DEFAULT ''")
+        print("migrated: added item.icon")
+
+
 def main():
     data = json.loads(SEED.read_text(encoding="utf-8"))
+    icons = load_icons()
     db = sqlite3.connect(DB)
     db.execute("PRAGMA foreign_keys = ON")
+    migrate_columns(db)
     db.executescript(SCHEMA.read_text(encoding="utf-8"))
 
     # Preserve progress across a reseed by remembering it under the natural key.
@@ -46,7 +77,7 @@ def main():
     # a contentless fts5 table has no DELETE; this is the supported way to empty it
     db.execute("INSERT INTO item_fts(item_fts) VALUES('delete-all')")
 
-    n_sec = n_grp = n_item = 0
+    n_sec = n_grp = n_item = n_icon = 0
     for spos, sec in enumerate(data):
         cur = db.execute(
             "INSERT INTO section(slug, title, note, pos) VALUES (?,?,?,?)",
@@ -64,10 +95,11 @@ def main():
             for ipos, raw in enumerate(grp["items"]):
                 name, detail, kind, target = split_detail(raw)
                 ukey = f"{sec['id']}\x1f{grp['name']}\x1f{name}\x1f{ipos}"
+                icon = icons.get(f"{sec['id']}\x1f{name}", "")
                 cur = db.execute(
-                    "INSERT INTO item(group_id, ukey, name, detail, kind, target, pos) "
-                    "VALUES (?,?,?,?,?,?,?)",
-                    (gid, ukey, name, detail, kind, target, ipos),
+                    "INSERT INTO item(group_id, ukey, name, detail, kind, target, pos, icon) "
+                    "VALUES (?,?,?,?,?,?,?,?)",
+                    (gid, ukey, name, detail, kind, target, ipos, icon),
                 )
                 db.execute(
                     "INSERT INTO item_fts(rowid, name, detail, group_name, section_title) "
@@ -75,6 +107,7 @@ def main():
                     (cur.lastrowid, name, detail, grp["name"], sec["t"]),
                 )
                 n_item += 1
+                n_icon += 1 if icon else 0
 
     n_links = load_links(db)
 
@@ -118,6 +151,10 @@ def main():
     print(f"seeded {DB}")
     print(f"  {n_sec} sections, {n_grp} groups, {n_item} items ({total} tickable units)")
     print(f"  {n_links} implications ({len(set(t for t, _ in _link_pairs))} derived items)")
+    if icons:
+        print(f"  {n_icon}/{n_item} items have artwork")
+    else:
+        print("  no icons.json — running without artwork")
     if saved:
         print(f"  restored {restored}/{len(saved)} progress rows")
     if moved:

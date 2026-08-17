@@ -60,6 +60,11 @@ let
     ER_SCHEMA = "${src}/schema.sql";
     ER_UI = "${src}/ui.html";
     ER_FONTS = "${fonts}";
+    # Artwork, vendored by fetch-icons.py and committed alongside seed.json —
+    # 1,494 WebP files, ~6 MB. Deliberately not fetched at build or run time:
+    # the wikis it came from are not a dependency of this service.
+    ER_ICONS = "${src}/icons";
+    ER_ICON_MAP = "${src}/icons.json";
     ER_HOST = "0.0.0.0";
     ER_PORT = toString port;
     # Login half that isn't secret. The password is the sops secret below.

@@ -16,6 +16,10 @@ tailnet only. See the module tree entry in `ARCHITECTURE.md`.
 | `seed.py` | rebuilds reference tables from `seed.json`, **keeps progress** |
 | `app.py` | HTTP server + JSON API |
 | `ui.html` | the UI |
+| `fetch-icons.py` | hand-run scraper that vendors the artwork |
+| `icons/` | 1,494 WebP files, ~6 MB — the artwork itself |
+| `icons.json` | item → filename, read by `seed.py` |
+| `icons.map.json` | where each file came from, for re-fetching |
 
 1,704 tickable units across 17 sections (1,640 rows; tallies like the 45 Golden
 Seeds and 104 Cookbooks count for more than one).
@@ -72,6 +76,49 @@ already ticked it, the tick is pushed down onto its sources — ticking
 "Shardbearer Godrick" means you demonstrably killed Godrick — and the stored row
 is removed so the computed value takes over. Without that, turning items derived
 would silently zero them.
+
+## Artwork
+
+1,543 of the 1,640 rows carry a picture, served from `icons/` at `/img/…`
+behind the same auth gate as everything else. Equipment gets its transparent
+96px game icon; bosses and quest NPCs get a landscape screenshot cropped to a
+plate, because no icon assets exist for them.
+
+The remaining 97 rows are abstractions — achievements, endings, `Vigor 99`,
+`All cookbook recipes learned` — and no artwork exists for them anywhere. They
+render with the space where the icon would be, which is the honest answer.
+
+**The images are committed, not fetched.** Neither wiki is a dependency of this
+service: nothing downloads at build time or at run time, and the tracker works
+with both of them offline or gone. `fetch-icons.py` is the only thing here that
+touches the network, it is never run by systemd, and its output is what ships.
+
+```bash
+python3 fetch-icons.py resolve      # find a source for every row -> icons.map.json
+nix shell nixpkgs#libwebp --command python3 fetch-icons.py fetch
+python3 fetch-icons.py resolve --only boss,quest   # redo one section
+```
+
+`resolve` tries three sources in order. **wiki.gg**'s API covers all equipment:
+its icon filenames are mechanical (`ER Icon <kind> <exact item name>.png`), so
+one bulk listing of the File: namespace resolves ~1,200 rows offline in six
+requests. **Fextralife** covers bosses and NPCs, which wiki.gg has no icon
+assets for, by reading the `og:image` meta tag off each page — no API exists, so
+that is one request per row. **wiki.gg infoboxes** catch the stragglers by
+pulling `image =` out of the raw wikitext.
+
+Most of the work is undoing disambiguation this list adds and the wikis do not
+have: parentheticals, `Duo`/`Trio`/`and allies`, and `A & B` pairs the wiki
+files under either half alone. `ALIASES` in the script holds the nine entries
+where the two simply use different names (`Iji the Blacksmith` is wiki.gg's
+`War Counselor Iji`). Apostrophes must survive — Night's Cavalry is not Nights
+Cavalry.
+
+Two things to know. Fextralife's `og:image` occasionally names a file missing
+from their own server, so `fetch` falls back to wiki.gg and **rewrites the map
+entry** so the repair sticks. And roughly one boss portrait in twenty is simply
+the wrong picture on their end — `Kindred of Rot` currently shows a miner prawn.
+Both are worth an eyeball pass after a re-fetch.
 
 ## Runs
 

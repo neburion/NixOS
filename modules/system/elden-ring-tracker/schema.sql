@@ -30,7 +30,11 @@ CREATE TABLE IF NOT EXISTS item (
   detail   TEXT    NOT NULL DEFAULT '',
   kind     TEXT    NOT NULL CHECK (kind IN ('check','tally')),
   target   INTEGER NOT NULL DEFAULT 1 CHECK (target > 0),
-  pos      INTEGER NOT NULL
+  pos      INTEGER NOT NULL,
+  -- Filename in icons/, from icons.json. Empty for the ~100 abstract entries
+  -- (achievements, endings, "Vigor 99") that no artwork exists for, so the UI
+  -- can leave a gap instead of requesting a file that is not there.
+  icon     TEXT    NOT NULL DEFAULT ''
 );
 
 -- Implication graph, rebuilt from links.json alongside the reference tables.
@@ -73,13 +77,18 @@ CREATE INDEX IF NOT EXISTS ix_prog_item    ON progress(item_id);
 CREATE INDEX IF NOT EXISTS ix_prog_updated ON progress(profile_id, updated_at DESC);
 
 -- Flat join used by nearly every read path.
-CREATE VIEW IF NOT EXISTS v_item AS
+-- Dropped and rebuilt rather than IF NOT EXISTS: a view is derived, costs
+-- nothing to recreate, and IF NOT EXISTS would silently keep an old
+-- definition on an existing database whenever a column is added here.
+DROP VIEW IF EXISTS v_item;
+CREATE VIEW v_item AS
 SELECT i.id         AS item_id,
        i.ukey       AS ukey,
        i.name       AS name,
        i.detail     AS detail,
        i.kind       AS kind,
        i.target     AS target,
+       i.icon       AS icon,
        i.pos        AS ipos,
        g.id         AS group_id,
        g.name       AS group_name,
