@@ -93,9 +93,18 @@ in
   # HTTP Basic Auth password for the UI. Rotate with:
   #   sops secrets/personal-server.yaml   (edit reading-tracker-password)
   #   git commit && git push && rebuild personal-server
+  #
+  # `restartUnits` is load-bearing, not tidiness. LoadCredential snapshots the
+  # password into the service's credential directory at unit start, and app.py
+  # reads it once at import. Rotating the secret rewrites /run/secrets and
+  # changes nothing else, so without this the unit is not restarted, the running
+  # process keeps the old password in memory, and the deploy prints
+  # "modifying secret: …" and a cheerful "Done." while the credential you just
+  # retired still works. Found exactly that way.
   sops.secrets.reading-tracker-password = {
     sopsFile = ../../../secrets/personal-server.yaml;
     mode = "0400";
+    restartUnits = [ "reading-tracker.service" ];
   };
 
   systemd.services.reading-tracker = {

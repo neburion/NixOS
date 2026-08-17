@@ -95,9 +95,16 @@ in
   # HTTP Basic Auth password for the UI. Rotate with:
   #   sops secrets/personal-server.yaml   (edit elden-ring-password)
   #   git commit && git push && rebuild personal-server
+  #
+  # `restartUnits` is load-bearing. LoadCredential snapshots the password at
+  # unit start and app.py reads it once at import, so rotating the secret
+  # rewrites /run/secrets and changes nothing else: without this the unit is
+  # never restarted and the retired password keeps working while the deploy
+  # prints "modifying secret" and "Done.".
   sops.secrets.elden-ring-password = {
     sopsFile = ../../../secrets/personal-server.yaml;
     mode = "0400";
+    restartUnits = [ "elden-ring-tracker.service" ];
   };
 
   systemd.services.elden-ring-tracker = {

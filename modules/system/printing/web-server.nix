@@ -42,10 +42,17 @@ in
   # KEY=VALUE env file that the systemd unit loads via EnvironmentFile.
   # Rotation: `sops set secrets/home-server.yaml '["print-server-password"]'
   # '"newpass"'` + rebuild.
+  #
+  # `restartUnits` is what makes that rotation actually take effect.
+  # LoadCredential snapshots the password at unit start and the app reads it
+  # once, so rewriting /run/secrets changes nothing on its own: without this the
+  # unit is never restarted and the retired password keeps working, while the
+  # deploy prints "modifying secret" and "Done.".
   sops.secrets.print-server-password = {
     sopsFile = ../../../secrets/home-server.yaml;
     mode     = "0400";
     owner    = "print-server";
+    restartUnits = [ "print-server.service" ];
   };
 
   # LoadCredential= reads the sops-decrypted secret as root at unit startup
