@@ -12,8 +12,14 @@
 # every start and only your ticks are preserved. Here seed.json is a snapshot of
 # an Obsidian vault, and *everything* in it — chapter, rating, status — is the
 # mutable state the app exists to edit. So seeding is additive and keyed on
-# title: new titles are inserted, existing rows are never touched. First start
-# imports 300 series; every start after that is a no-op.
+# title: new titles are inserted, existing rows are never touched. The first
+# start imported 300 series from the vault; a later one added 617 more from an
+# Anime-Planet export, and every start in between and since is a no-op.
+#
+# tags.json is the other half and works differently: it is a classification of
+# every title on all three tag axes, applied *once*, as a recorded migration,
+# precisely because re-applying it would overwrite tags edited by hand. See
+# apply_tags() in seed.py.
 #
 # Store vs. state. app.py/seed.py/seed.json live in the read-only store; the
 # database and the cover cache do not. Both read RT_* from the environment and
@@ -56,6 +62,7 @@ let
   env = {
     RT_DB = "${stateDir}/reading.db";
     RT_SEED = "${src}/seed.json";
+    RT_TAGS = "${src}/tags.json";
     RT_SCHEMA = "${src}/schema.sql";
     RT_UI = "${src}/ui.html";
     RT_FONTS = "${fonts}";

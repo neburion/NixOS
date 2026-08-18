@@ -217,7 +217,7 @@ def tag_key(t):
 
 def tag_report(db):
     rows = db.execute("""
-        SELECT t.id, t.name, COUNT(st.series_id) AS n
+        SELECT t.id, t.name, t.axis, COUNT(st.series_id) AS n
         FROM tag t LEFT JOIN series_tag st ON st.tag_id = t.id
         GROUP BY t.id ORDER BY n DESC, t.name
     """).fetchall()
@@ -239,11 +239,21 @@ def tag_report(db):
                               for r in sorted(group, key=lambda r: -r["n"])],
             })
     variants.sort(key=lambda v: -sum(s["count"] for s in v["spellings"]))
-    return {
-        "counts": [{"id": r["id"], "tag": r["name"], "count": r["n"]}
-                   for r in rows if r["n"]],
-        "variants": variants,
-    }
+    counts = [{"id": r["id"], "tag": r["name"], "axis": r["axis"] or "",
+               "count": r["n"]} for r in rows if r["n"]]
+    # Grouped for the UI, in the vocabulary's own order rather than by count —
+    # a menu whose items move every time you tag something is a menu you have
+    # to read every time. Anything the user typed himself lands in "other".
+    order = {name: i for i, name in enumerate(
+        n for names in S.TAGS.values() for n in names)}
+    axes = []
+    for axis in list(S.TAGS) + ["other"]:
+        want = axis if axis != "other" else ""
+        members = [c for c in counts if (c["axis"] or "") == want]
+        if members:
+            members.sort(key=lambda c: (order.get(c["tag"], 1e9), c["tag"]))
+            axes.append({"axis": axis, "tags": members})
+    return {"counts": counts, "axes": axes, "variants": variants}
 
 
 def merge_tags(db, source_ids, target_id):
@@ -287,6 +297,30 @@ def _bucket(db, table, column):
     return out
 
 
+def _tag_bucket(db):
+    """Series per tag, grouped by axis — the shape the stats panel wants.
+
+    This is what replaced the two "shelved and now complete" / "on hold, still
+    publishing" lists that used to sit at the bottom of Stats. Those were
+    recommendations: the page deciding what he should read next, out of two
+    fields it had no business drawing a conclusion from. A breakdown of what
+    the shelf actually contains is a statistic; a nudge is not."""
+    rows = db.execute("""
+        SELECT t.axis, t.name, COUNT(st.series_id) AS n
+        FROM tag t JOIN series_tag st ON st.tag_id = t.id
+        GROUP BY t.id HAVING n > 0
+    """).fetchall()
+    out = []
+    for axis in list(S.TAGS) + ["other"]:
+        want = axis if axis != "other" else None
+        members = sorted(((r["name"], r["n"]) for r in rows if r["axis"] == want),
+                         key=lambda p: (-p[1], p[0]))
+        if members:
+            out.append({"axis": axis,
+                        "rows": [{"name": n, "count": c} for n, c in members]})
+    return out
+
+
 def stats(db):
     total = db.execute("SELECT COUNT(*) FROM series").fetchone()[0]
     agg = db.execute("""
@@ -295,25 +329,6 @@ def stats(db):
                ROUND(AVG(rating), 2) AS avg
         FROM series
     """).fetchone()
-
-    # Two lists the pair of status fields makes possible and neither field
-    # answers alone: things you shelved that have since finished, and things
-    # you shelved that never stopped publishing.
-    def titles(sql):
-        return [r["title"] for r in db.execute(sql)]
-
-    finishable = titles("""
-        SELECT s.title FROM series s
-        JOIN status st ON st.id = s.status_id
-        JOIN pub p ON p.id = s.pub_id
-        WHERE st.name IN ('Hold','Later') AND p.name = 'Completed'
-        ORDER BY s.title COLLATE NOCASE""")
-    stalled = titles("""
-        SELECT s.title FROM series s
-        JOIN status st ON st.id = s.status_id
-        JOIN pub p ON p.id = s.pub_id
-        WHERE st.name = 'Hold' AND p.name = 'Ongoing'
-        ORDER BY s.title COLLATE NOCASE""")
 
     ratings = [{"score": int(r["b"]), "count": r["n"]} for r in db.execute("""
         SELECT CAST(ROUND(rating) AS INTEGER) AS b, COUNT(*) AS n
@@ -339,8 +354,7 @@ def stats(db):
         "byType": _bucket(db, "type", "type_id"),
         "byPub": _bucket(db, "pub", "pub_id"),
         "ratings": ratings,
-        "finishable": finishable,
-        "stalled": stalled,
+        "byTag": _tag_bucket(db),
         "chaptersWeek": week,
         "chaptersMonth": recent,
     }
@@ -397,8 +411,8 @@ def update_series(db, sid, fields):
     for field in ("chapter", "rating"):
         if field in fields:
             new = _num(fields[field])
-            if new is not None and field == "rating" and not (-10 <= new <= 10):
-                raise ValueError("rating must be between -10 and 10")
+            if new is not None and field == "rating" and not (0 <= new <= 10):
+                raise ValueError("rating must be between 0 and 10")
             if new != before[field]:
                 sets.append(f"{field} = ?")
                 args.append(new)
@@ -862,14 +876,10 @@ def print_stats():
         print(f"  {row['name']:<18} {row['count']:>4}")
     print(f"\nread in the last 7 days: {st['chaptersWeek']} chapters"
           f"   ·   30 days: {st['chaptersMonth']}")
-    if st["finishable"]:
-        print(f"\nShelved and now complete — finishable ({len(st['finishable'])}):")
-        for n in st["finishable"][:12]:
-            print(f"  · {n}")
-    if st["stalled"]:
-        print(f"\nOn hold but still publishing ({len(st['stalled'])}):")
-        for n in st["stalled"][:12]:
-            print(f"  · {n}")
+    for group in st["byTag"]:
+        top = ", ".join(f"{r['name']} {r['count']}" for r in group["rows"][:6])
+        print(f"\n  {group['axis']:<8} {top}")
+    print()
     var = tag_report(db)["variants"]
     if var:
         print(f"\n{len(var)} tags spelled more than one way:")

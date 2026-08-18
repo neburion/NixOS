@@ -7,8 +7,9 @@ on the tailnet, and publicly at **https://reading.azuresalt.app** through the
 Cloudflare tunnel declared in the host's `cloudflare-layout.nix`.
 See the module tree entry in `ARCHITECTURE.md`.
 
-300 series, 13,316 chapters, imported once from the **Reading-Ob** Obsidian
-vault on pod042.
+918 series. 300 came from the **Reading-Ob** Obsidian vault on pod042; the
+other 617 from an Anime-Planet export (`export-manga-Jacine0520.json`) of an
+older account, imported 2026-08-17. Both are snapshots — see below.
 
 ## Files
 
@@ -16,7 +17,8 @@ vault on pod042.
 |---|---|
 | `service.nix` | systemd unit, cover-warming timer, tailnet firewall rule |
 | `schema.sql` | tables, views, FTS5 index |
-| `seed.json` | the 300-series origin snapshot |
+| `seed.json` | the origin snapshot: 300 vault series + 617 from Anime-Planet |
+| `tags.json` | every title classified on the three tag axes, applied once |
 | `seed.py` | builds the database; **additive**, never overwrites your edits |
 | `app.py` | HTTP server + JSON API + cover cache |
 | `ui.html` | the UI |
@@ -93,17 +95,87 @@ corrupt data, it is an opinion, and clamping it to fit a 0–10 scale would be
 editing a verdict to suit a schema — so the range admits it and the UI slider
 goes down to −10.
 
-## Tag spellings
+## Tags are on three axes
 
-The vault was hand-written over years, so the same tag arrived in more than one
-form: `HunterFantasy` / `Hunter Fantasy`, `SchoolLife` / `School Life`,
-`Video Game` / `VideoGame`. They mean one thing and filter as two.
+The vault's tags were a flat pile of 59, written by hand over years, in which
+`Fantasy` (half the shelf), `Transmigrassion` (a typo, 109 series) and `Boxing`
+(one series) were peers in one alphabetical menu. Eighteen of the 59 were used
+twice or less, and six were the same tag spelled two ways.
 
-Folding them automatically would decide for you which spelling was the mistake,
-so the **Tags** view surfaces them and the merge is a button press. `tag_key()`
-decides what counts as the same tag: case-folded, non-alphanumerics stripped.
-The merge inserts before it deletes, because a series carrying *both* spellings
-has to end up with one row rather than a primary-key violation.
+They are now a closed vocabulary of 41, and every one of them answers exactly
+one question:
+
+| axis | question | e.g. |
+|---|---|---|
+| **setting** | where does it take place | Fantasy, Murim, Xianxia, Modern, Hunter Fantasy, Apocalypse |
+| **genre** | what does reading it feel like | Action, Adventure, Romance, Horror, Slice of Life |
+| **premise** | what is the hook | Transmigration, Regression, System, Revenge, Time Loop |
+
+The axis is a column on `tag`, and it is what makes the filters work: there are
+three tag dropdowns rather than one 59-item menu, and they are ANDed, so "a
+murim story with a regression premise" is one query instead of a choice between
+two of the three things you know about it. A tag typed straight into the sheet
+gets no axis and shows up under **Unfiled** until it is given one.
+
+`tags.json` holds the classification for every title. It was built from three
+layers, in increasing authority: regex over the title — which works far better
+here than it should, because this genre names its books after their own
+synopsis — then the tags the vault already carried, then a hand-written table
+for the ~380 whose titles give nothing away. Each axis is capped (2 settings,
+3 genres, 3 premises), keeping the rarest, because eight true tags is not a
+classification, it is the synopsis again.
+
+It is applied **once**, as a recorded migration, not on every start: replacing a
+series' tags is destructive of anything typed by hand, and a seeder that
+re-applied it would undo your edits on the next reboot. That is the same reason
+`seed_applied` exists — see below.
+
+### Spellings
+
+`tag_key()` still backs a merge tool in the **Tags** view — case-folded,
+non-alphanumerics stripped — for spellings typed into the sheet by hand. It is
+a net now rather than the standing condition it was when the tags came out of
+the vault, so the panel only appears when there is something in it. The merge
+inserts before it deletes, because a series carrying *both* spellings has to end
+up with one row rather than a primary-key violation.
+
+## Vocabularies, and what each one is asking
+
+Three closed sets, and the whole point is that they ask different questions.
+They were easy to confuse when the menus were unlabelled, and the vault had in
+fact confused two of them:
+
+| field | the question | values |
+|---|---|---|
+| **status** — *Shelf* | where **you** are with it | Reading, Later, Hold, Read, Dropped |
+| **pub** — *Still publishing* | whether the **author** is still writing it | Ongoing, Hiatus, Completed, Cancelled |
+| **type** — *Medium* | what it is | Manhwa, Manhua, Manga, Web Novel, Indonesian Comic |
+
+`Hold` used to appear in *both* status and pub, on the strength of one vault
+note reading `Publication Status: Hold`. Hold is a shelf. That value is retired
+and the note reads Hiatus; the migration is `pub-drop-hold` in `seed.py`.
+
+Every filter dropdown now carries its question above it rather than a
+placeholder describing what it will accept — "Any publication" told you what
+the menu held and never what it was for.
+
+## Ratings are 0–10
+
+They were once −10 to 10, to admit a single series rated −10. That was a verdict
+rather than a score; it is 0 now, the `CHECK` in `schema.sql` is `0..10`, and
+both writers — `update_series()` in app.py, `clamp_rating()` in seed.py — refuse
+a negative. Databases created before the change keep the wider `CHECK`, since
+rebuilding a table to tighten a constraint is not worth the risk to the reading
+history hanging off it, and nothing can write a negative through it anyway.
+
+## Stats has no recommendations
+
+It used to end with two lists — *shelved and now complete*, *on hold and still
+publishing* — computed by joining status against pub. Those were not statistics.
+They were the page deciding what you should read next out of two fields that
+were never asked that question. They are gone, and what replaced them is a
+breakdown of the shelf by setting, genre and premise, which is a fact about the
+library rather than a nudge.
 
 ## Cover artwork
 

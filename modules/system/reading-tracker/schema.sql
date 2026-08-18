@@ -10,10 +10,9 @@ PRAGMA foreign_keys = ON;
 
 -- ── vocabularies ─────────────────────────────────────────────────────────
 -- Three closed sets that were free text in the frontmatter, which is how the
--- vault ended up with a `Publication Status: Hold` on one note where every
--- other note says Hiatus. `pos` carries presentation order, which is not
--- alphabetical: what you are reading now belongs at the top of the shelf and
--- what you abandoned belongs at the bottom.
+-- vault ended up spelling one value two ways. `pos` carries presentation order,
+-- which is not alphabetical: what you are reading now belongs at the top of the
+-- shelf and what you abandoned belongs at the bottom.
 
 CREATE TABLE IF NOT EXISTS status (
   id   INTEGER PRIMARY KEY,
@@ -21,6 +20,10 @@ CREATE TABLE IF NOT EXISTS status (
   pos  INTEGER NOT NULL
 );
 
+-- `pub` answers "is the author still writing it", which is not the same
+-- question as "am I still reading it" — that is `status`. The vault confused
+-- the two and left a `Publication Status: Hold` on one note; Hold is a shelf,
+-- so that value is gone and the note reads Hiatus.
 CREATE TABLE IF NOT EXISTS pub (
   id   INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -45,11 +48,13 @@ CREATE TABLE IF NOT EXISTS series (
   id         INTEGER PRIMARY KEY,
   title      TEXT NOT NULL UNIQUE,
   chapter    REAL,
-  -- The scale is 0-10, except that Mushoku Tensei is rated -10. That is not
-  -- corrupt data, it is an opinion, and clamping it would be editing a verdict
-  -- to fit a schema. The range is widened to admit it and the UI slider goes
-  -- down to -10 to match.
-  rating     REAL CHECK (rating IS NULL OR (rating >= -10 AND rating <= 10)),
+  -- 0-10. This once admitted -10, to hold a single series rated in anger; that
+  -- was a verdict rather than a score, and it has been set to 0. Databases
+  -- created before that keep the wider CHECK — rebuilding a table to tighten a
+  -- constraint is not worth the risk to the reading history hanging off it —
+  -- but nothing can write a negative any more: app.py clamps on the way in and
+  -- seed.py clamps on import, which are the only two writers there are.
+  rating     REAL CHECK (rating IS NULL OR (rating >= 0 AND rating <= 10)),
   status_id  INTEGER REFERENCES status(id) ON DELETE RESTRICT,
   pub_id     INTEGER REFERENCES pub(id)    ON DELETE RESTRICT,
   type_id    INTEGER REFERENCES type(id)   ON DELETE RESTRICT,
@@ -65,10 +70,17 @@ CREATE INDEX IF NOT EXISTS series_updated ON series(updated_at DESC);
 -- ── tags ─────────────────────────────────────────────────────────────────
 -- A real many-to-many, which is what makes `UPDATE tag SET name = ?` a
 -- complete merge of two spellings rather than a rewrite of 11 files.
-
+--
+-- `axis` is what stops a tag list from turning back into the 59-item pile this
+-- started as. Every tag answers exactly one of three questions — where it is
+-- set, how it reads, what the hook is — and the UI groups the picker and the
+-- filters by that, so "Fantasy" and "Regression" never sit in the same menu
+-- again. Nullable for a tag typed straight into the sheet, which lands
+-- unfiled until it is given an axis.
 CREATE TABLE IF NOT EXISTS tag (
   id   INTEGER PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE
+  name TEXT NOT NULL UNIQUE,
+  axis TEXT
 );
 
 CREATE TABLE IF NOT EXISTS series_tag (
@@ -126,6 +138,18 @@ CREATE TABLE IF NOT EXISTS seed_applied (
   title     TEXT PRIMARY KEY,
   series_id INTEGER REFERENCES series(id) ON DELETE SET NULL,
   at        TEXT NOT NULL DEFAULT (datetime('now'))
+) WITHOUT ROWID;
+
+-- One-time repairs that have already run, so they do not run again. The seeder
+-- is otherwise entirely declarative — this is the escape hatch for the handful
+-- of things that are a *change of mind* rather than a change of data, like
+-- retiring a vocabulary value or reclassifying every tag on the shelf. Those
+-- must happen exactly once, because the user is free to undo them afterwards
+-- and a seeder that re-applied them would be arguing with him every restart.
+
+CREATE TABLE IF NOT EXISTS migration (
+  name TEXT PRIMARY KEY,
+  at   TEXT NOT NULL DEFAULT (datetime('now'))
 ) WITHOUT ROWID;
 
 -- ── views ────────────────────────────────────────────────────────────────

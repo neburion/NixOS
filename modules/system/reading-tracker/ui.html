@@ -53,6 +53,17 @@
   --gap:16px;
   --tap:44px;
   --shadow:0 1px 2px rgba(27,26,22,.07), 0 6px 18px rgba(27,26,22,.06);
+
+  /* Signal's geometry, on this palette. Its phone UI is built out of two
+     things: corners that are rounder than feels reasonable until you see them
+     next to a thumb, and separation by *tone* rather than by hairline — a
+     surface sits on a slightly different ground instead of being fenced off
+     with a 1px rule. Everything below is those two ideas applied. */
+  --r-pill:999px;      /* chips, buttons, the search field, the nav indicator */
+  --r-card:18px;       /* panels and slabs */
+  --r-art:14px;        /* cover plates and thumbnails */
+  --r-sheet:28px;      /* the bottom sheet's top corners */
+  --tint:rgba(140,58,43,.10);   /* accent at nav-indicator strength */
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
   --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
@@ -62,6 +73,7 @@
   --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
   --read:#B79BD4; --dropped:#7C776B;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --tint:rgba(224,138,118,.14);
 }}
 :root[data-theme=dark]{
   --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
@@ -71,6 +83,7 @@
   --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
   --read:#B79BD4; --dropped:#7C776B;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --tint:rgba(224,138,118,.14);
 }
 
 *{box-sizing:border-box}
@@ -96,6 +109,9 @@ header{
   border-bottom:1px solid var(--rule);
   padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));
 }
+/* On a phone the header is the top of a single continuous surface, so the rule
+   under it is one line too many — the shelf reads as one sheet of paper. */
+@media (max-width:640px){header{border-bottom:0;padding-top:6px}}
 .bar{display:flex;align-items:center;gap:12px;min-height:36px}
 /* min-width:0 so the title truncates instead of shoving the toolbar off the
    right edge — without it a long name makes the whole page scroll sideways. */
@@ -120,9 +136,10 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
   stroke-linecap:round;stroke-linejoin:round}
 .ico.on{color:var(--accent);border-color:var(--rule);background:var(--sunk)}
 
-.seek{display:flex;align-items:center;gap:8px;margin:8px 0;
-  border:1px solid var(--rule);background:var(--paper);padding:0 10px;
-  height:38px;border-radius:3px}
+.seek{display:flex;align-items:center;gap:9px;margin:8px 0 10px;
+  border:1px solid transparent;background:var(--sunk);padding:0 14px;
+  height:40px;border-radius:var(--r-pill);transition:border-color .12s}
+.seek:focus-within{border-color:var(--accent)}
 .seek svg{width:15px;height:15px;flex:none;color:var(--ink-3);fill:none;
   stroke:currentColor;stroke-width:1.7}
 .seek input{flex:1;min-width:0;border:0;background:none;outline:none;height:100%;
@@ -131,30 +148,47 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
 
 /* status tabs — the primary navigation, because a shelf is sorted by what you
    are doing with a book, not by its title */
-.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -4px}
+.tabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;
+  padding:2px 0 10px;margin:0 -2px;scroll-padding:0 14px}
 .tabs::-webkit-scrollbar{display:none}
 .tab{
-  flex:none;background:none;border:0;border-bottom:2px solid transparent;
-  padding:7px 10px 8px;color:var(--ink-3);font-size:13px;font-weight:500;
-  display:flex;align-items:baseline;gap:6px;white-space:nowrap;
+  flex:none;background:var(--sunk);border:1px solid transparent;
+  border-radius:var(--r-pill);
+  padding:0 13px;height:32px;color:var(--ink-2);font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:7px;white-space:nowrap;
 }
-@media (max-width:640px){.tab{min-height:var(--tap);padding:0 12px;align-items:center}}
-.tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.75}
+@media (max-width:640px){.tab{height:36px;padding:0 15px}}
+.tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.7}
 .tab:hover{color:var(--ink)}
-.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--dot,var(--accent))}
+/* The shelf's colour lives in the chip itself when it is the one you are on,
+   which is one fewer thing on screen than a dot plus an underline. */
+.tab[aria-selected=true]{background:var(--dot,var(--accent));color:var(--card);
+  font-weight:600}
+.tab[aria-selected=true] em{opacity:.85}
 .tab[data-s=Reading]{--dot:var(--reading)} .tab[data-s=Later]{--dot:var(--later)}
 .tab[data-s=Hold]{--dot:var(--hold)}      .tab[data-s=Read]{--dot:var(--read)}
 .tab[data-s=Dropped]{--dot:var(--dropped)}
 
-.drawer{display:none;flex-wrap:wrap;gap:8px;align-items:center;
-  padding:10px 0;border-top:1px solid var(--rule-2)}
-.drawer.open{display:flex}
+/* Six unlabelled dropdowns in a row is a puzzle: "Any publication" and "Any
+   tag" tell you what they will accept, never what they are asking. Each one
+   now carries its own question above it, and the tag filter is split into the
+   three axes the vocabulary actually has, so choosing a setting and a genre
+   at once is possible rather than a choice between them. */
+.drawer{display:none;gap:10px 12px;padding:4px 0 12px;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.drawer.open{display:grid}
+.filt{display:flex;flex-direction:column;gap:5px;min-width:0}
+.filt>.lbl{padding-left:2px}
 select,.chip{
-  height:32px;border:1px solid var(--rule);background:var(--paper);
-  color:var(--ink-2);padding:0 9px;border-radius:3px;font-size:13px;
+  height:36px;border:1px solid var(--rule);background:var(--paper);
+  color:var(--ink-2);padding:0 12px;border-radius:var(--r-pill);font-size:13px;
+  width:100%;
 }
+.chip{width:auto}
 select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--card)}
+/* Reset has no question of its own, so it aligns to the bottom of the row. */
+.filt.act{justify-content:flex-end}
 
 /* ── bottom dock (phones) ───────────────────────────────────────────────
    Six icons plus a title and a tally do not fit across a 390px phone: the
@@ -171,16 +205,41 @@ select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
               max(4px,env(safe-area-inset-left));
   }
   .dock button{
-    flex:1;min-width:0;min-height:56px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:3px;
-    background:none;border:0;color:var(--ink-3);padding:6px 2px;
+    flex:1;min-width:0;min-height:58px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;
+    background:none;border:0;color:var(--ink-3);padding:8px 2px 6px;
   }
+  /* The icon sits in its own pill, which is what fills in when the view is
+     active. Colouring the glyph alone gives a 20px target's worth of feedback
+     on a 58px control; the pill is the part you can actually see land. */
+  .dock i{display:grid;place-items:center;width:56px;height:30px;
+    border-radius:var(--r-pill);transition:background .14s}
   .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round}
-  .dock span{font-size:10px;letter-spacing:.02em;font-weight:500}
+  .dock span{font-size:10.5px;letter-spacing:.01em;font-weight:500}
   .dock button.on{color:var(--accent)}
+  .dock button.on i{background:var(--tint)}
+  .dock button.on span{font-weight:600}
   /* These live in the dock now; keeping both would be two ways to do one thing. */
-  header .bar [data-view],header .bar [data-act=new]{display:none}
+  header .bar [data-view]{display:none}
+  header .bar [data-act=new]{display:none}
+}
+
+/* Add is the one thing here that creates rather than navigates, so on a phone
+   it leaves the row of view switches and becomes the floating button — the
+   same split Signal makes between its nav bar and its compose button. */
+.fab{display:none}
+@media (max-width:640px){
+  .fab{
+    display:grid;place-items:center;position:fixed;z-index:46;
+    right:max(16px,env(safe-area-inset-right));
+    bottom:calc(74px + env(safe-area-inset-bottom));
+    width:56px;height:56px;border:0;border-radius:18px;
+    background:var(--accent);color:var(--card);box-shadow:var(--shadow);
+  }
+  .fab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round}
+  .fab:active{background:var(--accent-lit)}
 }
 
 /* ── shelf ──────────────────────────────────────────────────────────── */
@@ -201,9 +260,10 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   --dot:var(--ink-3)}
 .plate{
   position:relative;aspect-ratio:2/3;background:var(--sunk);overflow:hidden;
-  border:1px solid var(--rule-2);border-radius:2px;box-shadow:var(--shadow);
+  border:1px solid var(--rule-2);border-radius:var(--r-art);box-shadow:var(--shadow);
   cursor:pointer;
 }
+@media (max-width:640px){.plate{border-color:transparent}}
 .plate img{width:100%;height:100%;object-fit:cover;display:block}
 .book:hover .plate{border-color:var(--accent)}
 /* No artwork: set the title on a tinted ground rather than leave a hole. The
@@ -217,12 +277,16 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 :root[data-theme=dark] .fallback{
   background:linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}
 
-.mark{position:absolute;top:0;left:0;width:4px;height:34px;background:var(--dot)}
+/* The status stripe was flush to a square corner; on a rounded plate it has to
+   be inset or it is clipped into a wedge. */
+.mark{position:absolute;top:9px;left:0;width:4px;height:28px;background:var(--dot);
+  border-radius:0 var(--r-pill) var(--r-pill) 0}
 .book[data-s=Reading]{--dot:var(--reading)} .book[data-s=Later]{--dot:var(--later)}
 .book[data-s=Hold]{--dot:var(--hold)}       .book[data-s=Read]{--dot:var(--read)}
 .book[data-s=Dropped]{--dot:var(--dropped)}
 
-.score{position:absolute;top:6px;right:6px;padding:2px 6px;border-radius:2px;
+.score{position:absolute;top:8px;right:8px;padding:3px 8px;
+  border-radius:var(--r-pill);
   background:rgba(12,11,8,.72);color:#F4F1E9;font-family:Mono,monospace;
   font-size:11px;backdrop-filter:blur(3px)}
 .foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;
@@ -232,7 +296,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .ch b{font-weight:400;font-size:9px;opacity:.7;letter-spacing:.06em}
 .plus{
-  margin-left:auto;width:28px;height:28px;flex:none;border-radius:2px;
+  margin-left:auto;width:28px;height:28px;flex:none;border-radius:var(--r-pill);
   border:1px solid rgba(244,241,233,.35);background:rgba(12,11,8,.6);
   color:#F4F1E9;font-size:15px;line-height:1;display:grid;place-items:center;
   opacity:0;transition:opacity .12s;backdrop-filter:blur(3px);
@@ -254,8 +318,9 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 
 /* ── panels ─────────────────────────────────────────────────────────── */
 .panel{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
-.slab{background:var(--card);border:1px solid var(--rule);border-radius:3px;
-  padding:18px}
+.slab{background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r-card);padding:20px}
+@media (max-width:640px){.slab{border-color:transparent;background:var(--sunk)}}
 .slab h2{font-family:Lit,Georgia,serif;font-size:16px;font-weight:600;margin:0 0 14px}
 .slab h2 span{color:var(--ink-3);font-size:13px;font-family:Mono,monospace}
 .figs{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
@@ -275,14 +340,14 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   color:var(--ink-3);text-align:right}
 .list{display:flex;flex-direction:column;gap:1px}
 .list button{display:flex;gap:10px;align-items:baseline;text-align:left;width:100%;
-  background:none;border:0;padding:7px 8px;border-radius:2px;font-size:13.5px}
+  background:none;border:0;padding:9px 12px;border-radius:12px;font-size:13.5px}
 .list button:hover{background:var(--sunk)}
 .list button em{font-style:normal;margin-left:auto;font-family:Mono,monospace;
   font-size:11px;color:var(--ink-3);flex:none}
 .hint{font-size:13px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.55}
 .cloud{display:flex;flex-wrap:wrap;gap:6px}
-.cloud button{border:1px solid var(--rule);background:var(--paper);border-radius:2px;
-  padding:4px 8px;font-size:12.5px;color:var(--ink-2)}
+.cloud button{border:1px solid var(--rule);background:var(--paper);
+  border-radius:var(--r-pill);padding:5px 12px;font-size:12.5px;color:var(--ink-2)}
 .cloud button:hover{border-color:var(--accent);color:var(--ink)}
 .cloud button em{font-style:normal;font-family:Mono,monospace;font-size:10px;
   color:var(--ink-3);margin-left:5px}
@@ -290,7 +355,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   border-bottom:1px solid var(--rule-2);font-size:13px}
 .merge:last-child{border-bottom:0}
 .merge code{font-family:Mono,monospace;font-size:12px;background:var(--sunk);
-  padding:2px 6px;border-radius:2px}
+  padding:3px 9px;border-radius:var(--r-pill)}
 .merge .go{margin-left:auto}
 
 /* ── the sheet ──────────────────────────────────────────────────────── */
@@ -307,7 +372,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .sheet.open{transform:none}
 @media (max-width:640px){
   .sheet{top:auto;left:0;width:100%;
-    border-left:0;border-top:1px solid var(--rule);border-radius:10px 10px 0 0;
+    border-left:0;border-top:0;border-radius:var(--r-sheet) var(--r-sheet) 0 0;
     transform:translateY(101%);
     /* dvh tracks the shrinking/growing browser toolbar; vh does not, and a
        sheet sized in vh has its footer under the address bar half the time. */
@@ -315,30 +380,38 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
     height:min(92dvh,860px);
   }
 }
-.sheet-top{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px;
-  border-bottom:1px solid var(--rule-2)}
+.sheet-top{display:flex;align-items:flex-start;gap:12px;padding:16px 16px 14px;
+  border-bottom:1px solid var(--rule-2);position:relative}
+/* The grab handle. It is not draggable — it is the affordance that tells you
+   this panel came up from the bottom edge and goes back down there. */
+@media (max-width:640px){
+  .sheet-top{padding-top:22px;border-bottom:0}
+  .sheet-top::before{content:"";position:absolute;top:9px;left:50%;
+    transform:translateX(-50%);width:36px;height:4px;border-radius:var(--r-pill);
+    background:var(--rule)}
+}
 .sheet-top h2{font-family:Lit,Georgia,serif;font-size:17px;font-weight:600;
   margin:0;line-height:1.3;flex:1}
 .sheet-body{flex:1;overflow-y:auto;padding:16px 14px 24px}
 .field{margin-bottom:18px}
 .field>.lbl{display:block;margin-bottom:6px}
 .field input[type=text],.field input[type=number],.field select,.field textarea{
-  width:100%;height:38px;border:1px solid var(--rule);background:var(--paper);
-  border-radius:3px;padding:0 10px;font-size:16px;outline:none}
+  width:100%;height:40px;border:1px solid var(--rule);background:var(--paper);
+  border-radius:12px;padding:0 13px;font-size:16px;outline:none}
 .field textarea{height:auto;padding:8px 10px;font-size:14px;resize:vertical;
   line-height:1.5}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
 .stepper{display:flex;gap:8px;align-items:center}
 .stepper input{text-align:center;font-family:Mono,monospace}
-.stepper button{width:var(--tap);height:38px;border:1px solid var(--rule);
-  background:var(--paper);border-radius:3px;font-size:17px;flex:none}
+.stepper button{width:var(--tap);height:40px;border:1px solid var(--rule);
+  background:var(--paper);border-radius:var(--r-pill);font-size:17px;flex:none}
 .stepper button:hover{border-color:var(--accent);color:var(--accent)}
 .stars{display:flex;align-items:center;gap:10px}
 .stars input[type=range]{flex:1;accent-color:var(--accent);height:38px;min-width:0}
 .stars output{font-family:Mono,monospace;font-size:17px;width:44px;text-align:right}
 .picks{display:flex;flex-wrap:wrap;gap:6px}
-.pick{height:32px;padding:0 11px;border:1px solid var(--rule);background:var(--paper);
-  border-radius:3px;font-size:13px;color:var(--ink-2)}
+.pick{height:34px;padding:0 14px;border:1px solid var(--rule);background:var(--paper);
+  border-radius:var(--r-pill);font-size:13px;color:var(--ink-2)}
 .pick:hover{border-color:var(--accent)}
 .pick[aria-pressed=true]{background:var(--tone,var(--accent));
   border-color:var(--tone,var(--accent));color:var(--card);font-weight:500}
@@ -346,30 +419,30 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .pick[data-v=Hold]{--tone:var(--hold)}      .pick[data-v=Read]{--tone:var(--read)}
 .pick[data-v=Dropped]{--tone:var(--dropped)}
 .tagbox{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.tagbox span{display:inline-flex;align-items:center;gap:6px;height:28px;
-  padding:0 4px 0 9px;border:1px solid var(--rule);border-radius:2px;
+.tagbox span{display:inline-flex;align-items:center;gap:6px;height:30px;
+  padding:0 6px 0 13px;border:1px solid var(--rule);border-radius:var(--r-pill);
   font-size:12.5px;color:var(--ink-2)}
 .tagbox span button{border:0;background:none;color:var(--ink-3);font-size:15px;
   line-height:1;padding:0 4px}
 .tagbox span button:hover{color:var(--accent)}
 .sheet-foot{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--rule-2);
   padding-bottom:calc(12px + env(safe-area-inset-bottom));background:var(--card)}
-.btn{height:var(--tap);padding:0 16px;border:1px solid var(--rule);
-  background:var(--paper);border-radius:3px;font-size:14px;font-weight:500}
+.btn{height:var(--tap);padding:0 20px;border:1px solid var(--rule);
+  background:var(--paper);border-radius:var(--r-pill);font-size:14px;font-weight:500}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card);
   flex:1}
 .btn.primary:hover{background:var(--accent-lit);border-color:var(--accent-lit);
   color:var(--card)}
 .btn.danger:hover{border-color:#B4342A;color:#B4342A}
-.thumb{width:74px;flex:none;aspect-ratio:2/3;object-fit:cover;border-radius:2px;
-  border:1px solid var(--rule-2);background:var(--sunk)}
+.thumb{width:74px;flex:none;aspect-ratio:2/3;object-fit:cover;
+  border-radius:var(--r-art);border:1px solid var(--rule-2);background:var(--sunk)}
 .meta{font-size:11.5px;color:var(--ink-3);line-height:1.6;margin:0}
 
 /* ── toast ──────────────────────────────────────────────────────────── */
 #toast{position:fixed;z-index:60;left:50%;transform:translate(-50%,20px);
   bottom:calc(18px + env(safe-area-inset-bottom));background:var(--ink);
-  color:var(--paper);padding:10px 14px;border-radius:4px;font-size:13.5px;
+  color:var(--paper);padding:12px 18px;border-radius:var(--r-pill);font-size:13.5px;
   display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;
   max-width:calc(100vw - 28px)}
@@ -384,11 +457,12 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 @media (max-width:640px){
   .seek{height:var(--tap)}
   .field input[type=text],.field input[type=number],.field select{height:var(--tap)}
+  .seek{height:var(--tap)}
   .field textarea{min-height:88px}
   .stepper button{height:var(--tap)}
   .stars input[type=range]{height:var(--tap)}
   .picks .pick,#e-rating-clear{height:40px;padding:0 13px}
-  .drawer select,.drawer .chip{height:40px}
+  .drawer select,.drawer .chip{height:44px}
   .cloud button{min-height:40px;padding:8px 11px}
   .merge .chip{height:40px}
   .tagbox span{height:34px;padding-left:11px}
@@ -407,7 +481,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   .drawer select,.field textarea,dialog select,dialog input{font-size:16px}
 }
 
-dialog{border:1px solid var(--rule);border-radius:4px;background:var(--card);
+dialog{border:1px solid var(--rule);border-radius:var(--r-card);background:var(--card);
   color:var(--ink);padding:0;width:min(400px,calc(100vw - 28px));box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(12,11,8,.5)}
 dialog form{padding:18px}
@@ -439,16 +513,24 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
   </div>
 
   <div class="drawer" id="drawer">
-    <select id="f-type"><option value="">Any medium</option></select>
-    <select id="f-pub"><option value="">Any publication</option></select>
-    <select id="f-tag"><option value="">Any tag</option></select>
-    <select id="f-sort">
-      <option value="updated">Recently touched</option>
-      <option value="rating">Highest rated</option>
-      <option value="chapter">Furthest along</option>
-      <option value="title">Title A–Z</option>
-    </select>
-    <button class="chip" id="f-clear">Reset</button>
+    <div class="filt"><label class="lbl" for="f-type">Medium</label>
+      <select id="f-type" title="Manhwa, manga, web novel…"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-pub">Still publishing</label>
+      <select id="f-pub" title="Whether the author is still writing it"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-setting">Setting</label>
+      <select id="f-setting" title="Where it takes place"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-genre">Genre</label>
+      <select id="f-genre" title="How it reads"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-premise">Premise</label>
+      <select id="f-premise" title="The hook"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-sort">Order</label>
+      <select id="f-sort">
+        <option value="updated">Recently touched</option>
+        <option value="rating">Highest rated</option>
+        <option value="chapter">Furthest along</option>
+        <option value="title">Title A–Z</option>
+      </select></div>
+    <div class="filt act"><button class="chip" id="f-clear">Reset filters</button></div>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -457,12 +539,13 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 <main id="main"><div class="empty">Opening the shelf…</div></main>
 
 <nav class="dock" aria-label="Views">
-  <button data-view="shelf"><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4zM16.5 5.2l3.4 15.1"/></svg><span>Shelf</span></button>
-  <button data-view="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Stats</span></button>
-  <button data-view="history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>History</span></button>
-  <button data-view="tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg><span>Tags</span></button>
-  <button data-act="new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+  <button data-view="shelf"><i><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4zM16.5 5.2l3.4 15.1"/></svg></i><span>Shelf</span></button>
+  <button data-view="stats"><i><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></i><span>Stats</span></button>
+  <button data-view="history"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></i><span>History</span></button>
+  <button data-view="tags"><i><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></i><span>Tags</span></button>
 </nav>
+
+<button class="fab" data-act="new" aria-label="Add a series"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <div class="veil" id="veil"></div>
 <aside class="sheet" id="sheet" aria-hidden="true"></aside>
@@ -546,8 +629,11 @@ async function api(path, body){
 /* ══ state ════════════════════════════════════════════════════════════ */
 const S = {
   data:null, view:'shelf', shelf:'Reading', q:'',
-  type:'', pub:'', tag:'', sort:'updated', open:null,
+  type:'', pub:'', setting:'', genre:'', premise:'', sort:'updated', open:null,
 };
+const AXES = ['setting','genre','premise'];
+const AXIS_LABEL = { setting:'Setting', genre:'Genre', premise:'Premise',
+                     other:'Unfiled' };
 const byId = id => S.data.series.find(s => s.id === id);
 
 /* ══ load ═════════════════════════════════════════════════════════════ */
@@ -562,6 +648,10 @@ async function load(){
   }
 }
 
+/* Tags belonging to one axis, in vocabulary order. */
+const tagsOn = axis => (S.data.tags.axes.find(a => a.axis === axis) || {}).tags || [];
+const axisOf = tag => (S.data.tags.counts.find(c => c.tag === tag) || {}).axis || '';
+
 function fillPickers(){
   const m = S.data.meta;
   const opt = (sel, items, blank) => {
@@ -570,9 +660,12 @@ function fillPickers(){
       items.map(v => `<option>${esc(v)}</option>`).join('');
     sel.value = items.includes(keep) ? keep : '';
   };
-  opt($('#f-type'), m.type, 'Any medium');
-  opt($('#f-pub'), m.pub, 'Any publication');
-  opt($('#f-tag'), S.data.tags.counts.map(t => t.tag), 'Any tag');
+  opt($('#f-type'), m.type, 'Any');
+  opt($('#f-pub'), m.pub, 'Any');
+  // One dropdown per axis, each holding only its own tags. The old single
+  // "Any tag" menu was 59 items long and mixed all three together.
+  for (const axis of AXES)
+    opt($('#f-' + axis), tagsOn(axis).map(t => t.tag), 'Any');
   $('#f-sort').value = S.sort;
 
   $('#n-type').innerHTML = '<option value="">—</option>' +
@@ -587,7 +680,10 @@ function shown(){
   if (S.shelf !== 'All') list = list.filter(s => s.status === S.shelf);
   if (S.type) list = list.filter(s => s.type === S.type);
   if (S.pub)  list = list.filter(s => s.pub === S.pub);
-  if (S.tag)  list = list.filter(s => s.tags.includes(S.tag));
+  // The three tag filters are ANDed: a murim regression story is one query now,
+  // not a choice between two of the three things you know about it.
+  for (const axis of AXES)
+    if (S[axis]) list = list.filter(s => s.tags.includes(S[axis]));
   if (S.q){
     const q = S.q.toLowerCase();
     list = list.filter(s => s.title.toLowerCase().includes(q)
@@ -619,8 +715,10 @@ function render(){
   // Header and dock carry the same data-view hooks, so one pass lights both.
   for (const b of document.querySelectorAll('[data-view]'))
     b.classList.toggle('on', b.dataset.view === S.view);
+  const filtered = S.type || S.pub || S.sort !== 'updated'
+                   || AXES.some(a => S[a]);
   for (const b of document.querySelectorAll('[data-act=filter]'))
-    b.classList.toggle('on', !!(S.type || S.pub || S.tag || S.sort !== 'updated'));
+    b.classList.toggle('on', !!filtered);
 
   if (S.view === 'stats')   return renderStats();
   if (S.view === 'tags')    return renderTags();
@@ -674,16 +772,6 @@ function bars(rows, total, tone){
 
 function renderStats(){
   const st = S.data.stats;
-  const jump = (arr, title, note) => !arr.length ? '' : `
-    <div class="slab">
-      <h2>${esc(title)} <span>${arr.length}</span></h2>
-      <p class="hint">${note}</p>
-      <div class="list">${arr.map(t => {
-        const s = S.data.series.find(x => x.title === t);
-        return `<button data-open="${s ? s.id : ''}">${esc(t)}
-          <em>${s && s.chapter !== null ? 'ch ' + esc(fmt(s.chapter)) : '—'}</em></button>`;
-      }).join('')}</div>
-    </div>`;
 
   $('#main').innerHTML = `<div class="panel">
     <div class="slab">
@@ -701,10 +789,9 @@ function renderStats(){
     <div class="slab"><h2>Ratings given</h2>
       ${bars(st.ratings.map(r => ({name:String(r.score), count:r.count})),
              Math.max(...st.ratings.map(r => r.count), 1))}</div>
-    ${jump(st.finishable, 'Shelved, and now complete',
-      'You put these down while they were still running. They have since finished, so there is an ending waiting.')}
-    ${jump(st.stalled, 'On hold, still publishing',
-      'These sit on the Hold shelf but the author never stopped. Chapters have piled up.')}
+    ${(st.byTag || []).map(g => `
+      <div class="slab"><h2>By ${esc(AXIS_LABEL[g.axis] || g.axis).toLowerCase()}</h2>
+        ${bars(g.rows, Math.max(...g.rows.map(r => r.count), 1))}</div>`).join('')}
   </div>`;
 }
 
@@ -728,11 +815,19 @@ function renderHistory(){
   </div></div>`;
 }
 
+const AXIS_NOTE = {
+  setting: 'Where it takes place. One or two per series — the narrower one wins, '
+         + 'so a murim story is not also filed under Fantasy.',
+  genre:   'What reading it feels like.',
+  premise: 'The hook: the thing you would say first describing it to someone.',
+  other:   'Tags typed straight into a series that are not part of the '
+         + 'vocabulary yet. Nothing is wrong with them — they just do not '
+         + 'appear in the filters above until they are given an axis.',
+};
+
 function renderTags(){
   const t = S.data.tags;
-  const variants = !t.variants.length
-    ? '<p class="hint">Every tag is spelled one way. Nothing to merge.</p>'
-    : t.variants.map(v => `
+  const variants = !t.variants.length ? '' : t.variants.map(v => `
       <div class="merge">
         ${v.spellings.map(s => `<code>${esc(s.tag)}</code><em style="font-style:normal;
           color:var(--ink-3);font-size:11px">${s.count}</em>`).join(
@@ -740,20 +835,26 @@ function renderTags(){
         <button class="chip go" data-merge="${esc(JSON.stringify(v))}">Merge into ${esc(v.canon)}</button>
       </div>`).join('');
 
-  $('#main').innerHTML = `<div class="panel">
+  // Only shown when there is something to merge. The vocabulary is closed now,
+  // so this is a net for spellings typed by hand into the sheet rather than the
+  // standing condition it was when the tags came out of the vault.
+  const mergePanel = !variants ? '' : `
     <div class="slab">
       <h2>Spelled more than one way</h2>
-      <p class="hint">These came across from the vault, which was written by hand
-      over years, so a few tags exist in two forms. They mean the same thing but
-      filter as two. Merging repoints every series onto one spelling and drops
-      the other.</p>
+      <p class="hint">Two tags here mean one thing and filter as two. Merging
+      repoints every series onto one spelling and drops the other.</p>
       ${variants}
-    </div>
-    <div class="slab">
-      <h2>Every tag <span>${t.counts.length}</span></h2>
-      <div class="cloud">${t.counts.map(c =>
-        `<button data-tag="${esc(c.tag)}">${esc(c.tag)}<em>${c.count}</em></button>`).join('')}</div>
-    </div>
+    </div>`;
+
+  $('#main').innerHTML = `<div class="panel">
+    ${mergePanel}
+    ${t.axes.map(a => `
+      <div class="slab">
+        <h2>${esc(AXIS_LABEL[a.axis] || a.axis)} <span>${a.tags.length}</span></h2>
+        <p class="hint">${esc(AXIS_NOTE[a.axis] || '')}</p>
+        <div class="cloud">${a.tags.map(c =>
+          `<button data-tag="${esc(c.tag)}">${esc(c.tag)}<em>${c.count}</em></button>`).join('')}</div>
+      </div>`).join('')}
   </div>`;
 }
 
@@ -790,7 +891,7 @@ function openSheet(id){
       <div class="field">
         <span class="lbl">Rating</span>
         <div class="stars">
-          <input type="range" id="e-rating" min="-10" max="10" step="0.5"
+          <input type="range" id="e-rating" min="0" max="10" step="0.5"
                  value="${s.rating ?? 0}">
           <output id="e-rating-out">${s.rating === null ? '—' : esc(fmt(s.rating))}</output>
           <button class="pick" id="e-rating-clear">Clear</button>
@@ -798,12 +899,12 @@ function openSheet(id){
       </div>
 
       <div class="field">
-        <span class="lbl">Shelf</span>
+        <span class="lbl">Shelf — where you are with it</span>
         <div class="picks">${picks('status', m.status, s.status)}</div>
       </div>
 
       <div class="field">
-        <span class="lbl">Publication</span>
+        <span class="lbl">Still publishing</span>
         <div class="picks">${picks('pub', m.pub, s.pub)}</div>
       </div>
 
@@ -816,8 +917,9 @@ function openSheet(id){
         <span class="lbl">Tags</span>
         <div class="tagbox" id="e-tagbox"></div>
         <input type="text" id="e-tag-add" list="taglist" placeholder="Add a tag, then Enter">
-        <datalist id="taglist">${S.data.tags.counts
-          .map(c => `<option value="${esc(c.tag)}">`).join('')}</datalist>
+        <datalist id="taglist">${S.data.tags.axes.map(a =>
+          a.tags.map(c => `<option value="${esc(c.tag)}" label="${
+            esc(AXIS_LABEL[a.axis] || a.axis)}">`).join('')).join('')}</datalist>
       </div>
 
       <div class="field">
@@ -942,9 +1044,14 @@ document.addEventListener('click', async ev => {
   if (tab){ S.view = 'shelf'; S.shelf = tab.dataset.s; return render(); }
 
   const tag = hit('[data-tag]');
-  if (tag){ S.tag = tag.dataset.tag; S.view = 'shelf'; S.shelf = 'All';
-            $('#f-tag').value = S.tag; $('#drawer').classList.add('open');
-            return render(); }
+  if (tag){
+    const name = tag.dataset.tag, axis = axisOf(name);
+    for (const a of AXES){ S[a] = ''; $('#f-' + a).value = ''; }
+    if (AXES.includes(axis)){ S[axis] = name; $('#f-' + axis).value = name; }
+    S.view = 'shelf'; S.shelf = 'All';
+    $('#drawer').classList.add('open');
+    return render();
+  }
 
   const merge = hit('[data-merge]');
   if (merge) return mergeTags(JSON.parse(merge.dataset.merge));
@@ -953,8 +1060,8 @@ document.addEventListener('click', async ev => {
   if (hit('[data-save]')) return saveSheet();
 
   if (ev.target.id === 'e-rating-clear'){
-    // The slider cannot express "unrated" — 0 is a real score, and so is -10 —
-    // so the output element carries that state and Clear puts it back.
+    // The slider still cannot express "unrated": 0 is a real score. So the
+    // output element carries that state and Clear puts it back.
     $('#e-rating').value = 0;
     $('#e-rating-out').textContent = '—';
     return;
@@ -1047,15 +1154,17 @@ document.addEventListener('click', ev => {
   if (act.dataset.act === 'theme') toggleTheme();
 });
 
-for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-tag','tag'],['#f-sort','sort']])
+for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-sort','sort'],
+                        ...AXES.map(a => ['#f-' + a, a])])
   $(id).addEventListener('change', e => {
     S[key] = e.target.value;
     if (S.view !== 'shelf') S.view = 'shelf';
     render();
   });
 $('#f-clear').addEventListener('click', () => {
-  S.type = S.pub = S.tag = ''; S.sort = 'updated';
-  $('#f-type').value = $('#f-pub').value = $('#f-tag').value = '';
+  S.type = S.pub = ''; S.sort = 'updated';
+  for (const a of AXES){ S[a] = ''; $('#f-' + a).value = ''; }
+  $('#f-type').value = $('#f-pub').value = '';
   $('#f-sort').value = 'updated';
   render();
 });
@@ -1075,9 +1184,12 @@ $('#dlg-form').addEventListener('submit', async ev => {
 });
 
 /* Theme: follow the system until told otherwise, then remember. */
-const THEME = 'reading-room-theme';
-if (localStorage.getItem(THEME))
-  document.documentElement.dataset.theme = localStorage.getItem(THEME);
+const THEME = 'reading-tracker-theme';
+// Falls back to the old key so renaming the app did not silently put everyone
+// back on the system theme.
+const savedTheme = localStorage.getItem(THEME)
+                || localStorage.getItem('reading-room-theme');
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 function toggleTheme(){
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   const now = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');

@@ -42,15 +42,56 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 DB = Path(os.environ.get("RT_DB") or HERE / "reading.db")
 SEED = Path(os.environ.get("RT_SEED") or HERE / "seed.json")
+# Title -> tags, on the three axes below. Applied once; see apply_tags().
+TAGSFILE = Path(os.environ.get("RT_TAGS") or HERE / "tags.json")
 SCHEMA = Path(os.environ.get("RT_SCHEMA") or HERE / "schema.sql")
 
-# Presentation order for the three closed vocabularies. Every value the vault
-# actually used is here; `Hold` appears under pub because one note says it.
+# Presentation order for the three closed vocabularies.
+#
+# `pub` has no Hold. Hold is a shelf — it says you stopped reading — and it
+# answers a different question from "is the author still writing this". The
+# vault had it on one note and it made the filter menu unreadable, because two
+# menus offered the same word for two different things.
 VOCAB = {
     "status": ["Reading", "Later", "Hold", "Read", "Dropped"],
-    "pub": ["Ongoing", "Hiatus", "Completed", "Cancelled", "Hold"],
+    "pub": ["Ongoing", "Hiatus", "Completed", "Cancelled"],
     "type": ["Manhwa", "Manhua", "Manga", "Web Novel", "Indonesian Comic"],
 }
+
+# The tag vocabulary, on three axes.
+#
+# This replaces a flat pile of 59 hand-written tags in which `Fantasy` (half the
+# shelf), `Transmigrassion` (a typo, 109 series) and `Boxing` (one series) were
+# peers in one alphabetical menu. Every tag now answers exactly one question:
+#
+#   setting  where does it take place
+#   genre    what does reading it feel like
+#   premise  what is the hook — the thing you would say first describing it
+#
+# Which is what makes the difference between a tag list and a filter. "Fantasy"
+# and "Regression" were never alternatives to each other; putting them on
+# separate axes lets you ask for a regression story set in a murim world, which
+# one flat menu could not express.
+#
+# Order inside an axis is presentation order, roughly most-used first.
+TAGS = {
+    "setting": [
+        "Fantasy", "Dark Fantasy", "Modern", "Hunter Fantasy", "Murim",
+        "Xianxia", "Apocalypse", "Supernatural", "Sci-Fi", "Historical",
+        "Academy", "School Life", "Tower", "Dungeon",
+    ],
+    "genre": [
+        "Action", "Adventure", "Comedy", "Romance", "Drama", "Psychological",
+        "Horror", "Thriller", "Mystery", "Slice of Life", "Sports",
+    ],
+    "premise": [
+        "Transmigration", "System", "Regression", "Reincarnation", "Revenge",
+        "Aristocracy", "Great Teacher", "Gender Swap", "Body Swap",
+        "Time Loop", "Author", "Demon King", "Death Game", "Video Game",
+        "Necromancy", "Profession",
+    ],
+}
+AXIS_OF = {name: axis for axis, names in TAGS.items() for name in names}
 
 
 def connect(path=DB):
@@ -101,12 +142,107 @@ def upsert_vocab(db):
             db.execute(
                 f"INSERT INTO {table}(name, pos) VALUES (?,?) "
                 f"ON CONFLICT(name) DO UPDATE SET pos = excluded.pos", (name, pos))
+    # Tags are upserted by name too, but only their axis is authoritative here:
+    # a tag the user invented in the sheet keeps existing with axis NULL, and
+    # one of ours gets its axis restored if it was somehow cleared.
+    for axis, names in TAGS.items():
+        for name in names:
+            db.execute(
+                "INSERT INTO tag(name, axis) VALUES (?,?) "
+                "ON CONFLICT(name) DO UPDATE SET axis = excluded.axis",
+                (name, axis))
+
+
+def once(db, name):
+    """True the first time a named repair is asked for, False ever after."""
+    if db.execute("SELECT 1 FROM migration WHERE name = ?", (name,)).fetchone():
+        return False
+    db.execute("INSERT INTO migration(name) VALUES (?)", (name,))
+    return True
+
+
+def add_column(db, table, column, decl):
+    """ALTER TABLE ... ADD COLUMN, but only when it is actually missing.
+
+    `CREATE TABLE IF NOT EXISTS` in schema.sql is a no-op against a database
+    that already exists, so a new column in that file reaches a fresh install
+    and nothing else. This is how it reaches the one on the server."""
+    cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})")]
+    if column not in cols:
+        db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
+
+def migrate(db):
+    """One-time repairs. Each runs once, on whichever start first sees it."""
+    add_column(db, "tag", "axis", "TEXT")
+
+    # A rating of -10 was a verdict rather than a score. Clamping it is the
+    # user's own call, recorded here rather than done silently every start.
+    if once(db, "rating-nonneg"):
+        n = db.execute("UPDATE series SET rating = 0 WHERE rating < 0").rowcount
+        if n:
+            print(f"  migrate: {n} negative rating(s) set to 0")
+
+    # Hold left `pub` (see VOCAB). Anything wearing it meant Hiatus.
+    if once(db, "pub-drop-hold"):
+        row = db.execute("SELECT id FROM pub WHERE name = 'Hold'").fetchone()
+        if row:
+            hiatus = db.execute("SELECT id FROM pub WHERE name = 'Hiatus'").fetchone()
+            n = db.execute("UPDATE series SET pub_id = ? WHERE pub_id = ?",
+                           (hiatus["id"], row["id"])).rowcount
+            db.execute("DELETE FROM pub WHERE id = ?", (row["id"],))
+            print(f"  migrate: pub 'Hold' retired, {n} series moved to Hiatus")
+
+
+def apply_tags(db, plan):
+    """Re-tag the shelf from tags.json, once.
+
+    Deliberately a migration and not part of the additive seed. These are
+    *classifications* — the axis vocabulary above applied to every title — and
+    replacing a series' tags is destructive of anything hand-typed. Doing it
+    once means the user can re-tag anything he disagrees with afterwards and
+    keep the change; doing it every start would mean losing that edit on the
+    next reboot, which is the exact failure `seed_applied` exists to prevent.
+    """
+    if not once(db, "tags-three-axis"):
+        return 0
+    by_title = {r["title"]: r["id"] for r in db.execute("SELECT id, title FROM series")}
+    touched = 0
+    for title, names in plan.items():
+        sid = by_title.get(title)
+        if sid is None:
+            continue
+        db.execute("DELETE FROM series_tag WHERE series_id = ?", (sid,))
+        for name in names:
+            db.execute(
+                "INSERT OR IGNORE INTO series_tag(series_id, tag_id) VALUES (?,?)",
+                (sid, tag_id(db, name)))
+        reindex(db, sid)
+        touched += 1
+    # Whatever is left over from the old flat vocabulary and now carries
+    # nothing. Tags the user made himself are not in TAGS and are kept only if
+    # something still wears them, which is the same rule.
+    dead = db.execute(
+        "DELETE FROM tag WHERE id NOT IN (SELECT tag_id FROM series_tag)").rowcount
+    print(f"  migrate: re-tagged {touched} series, dropped {dead} unused tag(s)")
+    return touched
+
+
+def clamp_rating(v):
+    """0-10, or None. One of the two write paths that enforce it; app.py is the
+    other. See the CHECK in schema.sql for why it is done here and not there."""
+    if v is None or v == "":
+        return None
+    try:
+        return min(10.0, max(0.0, float(v)))
+    except (TypeError, ValueError):
+        return None
 
 
 def apply_series(db, s, series_id=None):
     """Insert, or overwrite an existing row when --force-import is given."""
     vals = (
-        s["title"], s.get("chapter"), s.get("rating"),
+        s["title"], s.get("chapter"), clamp_rating(s.get("rating")),
         vocab_id(db, "status", s.get("status")),
         vocab_id(db, "pub", s.get("pub")),
         vocab_id(db, "type", s.get("type")),
@@ -139,6 +275,7 @@ def main():
     DB.parent.mkdir(parents=True, exist_ok=True)
     db = connect()
     db.executescript(SCHEMA.read_text(encoding="utf-8"))
+    migrate(db)
     upsert_vocab(db)
 
     payload = json.loads(SEED.read_text(encoding="utf-8"))
@@ -163,6 +300,9 @@ def main():
         elif a.force_import and applied[title] is not None:
             apply_series(db, s, applied[title])
             updated += 1
+
+    if TAGSFILE.exists():
+        apply_tags(db, json.loads(TAGSFILE.read_text(encoding="utf-8"))["tags"])
 
     # A row whose FTS entry went missing — an interrupted write, or a database
     # that predates the index — would be invisible to search while looking
