@@ -223,16 +223,45 @@ each step having a documented job — 1 app background, 3 element background, 6
 border, 11 low-contrast text, 12 high-contrast text. That numbering is why a
 dark UI stops being guesswork about which grey goes where.
 
-**There is no brand accent.** Emphasis is carried by contrast: a selected
-control goes to the light end of the same scale. With nine hundred pieces of
-cover art on the page, any hue in the chrome competes with all of them and
-loses to most. Red survives on exactly one control — the one that deletes a
-series — because there it is semantic rather than decorative.
+The greys are the ground, not the whole palette. Colour sits on top of them in
+exactly two places, and both of them mean something.
 
-The shelf markers are five greys running light to dark, so how present a book
-looks is how present it is. Placeholder plates for the 605 series with no
-artwork keep a per-title hue so they stay distinguishable, at 7% saturation,
-which reads as a shade rather than as a colour scheme.
+**The accent is Radix `iris`**, at the steps it was designed for: 9 as a solid
+fill (primary button, floating Add), 11 as text on dark (links, active nav), 3
+as a subtle tinted background, 7 as a border and focus ring. A dark UI cannot
+take a fully saturated hue — it optically vibrates against the ground and
+struggles to clear 4.5:1, which is why the advice is uniformly to desaturate
+20–30% for dark mode. Radix's dark scales are already built that way, which is
+the reason for taking them rather than mixing by hand.
+
+**The shelf markers are three hues and two greys.** Reading is green, Later
+blue, Hold orange — the shelves where something is still true of the book.
+Read and Dropped are finished states and are told apart by lightness, which
+leaves colour to mean *this is live*. The mustard that was on Hold is now
+orange at step 11: the same idea at a lightness that reads as orange on a dark
+ground rather than as something spilled on it.
+
+Red survives on exactly one control, the one that deletes a series, where it is
+semantic rather than decorative.
+
+Placeholder plates for the 605 series with no artwork keep a per-title hue so
+they stay distinguishable, at 7% saturation, which reads as a shade rather than
+as a colour scheme.
+
+### The selected chip cannot be a solid light fill
+
+It was, for one revision, and Reading's marker vanished into it — a near-white
+dot on a near-white chip, on the one shelf you were most likely to be looking
+at. That is not a value to nudge; it is the shape of the idea. Any solid light
+fill can swallow some marker, and which marker is a property you cannot keep
+hold of as the palette changes.
+
+So a selected chip is the tinted-surface pattern instead: `--a3` ground,
+`--a7` border, `--a11` label. Both states are dark, so all five markers clear
+3:1 in both. Every text colour clears 4.5:1 on all three surface greys — that
+is checked, not asserted; `--ink-3` moved off Radix step 9 because step 9 is a
+*solid* step, not a text step, and at 3.7:1 it was failing the 11px labels it
+was carrying.
 
 ## Radius
 

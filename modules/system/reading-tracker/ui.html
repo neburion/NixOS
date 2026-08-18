@@ -55,27 +55,36 @@
   --sunk:var(--g3);       /* inset: search field, chips, wells */
   --ink:var(--g12);
   --ink-2:var(--g11);
-  --ink-3:var(--g9);
+  --ink-3:#8a8a8a;   /* 4.6:1 on --g3, the lightest ground a label sits on */
   --rule:var(--g6);
   --rule-2:var(--g5);
 
-  /* There is no brand accent. Emphasis is carried by contrast — a selected
-     control goes to the light end of the same scale — which is how a UI with
-     nine hundred pieces of cover art in it stays legible: any hue put in the
-     chrome competes with all of them, and loses to most.
+  /* Accent: Radix `iris`, used at the steps it was designed for — 9 as a solid
+     fill, 11 as text on dark, 3 as a subtle tinted background, 7 as a border.
+     Dark UIs cannot take a fully saturated hue: it optically vibrates against
+     the ground and struggles to clear 4.5:1, which is why every guide says to
+     desaturate 20-30% for dark mode. Radix's dark scales are already built to
+     that, which is the reason for using them rather than mixing by hand. */
+  --a3:#202248;  --a5:#303374;  --a7:#4a4a95;
+  --a9:#5b5bd6;  --a10:#6e6ade; --a11:#b1a9ff;
 
-     Red is the one colour left, and it is semantic rather than decorative: it
-     appears on exactly one control, the one that deletes a series. */
+  /* Shelf markers. Three hues for the shelves where something is still true of
+     the book, two greys for the two where nothing is: Read and Dropped are
+     finished states and are told apart by lightness rather than by hue, which
+     leaves the colour to mean "this is live".
+
+     The mustard that was on Hold is now Radix `orange` at step 11 — the same
+     idea, at a lightness that reads as orange on a dark ground instead of as
+     something spilled on it. */
+  --reading:#3dd68c;   /* green-11  — you are in it */
+  --later:#70b8ff;     /* blue-11   — queued */
+  --hold:#ffa057;      /* orange-11 — paused */
+  --read:#b4b4b4;      /* gray-11   — done */
+  --dropped:#7b7b7b;   /* gray-10   — abandoned; dimmest of the five, but 3:1 */
+
+  /* Semantic, on one control: the one that deletes a series. */
   --danger:#e5484d;
   --danger-dim:#b54548;
-
-  /* Shelf markers: five greys, light to dark. How present a book looks is how
-     present it is. */
-  --reading:var(--g12);
-  --later:var(--g10);
-  --hold:var(--g8);
-  --read:var(--g7);
-  --dropped:var(--g5);
 
   --gap:16px;
   --tap:44px;
@@ -107,7 +116,7 @@ body{
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-a{color:var(--ink);text-underline-offset:2px}
+a{color:var(--a11);text-underline-offset:2px}
 .mono{font-family:Mono,ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;
   color:var(--ink-3);font-weight:600}
@@ -143,12 +152,12 @@ h1{font-size:16px;font-weight:600;margin:0;
 .ico:hover{color:var(--ink);background:var(--g4)}
 .ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round}
-.ico.on{color:var(--ink);background:var(--g5)}
+.ico.on{color:var(--a11);background:var(--a3)}
 
 .seek{display:flex;align-items:center;gap:9px;margin:8px 0 10px;
   border:1px solid transparent;background:var(--sunk);padding:0 14px;
   height:40px;border-radius:var(--r-md);transition:border-color .12s}
-.seek:focus-within{border-color:var(--g8)}
+.seek:focus-within{border-color:var(--a7)}
 .seek svg{width:15px;height:15px;flex:none;color:var(--ink-3);fill:none;
   stroke:currentColor;stroke-width:1.7}
 .seek input{flex:1;min-width:0;border:0;background:none;outline:none;height:100%;
@@ -169,15 +178,17 @@ h1{font-size:16px;font-weight:600;margin:0;
 @media (max-width:640px){.tab{height:36px;padding:0 15px}}
 .tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.7}
 .tab:hover{color:var(--ink)}
-/* The shelf's marker rides in the chip as a dot rather than as the fill. The
-   fill was the first idea and it does not survive the palette: the markers run
-   from near-white to near-background, so half of them cannot carry dark text
-   and the other half cannot carry light. One high-contrast selected state plus
-   a dot says the same two things and is legible at both ends. */
+/* The shelf marker rides in the chip as a dot. Which means the chip itself
+   can never be a solid light fill: Reading's marker is the brightest of the
+   five, and on a white chip it vanished exactly when it mattered — the shelf
+   you were looking at. A tinted surface is the fix, and it is also the
+   documented pattern: step 3 ground, step 7 border, step 11 label. Both chip
+   states are dark, so all five markers stay visible in both. */
 .tab::before{content:"";width:8px;height:8px;border-radius:var(--r-dot);
   background:var(--dot,var(--ink-3));flex:none}
-.tab[aria-selected=true]{background:var(--ink);color:var(--paper);font-weight:600}
-.tab[aria-selected=true] em{opacity:.7}
+.tab[aria-selected=true]{background:var(--a3);border-color:var(--a7);
+  color:var(--a11);font-weight:600}
+.tab[aria-selected=true] em{opacity:.8}
 .tab[data-s=Reading]{--dot:var(--reading)} .tab[data-s=Later]{--dot:var(--later)}
 .tab[data-s=Hold]{--dot:var(--hold)}      .tab[data-s=Read]{--dot:var(--read)}
 .tab[data-s=Dropped]{--dot:var(--dropped)}
@@ -201,7 +212,7 @@ select,.chip{
 }
 .chip{width:auto}
 select:hover,.chip:hover{border-color:var(--g8);color:var(--ink)}
-.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip.on{background:var(--a3);border-color:var(--a7);color:var(--a11)}
 /* Reset has no question of its own, so it aligns to the bottom of the row. */
 .filt.act{justify-content:flex-end}
 
@@ -232,8 +243,8 @@ select:hover,.chip:hover{border-color:var(--g8);color:var(--ink)}
   .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round}
   .dock span{font-size:10.5px;letter-spacing:.01em;font-weight:500}
-  .dock button.on{color:var(--ink)}
-  .dock button.on i{background:var(--g5)}
+  .dock button.on{color:var(--a11)}
+  .dock button.on i{background:var(--a3)}
   .dock button.on span{font-weight:600}
   /* These live in the dock now; keeping both would be two ways to do one thing. */
   header .bar [data-view]{display:none}
@@ -250,11 +261,11 @@ select:hover,.chip:hover{border-color:var(--g8);color:var(--ink)}
     right:max(16px,env(safe-area-inset-right));
     bottom:calc(74px + env(safe-area-inset-bottom));
     width:52px;height:52px;border:0;border-radius:var(--r-xl);
-    background:var(--ink);color:var(--paper);box-shadow:var(--shadow);
+    background:var(--a9);color:#fff;box-shadow:var(--shadow);
   }
   .fab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;
     stroke-linecap:round}
-  .fab:active{background:var(--g11)}
+  .fab:active{background:var(--a10)}
 }
 
 /* ── shelf ──────────────────────────────────────────────────────────── */
@@ -280,7 +291,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 }
 @media (max-width:640px){.plate{border-color:transparent}}
 .plate img{width:100%;height:100%;object-fit:cover;display:block}
-.book:hover .plate{border-color:var(--g8)}
+.book:hover .plate{border-color:var(--a7)}
 /* No artwork: set the title on a tinted ground rather than leave a hole. The
    hue comes from the title itself, so a book always looks like itself. */
 .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:10px;
@@ -313,7 +324,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   opacity:0;transition:opacity .12s;backdrop-filter:blur(3px);
 }
 .book:hover .plus,.plus:focus-visible{opacity:1}
-.plus:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.plus:hover{background:var(--a9);border-color:var(--a9);color:#fff}
 /* No hover to reveal it on a touch screen, and 28px is too small to hit while
    holding a phone — so it is always visible and grows to a real tap target. */
 @media (hover:none){.plus{opacity:1;width:38px;height:38px;font-size:19px}}
@@ -410,23 +421,22 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   border-radius:var(--r-md);padding:0 12px;font-size:16px;outline:none}
 .field textarea{height:auto;padding:8px 10px;font-size:14px;resize:vertical;
   line-height:1.5}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g8)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--a7)}
 .stepper{display:flex;gap:8px;align-items:center}
 .stepper input{text-align:center;font-family:Mono,monospace}
 .stepper button{width:var(--tap);height:40px;border:1px solid var(--rule);
   background:var(--paper);border-radius:var(--r-md);font-size:17px;flex:none}
 .stepper button:hover{border-color:var(--g8);color:var(--ink)}
 .stars{display:flex;align-items:center;gap:10px}
-.stars input[type=range]{flex:1;accent-color:var(--g11);height:38px;min-width:0}
+.stars input[type=range]{flex:1;accent-color:var(--a9);height:38px;min-width:0}
 .stars output{font-family:Mono,monospace;font-size:17px;width:44px;text-align:right}
 .picks{display:flex;flex-wrap:wrap;gap:6px}
 .pick{height:34px;padding:0 14px;border:1px solid var(--rule);background:var(--paper);
   border-radius:var(--r-md);font-size:13px;color:var(--ink-2)}
 .pick:hover{border-color:var(--g8)}
-/* Same reasoning as the shelf chips: one legible pressed state, and the shelf
-   marker as a dot rather than as the fill. */
-.pick[aria-pressed=true]{background:var(--ink);border-color:var(--ink);
-  color:var(--paper);font-weight:600}
+/* Same reasoning as the shelf chips, and the same fix. */
+.pick[aria-pressed=true]{background:var(--a3);border-color:var(--a7);
+  color:var(--a11);font-weight:600}
 .pick[data-v]{--tone:none}
 .pick[data-status]::before{content:"";width:8px;height:8px;margin-right:8px;
   border-radius:var(--r-dot);background:var(--tone,var(--ink-3));
@@ -446,9 +456,9 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .btn{height:var(--tap);padding:0 20px;border:1px solid var(--rule);
   background:var(--paper);border-radius:var(--r-md);font-size:14px;font-weight:500}
 .btn:hover{border-color:var(--g8);color:var(--ink)}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper);
+.btn.primary{background:var(--a9);border-color:var(--a9);color:#fff;
   flex:1;font-weight:600}
-.btn.primary:hover{background:var(--g11);border-color:var(--g11)}
+.btn.primary:hover{background:var(--a10);border-color:var(--a10)}
 .btn.danger{color:var(--ink-2)}
 .btn.danger:hover{border-color:var(--danger-dim);color:var(--danger)}
 .thumb{width:74px;flex:none;aspect-ratio:2/3;object-fit:cover;
@@ -463,7 +473,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;
   max-width:calc(100vw - 28px)}
 #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-#toast button{background:none;border:0;color:var(--paper);font-weight:600;
+#toast button{background:none;border:0;color:var(--a9);font-weight:600;
   text-decoration:underline;text-underline-offset:3px;
   font-size:13px;padding:0;flex:none}
 
