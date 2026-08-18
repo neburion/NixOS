@@ -353,25 +353,30 @@ def apply_verified(db, data, ap_data):
     Only written where the current value is still the one Anime-Planet wrote.
     A field he has touched since is his, and beats a lookup.
     """
-    if not once(db, "verified-pub-2026-08"):
+    if not once(db, "verified-pub-2026-08-b"):
         return
     rows = {r["title"]: r for r in db.execute(
         "SELECT s.id, s.title, p.name AS pub FROM series s "
         "LEFT JOIN pub p ON p.id = s.pub_id")}
-    n = skipped = 0
+    n = already = skipped = 0
     for title, got in data.items():
         row = rows.get(title)
         if row is None:
             continue
+        if row["pub"] == got["pub"]:
+            already += 1          # an earlier batch already set this one
+            continue
         was = (ap_data.get(title) or {}).get("pub")
         if was and row["pub"] != was:
-            skipped += 1          # edited since; leave it alone
+            # Not what Anime-Planet wrote and not what we want: he changed it.
+            skipped += 1
             continue
         db.execute("UPDATE series SET pub_id = ? WHERE id = ?",
                    (vocab_id(db, "pub", got["pub"]), row["id"]))
         n += 1
     print(f"  migrate: {n} verified publication status(es)"
-          + (f", {skipped} left as edited" if skipped else ""))
+          + (f", {already} already set" if already else "")
+          + (f", {skipped} left alone as edited by hand" if skipped else ""))
 
 
 def main():
