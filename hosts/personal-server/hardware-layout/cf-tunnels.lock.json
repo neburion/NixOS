@@ -3,6 +3,10 @@
     "credentialsSecret": "cloudflared-eldenring-azuresalt-app",
     "uuid": "c5c06856-290f-4fac-94c3-920c3441a4bd"
   },
+  "media.azuresalt.app": {
+    "credentialsSecret": "cloudflared-media-azuresalt-app",
+    "uuid": "8f1b8c23-a1c2-444e-a2bb-83b7cdbe4eb5"
+  },
   "reading.azuresalt.app": {
     "credentialsSecret": "cloudflared-reading-azuresalt-app",
     "uuid": "e44b3fcb-f132-4d06-a154-f3ba334bd396"
