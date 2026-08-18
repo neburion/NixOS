@@ -285,18 +285,24 @@ headings on a tool make it look like a magazine.
 ## What Anime-Planet was asked, and what it can answer
 
 The export carried a name, a status, a chapter and a rating, and nothing else —
-so 617 series arrived with no publication status and 605 with no type.
-`anime-planet.json` fills both from the source they came from.
+so 617 series arrived with no publication status and 604 with no type.
+`anime-planet.json` fills both from the source they came from: **617/617 have a
+publication status and a type**. 372 Completed, 245 Ongoing; 262 Manhwa, 179
+Manhua, 161 Manga, 15 Web Novel.
 
 The lookup is AP's own search, which 302s straight to the entry on an exact
 name, and these titles *are* AP's names. What the entry page gives:
 
 - **Publication status**, from the year range in the entry bar: `2018 - ?` is
-  running, `2018 - 2023` is finished. That is the only signal there — AP does
-  not distinguish hiatus or cancellation from completion — so this can produce
-  **Ongoing** and **Completed** and nothing else. Hiatus and Cancelled are
-  judgements it does not make, and guessing them from a stalled year range
-  would put a wrong word on a shelf rather than leave an honest blank.
+  running, `2018 - 2023` is finished. Some Chinese webcomics carry no year at
+  all, or say `TBA`; the chapter count answers those, because AP writes
+  `Ch: 759+` while a series runs and `Ch: 387` once it has stopped. Between the
+  two, all 617 resolved.
+
+  It can only ever produce **Ongoing** and **Completed** — AP does not
+  distinguish hiatus or cancellation from completion. Those two are judgements
+  it does not make, and guessing them from a stalled year range would put a
+  wrong word on a shelf rather than leave an honest blank.
 - **Type**, from the tags: `Manhwa`, `Manhua` and `Light Novels` are tagged
   explicitly, and a Japanese manga carries no medium tag at all because on a
   manga database that is the default. So *no medium tag* means Manga. (`Based

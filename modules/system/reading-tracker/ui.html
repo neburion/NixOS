@@ -812,8 +812,8 @@ function renderStats(){
       </div>
     </div>
     <div class="slab"><h2>By shelf</h2>${bars(st.byStatus, st.total, true)}</div>
-    <div class="slab"><h2>By medium</h2>${bars(st.byType, st.total)}</div>
-    <div class="slab"><h2>By publication</h2>${bars(st.byPub, st.total)}</div>
+    <div class="slab"><h2>By type</h2>${bars(st.byType, st.total)}</div>
+    <div class="slab"><h2>By publication status</h2>${bars(st.byPub, st.total)}</div>
     <div class="slab"><h2>Ratings given</h2>
       ${bars(st.ratings.map(r => ({name:String(r.score), count:r.count})),
              Math.max(...st.ratings.map(r => r.count), 1))}</div>
