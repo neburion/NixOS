@@ -47,6 +47,8 @@ TAGSFILE = Path(os.environ.get("RT_TAGS") or HERE / "tags.json")
 # Title -> {pub, type} looked up on Anime-Planet for the series imported from
 # there, which the export itself did not carry. Applied once; see apply_ap().
 APFILE = Path(os.environ.get("RT_ANIME_PLANET") or HERE / "anime-planet.json")
+# The handful Anime-Planet got wrong, confirmed one at a time. See apply_verified().
+VERIFIED = Path(os.environ.get("RT_VERIFIED") or HERE / "verified.json")
 SCHEMA = Path(os.environ.get("RT_SCHEMA") or HERE / "schema.sql")
 
 # Presentation order for the three closed vocabularies.
@@ -338,6 +340,40 @@ def apply_ap(db, data):
           f"and {types} type(s)")
 
 
+def apply_verified(db, data, ap_data):
+    """Hand-checked publication statuses, applied over the Anime-Planet guess.
+
+    Anime-Planet publishes a year range and no more, so a series it still shows
+    as `2019 - ?` may have finished years ago. Nothing fills that gap in bulk:
+    MangaDex was wrong on both series it was spot-checked against, and AniList
+    on three of six — a licensed webtoon taken off an aggregator looks exactly
+    like one that stopped. So these are one at a time, off a source that said
+    the fact outright.
+
+    Only written where the current value is still the one Anime-Planet wrote.
+    A field he has touched since is his, and beats a lookup.
+    """
+    if not once(db, "verified-pub-2026-08"):
+        return
+    rows = {r["title"]: r for r in db.execute(
+        "SELECT s.id, s.title, p.name AS pub FROM series s "
+        "LEFT JOIN pub p ON p.id = s.pub_id")}
+    n = skipped = 0
+    for title, got in data.items():
+        row = rows.get(title)
+        if row is None:
+            continue
+        was = (ap_data.get(title) or {}).get("pub")
+        if was and row["pub"] != was:
+            skipped += 1          # edited since; leave it alone
+            continue
+        db.execute("UPDATE series SET pub_id = ? WHERE id = ?",
+                   (vocab_id(db, "pub", got["pub"]), row["id"]))
+        n += 1
+    print(f"  migrate: {n} verified publication status(es)"
+          + (f", {skipped} left as edited" if skipped else ""))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Seed the reading tracker database")
     ap.add_argument("--force-import", action="store_true",
@@ -375,8 +411,13 @@ def main():
 
     if TAGSFILE.exists():
         apply_tags(db, json.loads(TAGSFILE.read_text(encoding="utf-8"))["tags"])
+    ap_data = {}
     if APFILE.exists():
-        apply_ap(db, json.loads(APFILE.read_text(encoding="utf-8"))["series"])
+        ap_data = json.loads(APFILE.read_text(encoding="utf-8"))["series"]
+        apply_ap(db, ap_data)
+    if VERIFIED.exists():
+        apply_verified(db, json.loads(VERIFIED.read_text(encoding="utf-8"))["series"],
+                       ap_data)
 
     # A row whose FTS entry went missing — an interrupted write, or a database
     # that predates the index — would be invisible to search while looking

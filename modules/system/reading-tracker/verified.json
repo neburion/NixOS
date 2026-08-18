@@ -1,0 +1,17 @@
+{
+ "note": "Publication statuses confirmed by hand, one series at a time, because no database has them right. Anime-Planet has no hiatus/cancelled concept at all; MangaDex was wrong on 2 of 2 spot-checks; AniList on 3 of 6. Each entry here was read off a search result that stated the fact outright. Applied once, and only over a value that still matches what anime-planet.json wrote, so anything edited by hand wins.",
+ "series": {
+  "The Legendary Return": {
+   "pub": "Completed",
+   "why": "200 chapters, two seasons; status in country of origin: complete"
+  },
+  "I'm an EX-Rank Hunter": {
+   "pub": "Completed",
+   "why": "75 chapters across two seasons, complete and fully scanlated"
+  },
+  "The First Order": {
+   "pub": "Completed",
+   "why": "608 chapters, complete in country of origin; only the English scanlation stopped"
+  }
+ }
+}

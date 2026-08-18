@@ -299,7 +299,7 @@ name, and these titles *are* AP's names. What the entry page gives:
   `Ch: 759+` while a series runs and `Ch: 387` once it has stopped. Between the
   two, all 617 resolved.
 
-  It can only ever produce **Ongoing** and **Completed** — AP does not
+  It can only ever produce **Ongoing** and **Completed** — Anime-Planet does not
   distinguish hiatus or cancellation from completion. Those two are judgements
   it does not make, and guessing them from a stalled year range would put a
   wrong word on a shelf rather than leave an honest blank.
@@ -314,6 +314,28 @@ lookup says — the same rule the import ran under.
 
 AP answers 429 at any real pace, so the scraper waits 2.5s between calls and
 backs off on `Retry-After`.
+
+### Hiatus and Cancelled are not obtainable in bulk
+
+They were chased and they are not there. In order:
+
+- **Anime-Planet** has no such concept. A full page was searched for every
+  variant of the words; Hunter x Hunter, on indefinite hiatus for years, reads
+  `1998 - ?`, identical to a weekly series.
+- **MangaDex** has a `hiatus` status and got **2 of 2** spot-checks wrong — it
+  called *My S-Class Hunters* and *Library of Heaven's Path* hiatus while both
+  were publishing in 2026. The cause is licensing: 100 of the 245 candidates
+  are missing or chapter-less there because they moved to Webtoon or Kakao, and
+  a takedown looks exactly like a death.
+- **MyAnimeList** has the right field and was down (504 on every call).
+- **AniList** has `RELEASING / FINISHED / HIATUS / CANCELLED` and returned
+  **zero hiatus and zero cancelled across all 245**. Of the 14 it called
+  FINISHED, hand-checking found 3 right, 3 wrong and 1 unclear.
+
+So the shelf carries Ongoing and Completed, which is what can be known, and
+`verified.json` holds the ones checked by hand afterwards. It applies once and
+only over a value that still matches what `anime-planet.json` wrote — a field
+edited since is his, and beats any lookup.
 
 ## Cover artwork
 
