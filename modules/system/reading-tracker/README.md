@@ -18,7 +18,8 @@ older account, imported 2026-08-17. Both are snapshots — see below.
 | `service.nix` | systemd unit, cover-warming timer, tailnet firewall rule |
 | `schema.sql` | tables, views, FTS5 index |
 | `seed.json` | the origin snapshot: 300 vault series + 617 from Anime-Planet |
-| `tags.json` | every title classified on the three tag axes, applied once |
+| `tags.json` | every title classified on the two tag axes, applied once |
+| `anime-planet.json` | publication status + type looked up on Anime-Planet, applied once |
 | `seed.py` | builds the database; **additive**, never overwrites your edits |
 | `app.py` | HTTP server + JSON API + cover cache |
 | `ui.html` | the UI |
@@ -95,35 +96,44 @@ corrupt data, it is an opinion, and clamping it to fit a 0–10 scale would be
 editing a verdict to suit a schema — so the range admits it and the UI slider
 goes down to −10.
 
-## Tags are on three axes
+## Tags are on two axes
 
 The vault's tags were a flat pile of 59, written by hand over years, in which
 `Fantasy` (half the shelf), `Transmigrassion` (a typo, 109 series) and `Boxing`
 (one series) were peers in one alphabetical menu. Eighteen of the 59 were used
 twice or less, and six were the same tag spelled two ways.
 
-They are now a closed vocabulary of 41, and every one of them answers exactly
+They are now a closed vocabulary of 25, and every one of them answers exactly
 one question:
 
 | axis | question | e.g. |
 |---|---|---|
-| **setting** | where does it take place | Fantasy, Murim, Xianxia, Modern, Hunter Fantasy, Apocalypse |
+| **setting** | where does it take place | Fantasy, Murim, Wuxia, Modern, Hunter Fantasy, Apocalypse, Academy |
 | **genre** | what does reading it feel like | Action, Adventure, Romance, Horror, Slice of Life |
-| **premise** | what is the hook | Transmigration, Regression, System, Revenge, Time Loop |
 
-The axis is a column on `tag`, and it is what makes the filters work: there are
-three tag dropdowns rather than one 59-item menu, and they are ANDed, so "a
-murim story with a regression premise" is one query instead of a choice between
-two of the three things you know about it. A tag typed straight into the sheet
-gets no axis and shows up under **Unfiled** until it is given one.
+The axis is a column on `tag`, and it is what makes the filters work: two tag
+dropdowns holding different kinds of thing, ANDed, rather than one 59-item menu
+in which picking Fantasy meant not picking Action. A tag typed straight into the
+sheet gets no axis and shows up under **Unfiled** until it is given one.
+
+There was a third axis for a while — **premise**, holding Transmigration,
+Regression, System, Revenge and eleven more. It described the shelf accurately
+and it is gone anyway, because it was not asked for. `tag-drop-premise` in
+`seed.py` removes it; three series wore nothing else and are re-read from
+`tags.json` so that losing an axis does not mean losing a series from the
+filters.
+
+**Wuxia, not Xianxia.** They were separate for one revision — Chinese immortal
+cultivation against Korean martial arts — and are now one tag under the name
+that gets said out loud. `Murim` stays separate.
 
 `tags.json` holds the classification for every title. It was built from three
 layers, in increasing authority: regex over the title — which works far better
 here than it should, because this genre names its books after their own
 synopsis — then the tags the vault already carried, then a hand-written table
 for the ~380 whose titles give nothing away. Each axis is capped (2 settings,
-3 genres, 3 premises), keeping the rarest, because eight true tags is not a
-classification, it is the synopsis again.
+3 genres), keeping the rarest, because eight true tags is not a classification,
+it is the synopsis again.
 
 It is applied **once**, as a recorded migration, not on every start: replacing a
 series' tags is destructive of anything typed by hand, and a seeder that
@@ -148,16 +158,22 @@ fact confused two of them:
 | field | the question | values |
 |---|---|---|
 | **status** — *Shelf* | where **you** are with it | Reading, Later, Hold, Read, Dropped |
-| **pub** — *Still publishing* | whether the **author** is still writing it | Ongoing, Hiatus, Completed, Cancelled |
-| **type** — *Medium* | what it is | Manhwa, Manhua, Manga, Web Novel, Indonesian Comic |
+| **pub** — *Publication status* | whether the **author** is still writing it | Ongoing, Hiatus, Completed, Cancelled |
+| **type** — *Type* | what it is | Manhwa, Manhua, Manga, Web Novel, Indonesian Comic |
 
 `Hold` used to appear in *both* status and pub, on the strength of one vault
 note reading `Publication Status: Hold`. Hold is a shelf. That value is retired
 and the note reads Hiatus; the migration is `pub-drop-hold` in `seed.py`.
 
-Every filter dropdown now carries its question above it rather than a
-placeholder describing what it will accept — "Any publication" told you what
-the menu held and never what it was for.
+Every filter dropdown carries its question above it rather than a placeholder
+describing what it will accept — "Any publication" told you what the menu held
+and never what it was for. **Order** comes first, being the one control that
+changes the shelf rather than narrowing it.
+
+The filters do not survive leaving the shelf. Going to Stats or Tags clears
+them and hides the control that opens them, because the alternative was
+returning to a shelf quietly showing a third of itself with the only evidence a
+lit icon inside a closed drawer.
 
 ## Ratings are 0–10
 
@@ -168,14 +184,60 @@ a negative. Databases created before the change keep the wider `CHECK`, since
 rebuilding a table to tighten a constraint is not worth the risk to the reading
 history hanging off it, and nothing can write a negative through it anyway.
 
-## Stats has no recommendations
+## Stats has no recommendations, and no clock
 
 It used to end with two lists — *shelved and now complete*, *on hold and still
 publishing* — computed by joining status against pub. Those were not statistics.
 They were the page deciding what you should read next out of two fields that
 were never asked that question. They are gone, and what replaced them is a
-breakdown of the shelf by setting, genre and premise, which is a fact about the
-library rather than a nudge.
+breakdown of the shelf by setting and genre, which is a fact about the library
+rather than a nudge.
+
+The *this week* / *this month* chapter counters are gone too. The reading log
+they were computed from is still written on every chapter change — see below.
+
+## No reading-history view, and no light mode
+
+Both are removals of a screen, not of a capability.
+
+`reading_log` is still appended on every chapter change and `/api/history` still
+answers; there is simply no tab for it. Putting the view back is a dock button
+and a `renderHistory()`. Deleting the log to hide a tab would have been the
+expensive half of a cheap decision — a note can only ever hold the number you
+are on now, which is the whole reason this is a database.
+
+The theme is dark, full stop: no toggle, no `prefers-color-scheme`, no stored
+preference. The shelf markers went with it. Reading / Later / Hold / Read /
+Dropped are now five greys running light to dark, so how present a book looks is
+how present it is — the old set had a mustard yellow on Hold that fought every
+cover on the page.
+
+## What Anime-Planet was asked, and what it can answer
+
+The export carried a name, a status, a chapter and a rating, and nothing else —
+so 617 series arrived with no publication status and 605 with no type.
+`anime-planet.json` fills both from the source they came from.
+
+The lookup is AP's own search, which 302s straight to the entry on an exact
+name, and these titles *are* AP's names. What the entry page gives:
+
+- **Publication status**, from the year range in the entry bar: `2018 - ?` is
+  running, `2018 - 2023` is finished. That is the only signal there — AP does
+  not distinguish hiatus or cancellation from completion — so this can produce
+  **Ongoing** and **Completed** and nothing else. Hiatus and Cancelled are
+  judgements it does not make, and guessing them from a stalled year range
+  would put a wrong word on a shelf rather than leave an honest blank.
+- **Type**, from the tags: `Manhwa`, `Manhua` and `Light Novels` are tagged
+  explicitly, and a Japanese manga carries no medium tag at all because on a
+  manga database that is the default. So *no medium tag* means Manga. (`Based
+  on a Light Novel` is a source tag and deliberately does not match.)
+
+The backfill is a recorded migration like the others, and it only writes where
+the field is **still empty**. Anything already on the shelf beats anything a
+lookup says — the same rule the import ran under.
+
+AP answers 429 at any real pace, so the scraper waits 2.5s between calls and
+backs off on `Retry-After`.
 
 ## Cover artwork
 

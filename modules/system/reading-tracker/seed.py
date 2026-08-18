@@ -42,8 +42,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 DB = Path(os.environ.get("RT_DB") or HERE / "reading.db")
 SEED = Path(os.environ.get("RT_SEED") or HERE / "seed.json")
-# Title -> tags, on the three axes below. Applied once; see apply_tags().
+# Title -> tags, on the two axes below. Applied once; see apply_tags().
 TAGSFILE = Path(os.environ.get("RT_TAGS") or HERE / "tags.json")
+# Title -> {pub, type} looked up on Anime-Planet for the series imported from
+# there, which the export itself did not carry. Applied once; see apply_ap().
+APFILE = Path(os.environ.get("RT_ANIME_PLANET") or HERE / "anime-planet.json")
 SCHEMA = Path(os.environ.get("RT_SCHEMA") or HERE / "schema.sql")
 
 # Presentation order for the three closed vocabularies.
@@ -58,7 +61,7 @@ VOCAB = {
     "type": ["Manhwa", "Manhua", "Manga", "Web Novel", "Indonesian Comic"],
 }
 
-# The tag vocabulary, on three axes.
+# The tag vocabulary, on two axes.
 #
 # This replaces a flat pile of 59 hand-written tags in which `Fantasy` (half the
 # shelf), `Transmigrassion` (a typo, 109 series) and `Boxing` (one series) were
@@ -66,29 +69,21 @@ VOCAB = {
 #
 #   setting  where does it take place
 #   genre    what does reading it feel like
-#   premise  what is the hook — the thing you would say first describing it
 #
-# Which is what makes the difference between a tag list and a filter. "Fantasy"
-# and "Regression" were never alternatives to each other; putting them on
-# separate axes lets you ask for a regression story set in a murim world, which
-# one flat menu could not express.
+# Which is what makes the difference between a tag list and a filter: the two
+# menus hold different kinds of thing, so choosing from both is a narrower
+# question rather than a choice between two of them.
 #
 # Order inside an axis is presentation order, roughly most-used first.
 TAGS = {
     "setting": [
         "Fantasy", "Dark Fantasy", "Modern", "Hunter Fantasy", "Murim",
-        "Xianxia", "Apocalypse", "Supernatural", "Sci-Fi", "Historical",
+        "Wuxia", "Apocalypse", "Supernatural", "Sci-Fi", "Historical",
         "Academy", "School Life", "Tower", "Dungeon",
     ],
     "genre": [
         "Action", "Adventure", "Comedy", "Romance", "Drama", "Psychological",
         "Horror", "Thriller", "Mystery", "Slice of Life", "Sports",
-    ],
-    "premise": [
-        "Transmigration", "System", "Regression", "Reincarnation", "Revenge",
-        "Aristocracy", "Great Teacher", "Gender Swap", "Body Swap",
-        "Time Loop", "Author", "Demon King", "Death Game", "Video Game",
-        "Necromancy", "Profession",
     ],
 }
 AXIS_OF = {name: axis for axis, names in TAGS.items() for name in names}
@@ -183,6 +178,45 @@ def migrate(db):
         if n:
             print(f"  migrate: {n} negative rating(s) set to 0")
 
+    # Xianxia and wuxia are one shelf here, under the name that is actually
+    # said out loud. Renaming rather than merging: nothing was tagged Wuxia.
+    if once(db, "tag-xianxia-to-wuxia"):
+        n = db.execute(
+            "UPDATE tag SET name = 'Wuxia' WHERE name = 'Xianxia' "
+            "AND NOT EXISTS (SELECT 1 FROM tag WHERE name = 'Wuxia')").rowcount
+        if n:
+            print("  migrate: Xianxia renamed to Wuxia")
+
+    # The premise axis is gone — setting and genre are the two questions worth
+    # asking. Dropping the tags takes their join rows with them by cascade;
+    # the FTS rows for the series that wore them have to be rebuilt by hand,
+    # because series_fts is not a real foreign key.
+    if once(db, "tag-drop-premise"):
+        hit = [r[0] for r in db.execute(
+            "SELECT DISTINCT series_id FROM series_tag WHERE tag_id IN "
+            "(SELECT id FROM tag WHERE axis = 'premise')")]
+        n = db.execute("DELETE FROM tag WHERE axis = 'premise'").rowcount
+        for sid in hit:
+            reindex(db, sid)
+        if n:
+            print(f"  migrate: dropped {n} premise tag(s) from {len(hit)} series")
+        # Three series wore nothing *but* premise tags and came out of that
+        # delete with none at all. Losing an axis should not mean losing a
+        # series from the filters, so they are re-read from tags.json — which
+        # apply_tags() will not do on its own, having already run.
+        if TAGSFILE.exists():
+            plan = json.loads(TAGSFILE.read_text(encoding="utf-8"))["tags"]
+            bare = db.execute(
+                "SELECT id, title FROM series WHERE id NOT IN "
+                "(SELECT series_id FROM series_tag)").fetchall()
+            for row in bare:
+                for name in plan.get(row["title"], []):
+                    db.execute("INSERT OR IGNORE INTO series_tag(series_id, tag_id) "
+                               "VALUES (?,?)", (row["id"], tag_id(db, name)))
+                reindex(db, row["id"])
+            if bare:
+                print(f"  migrate: re-tagged {len(bare)} series left bare by that")
+
     # Hold left `pub` (see VOCAB). Anything wearing it meant Hiatus.
     if once(db, "pub-drop-hold"):
         row = db.execute("SELECT id FROM pub WHERE name = 'Hold'").fetchone()
@@ -266,6 +300,44 @@ def apply_series(db, s, series_id=None):
     return series_id
 
 
+def apply_ap(db, data):
+    """Fill publication status and type from Anime-Planet, once, and only where
+    the field is still empty.
+
+    Only-where-empty is the same rule the import itself ran under: anything
+    already recorded here beats anything a lookup says, whether it was typed
+    last week or came out of the vault. This is a backfill for fields that were
+    blank because the export had nothing to put in them.
+
+    Anime-Planet publishes a year range and nothing else — "2018 - ?" is
+    running, "2018 - 2023" is finished — so this can only ever produce Ongoing
+    and Completed. Hiatus and Cancelled are judgements it does not make, and
+    guessing them from a stalled year range would put a wrong word on a shelf
+    rather than leave an honest blank.
+    """
+    if not once(db, "anime-planet-backfill"):
+        return
+    by_title = {r["title"]: r["id"] for r in db.execute("SELECT id, title FROM series")}
+    pubs = types = 0
+    for title, got in data.items():
+        sid = by_title.get(title)
+        if sid is None:
+            continue
+        row = db.execute("SELECT pub_id, type_id FROM series WHERE id = ?",
+                         (sid,)).fetchone()
+        if got.get("pub") and row["pub_id"] is None:
+            db.execute("UPDATE series SET pub_id = ? WHERE id = ?",
+                       (vocab_id(db, "pub", got["pub"]), sid))
+            pubs += 1
+        if got.get("type") and row["type_id"] is None:
+            db.execute("UPDATE series SET type_id = ? WHERE id = ?",
+                       (vocab_id(db, "type", got["type"]), sid))
+            reindex(db, sid)          # type is in the search index
+            types += 1
+    print(f"  migrate: Anime-Planet filled {pubs} publication status(es) "
+          f"and {types} type(s)")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Seed the reading tracker database")
     ap.add_argument("--force-import", action="store_true",
@@ -303,6 +375,8 @@ def main():
 
     if TAGSFILE.exists():
         apply_tags(db, json.loads(TAGSFILE.read_text(encoding="utf-8"))["tags"])
+    if APFILE.exists():
+        apply_ap(db, json.loads(APFILE.read_text(encoding="utf-8"))["series"])
 
     # A row whose FTS entry went missing — an interrupted write, or a database
     # that predates the index — would be invisible to search while looking

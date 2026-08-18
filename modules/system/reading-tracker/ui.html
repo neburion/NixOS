@@ -3,9 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#F4F1E9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14130F" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#14130F">
 <title>Reading Tracker</title>
 <style>
 /* ── typefaces ──────────────────────────────────────────────────────────
@@ -29,30 +28,40 @@
   font-weight:400;font-display:swap}
 
 /* ── tokens ─────────────────────────────────────────────────────────────
-   Light is paper; dark is a lamplit room. The chrome stays close to neutral
-   on purpose — three hundred manhwa covers supply all the colour this page
-   can survive, and a tinted interface would fight every one of them.      */
-:root{
-  --paper:#F4F1E9;
-  --card:#FBF9F3;
-  --sunk:#EAE6DB;
-  --ink:#1B1A16;
-  --ink-2:#4C4A42;
-  --ink-3:#807D72;
-  --rule:#D9D5C7;
-  --rule-2:#E7E3D7;
-  --accent:#8C3A2B;        /* bookbinding red, used sparingly */
-  --accent-lit:#A84634;
+   One palette, dark. There is no light mode and no toggle: this is read on a
+   phone in the evening, and a theme switch is a control that exists to undo a
+   decision already made correctly.
 
-  --reading:#4A7A3B;
-  --later:#3C6480;
-  --hold:#96701E;
-  --read:#6A4B86;
-  --dropped:#8A8578;
+   The chrome stays close to neutral on purpose — nine hundred manhwa covers
+   supply all the colour this page can survive, and a tinted interface would
+   fight every one of them. The shelf markers are greys for the same reason:
+   they mark, they do not decorate.                                         */
+:root{
+  color-scheme:dark;
+
+  --paper:#14130F;
+  --card:#1D1C17;
+  --sunk:#0F0E0B;
+  --ink:#EDE9DC;
+  --ink-2:#B7B3A5;
+  --ink-3:#847F72;
+  --rule:#33312A;
+  --rule-2:#26241E;
+  --accent:#E08A76;        /* bookbinding red, used sparingly */
+  --accent-lit:#EFA491;
+
+  /* Shelf markers, light to dark: where you are with a book reads as how
+     present it is. Reading is nearly the text colour, Dropped nearly the
+     background. */
+  --reading:#EDE9DC;
+  --later:#A6A196;
+  --hold:#6E6A60;
+  --read:#4A473F;
+  --dropped:#332F2A;
 
   --gap:16px;
   --tap:44px;
-  --shadow:0 1px 2px rgba(27,26,22,.07), 0 6px 18px rgba(27,26,22,.06);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
 
   /* Signal's geometry, on this palette. Its phone UI is built out of two
      things: corners that are rounder than feels reasonable until you see them
@@ -63,27 +72,7 @@
   --r-card:18px;       /* panels and slabs */
   --r-art:14px;        /* cover plates and thumbnails */
   --r-sheet:28px;      /* the bottom sheet's top corners */
-  --tint:rgba(140,58,43,.10);   /* accent at nav-indicator strength */
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
-  --ink:#EDE9DC; --ink-2:#B7B3A5; --ink-3:#847F72;
-  --rule:#33312A; --rule-2:#26241E;
-  --accent:#E08A76; --accent-lit:#EFA491;
-  --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
-  --read:#B79BD4; --dropped:#7C776B;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-  --tint:rgba(224,138,118,.14);
-}}
-:root[data-theme=dark]{
-  --paper:#14130F; --card:#1D1C17; --sunk:#0F0E0B;
-  --ink:#EDE9DC; --ink-2:#B7B3A5; --ink-3:#847F72;
-  --rule:#33312A; --rule-2:#26241E;
-  --accent:#E08A76; --accent-lit:#EFA491;
-  --reading:#96C47C; --later:#84B4D2; --hold:#D8B45C;
-  --read:#B79BD4; --dropped:#7C776B;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-  --tint:rgba(224,138,118,.14);
+  --tint:rgba(224,138,118,.14);   /* accent at nav-indicator strength */
 }
 
 *{box-sizing:border-box}
@@ -160,14 +149,20 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
 @media (max-width:640px){.tab{height:36px;padding:0 15px}}
 .tab em{font-style:normal;font-family:Mono,monospace;font-size:11px;opacity:.7}
 .tab:hover{color:var(--ink)}
-/* The shelf's colour lives in the chip itself when it is the one you are on,
-   which is one fewer thing on screen than a dot plus an underline. */
-.tab[aria-selected=true]{background:var(--dot,var(--accent));color:var(--card);
-  font-weight:600}
-.tab[aria-selected=true] em{opacity:.85}
+/* The shelf's marker rides in the chip as a dot rather than as the fill. The
+   fill was the first idea and it does not survive the palette: the markers run
+   from near-white to near-background, so half of them cannot carry dark text
+   and the other half cannot carry light. One high-contrast selected state plus
+   a dot says the same two things and is legible at both ends. */
+.tab::before{content:"";width:8px;height:8px;border-radius:var(--r-pill);
+  background:var(--dot,var(--ink-3));flex:none}
+.tab[aria-selected=true]{background:var(--ink);color:var(--paper);font-weight:600}
+.tab[aria-selected=true] em{opacity:.7}
 .tab[data-s=Reading]{--dot:var(--reading)} .tab[data-s=Later]{--dot:var(--later)}
 .tab[data-s=Hold]{--dot:var(--hold)}      .tab[data-s=Read]{--dot:var(--read)}
 .tab[data-s=Dropped]{--dot:var(--dropped)}
+/* "All" is not a shelf and has no marker of its own. */
+.tab[data-s=All]::before{display:none}
 
 /* Six unlabelled dropdowns in a row is a puzzle: "Any publication" and "Any
    tag" tell you what they will accept, never what they are asking. Each one
@@ -271,11 +266,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:10px;
   font-family:Lit,Georgia,serif;font-size:13px;line-height:1.3;text-align:center;
   color:var(--ink-2);background:
-    linear-gradient(160deg,hsl(var(--h) 26% 88%),hsl(var(--h) 18% 79%))}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .fallback{
-  background:linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}}
-:root[data-theme=dark] .fallback{
-  background:linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}
+    linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}
 
 /* The status stripe was flush to a square corner; on a rounded plate it has to
    be inset or it is clipped into a wedge. */
@@ -287,18 +278,18 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 
 .score{position:absolute;top:8px;right:8px;padding:3px 8px;
   border-radius:var(--r-pill);
-  background:rgba(12,11,8,.72);color:#F4F1E9;font-family:Mono,monospace;
+  background:rgba(8,8,6,.78);color:var(--ink);font-family:Mono,monospace;
   font-size:11px;backdrop-filter:blur(3px)}
 .foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;
   gap:6px;padding:22px 6px 6px;
   background:linear-gradient(transparent,rgba(12,11,8,.82))}
-.ch{font-family:Mono,monospace;font-size:12px;color:#F4F1E9;
+.ch{font-family:Mono,monospace;font-size:12px;color:var(--ink);
   text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .ch b{font-weight:400;font-size:9px;opacity:.7;letter-spacing:.06em}
 .plus{
   margin-left:auto;width:28px;height:28px;flex:none;border-radius:var(--r-pill);
-  border:1px solid rgba(244,241,233,.35);background:rgba(12,11,8,.6);
-  color:#F4F1E9;font-size:15px;line-height:1;display:grid;place-items:center;
+  border:1px solid rgba(237,233,220,.3);background:rgba(8,8,6,.66);
+  color:var(--ink);font-size:15px;line-height:1;display:grid;place-items:center;
   opacity:0;transition:opacity .12s;backdrop-filter:blur(3px);
 }
 .book:hover .plus,.plus:focus-visible{opacity:1}
@@ -413,8 +404,14 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .pick{height:34px;padding:0 14px;border:1px solid var(--rule);background:var(--paper);
   border-radius:var(--r-pill);font-size:13px;color:var(--ink-2)}
 .pick:hover{border-color:var(--accent)}
-.pick[aria-pressed=true]{background:var(--tone,var(--accent));
-  border-color:var(--tone,var(--accent));color:var(--card);font-weight:500}
+/* Same reasoning as the shelf chips: one legible pressed state, and the shelf
+   marker as a dot rather than as the fill. */
+.pick[aria-pressed=true]{background:var(--ink);border-color:var(--ink);
+  color:var(--paper);font-weight:600}
+.pick[data-v]{--tone:none}
+.pick[data-status]::before{content:"";width:8px;height:8px;margin-right:8px;
+  border-radius:var(--r-pill);background:var(--tone,var(--ink-3));
+  display:inline-block;vertical-align:middle}
 .pick[data-v=Reading]{--tone:var(--reading)} .pick[data-v=Later]{--tone:var(--later)}
 .pick[data-v=Hold]{--tone:var(--hold)}      .pick[data-v=Read]{--tone:var(--read)}
 .pick[data-v=Dropped]{--tone:var(--dropped)}
@@ -500,10 +497,8 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
     </div>
     <button class="ico" data-act="filter" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg></button>
     <button class="ico" data-view="stats" title="Statistics" aria-label="Statistics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
-    <button class="ico" data-view="history" title="Reading history" aria-label="Reading history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></button>
     <button class="ico" data-view="tags" title="Tags" aria-label="Tags"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></button>
     <button class="ico" data-act="new" title="Add a series" aria-label="Add a series"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-    <button class="ico" data-act="theme" title="Light or dark" aria-label="Light or dark"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
   </div>
 
   <div class="seek">
@@ -513,16 +508,6 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
   </div>
 
   <div class="drawer" id="drawer">
-    <div class="filt"><label class="lbl" for="f-type">Medium</label>
-      <select id="f-type" title="Manhwa, manga, web novel…"><option value="">Any</option></select></div>
-    <div class="filt"><label class="lbl" for="f-pub">Still publishing</label>
-      <select id="f-pub" title="Whether the author is still writing it"><option value="">Any</option></select></div>
-    <div class="filt"><label class="lbl" for="f-setting">Setting</label>
-      <select id="f-setting" title="Where it takes place"><option value="">Any</option></select></div>
-    <div class="filt"><label class="lbl" for="f-genre">Genre</label>
-      <select id="f-genre" title="How it reads"><option value="">Any</option></select></div>
-    <div class="filt"><label class="lbl" for="f-premise">Premise</label>
-      <select id="f-premise" title="The hook"><option value="">Any</option></select></div>
     <div class="filt"><label class="lbl" for="f-sort">Order</label>
       <select id="f-sort">
         <option value="updated">Recently touched</option>
@@ -530,6 +515,14 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
         <option value="chapter">Furthest along</option>
         <option value="title">Title A–Z</option>
       </select></div>
+    <div class="filt"><label class="lbl" for="f-type">Type</label>
+      <select id="f-type" title="Manhwa, manga, web novel…"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-pub">Publication status</label>
+      <select id="f-pub" title="Whether the author is still writing it"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-setting">Setting</label>
+      <select id="f-setting" title="Where it takes place"><option value="">Any</option></select></div>
+    <div class="filt"><label class="lbl" for="f-genre">Genre</label>
+      <select id="f-genre" title="How it reads"><option value="">Any</option></select></div>
     <div class="filt act"><button class="chip" id="f-clear">Reset filters</button></div>
   </div>
 
@@ -541,7 +534,6 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 <nav class="dock" aria-label="Views">
   <button data-view="shelf"><i><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10 4h4v16h-4zM16.5 5.2l3.4 15.1"/></svg></i><span>Shelf</span></button>
   <button data-view="stats"><i><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></i><span>Stats</span></button>
-  <button data-view="history"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></i><span>History</span></button>
   <button data-view="tags"><i><svg viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></i><span>Tags</span></button>
 </nav>
 
@@ -560,7 +552,7 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
       <input type="text" id="n-title" required placeholder="What is it called?">
     </div>
     <div class="field">
-      <label class="lbl" for="n-type">Medium</label>
+      <label class="lbl" for="n-type">Type</label>
       <select id="n-type"></select>
     </div>
     <div class="field">
@@ -629,11 +621,10 @@ async function api(path, body){
 /* ══ state ════════════════════════════════════════════════════════════ */
 const S = {
   data:null, view:'shelf', shelf:'Reading', q:'',
-  type:'', pub:'', setting:'', genre:'', premise:'', sort:'updated', open:null,
+  type:'', pub:'', setting:'', genre:'', sort:'updated', open:null,
 };
-const AXES = ['setting','genre','premise'];
-const AXIS_LABEL = { setting:'Setting', genre:'Genre', premise:'Premise',
-                     other:'Unfiled' };
+const AXES = ['setting','genre'];
+const AXIS_LABEL = { setting:'Setting', genre:'Genre', other:'Unfiled' };
 const byId = id => S.data.series.find(s => s.id === id);
 
 /* ══ load ═════════════════════════════════════════════════════════════ */
@@ -715,14 +706,23 @@ function render(){
   // Header and dock carry the same data-view hooks, so one pass lights both.
   for (const b of document.querySelectorAll('[data-view]'))
     b.classList.toggle('on', b.dataset.view === S.view);
+
+  // Filters belong to the shelf and to nothing else. Leaving Stats with a
+  // setting still selected meant coming back to a shelf that was quietly
+  // showing a third of itself, with the only evidence a lit icon in a drawer
+  // that was closed. So leaving the shelf drops them, and the control that
+  // opens them is not there to press.
+  const onShelf = S.view === 'shelf';
   const filtered = S.type || S.pub || S.sort !== 'updated'
                    || AXES.some(a => S[a]);
-  for (const b of document.querySelectorAll('[data-act=filter]'))
+  for (const b of document.querySelectorAll('[data-act=filter]')){
+    b.hidden = !onShelf;
     b.classList.toggle('on', !!filtered);
+  }
+  if (!onShelf) $('#drawer').classList.remove('open');
 
   if (S.view === 'stats')   return renderStats();
   if (S.view === 'tags')    return renderTags();
-  if (S.view === 'history') return renderHistory();
   renderShelf();
 }
 
@@ -779,8 +779,6 @@ function renderStats(){
         <div class="fig"><b>${st.total}</b><span>series</span></div>
         <div class="fig"><b>${st.chapters.toLocaleString()}</b><span>chapters</span></div>
         <div class="fig"><b>${st.avg ?? '—'}</b><span>mean rating</span></div>
-        <div class="fig"><b>${st.chaptersWeek}</b><span>this week</span></div>
-        <div class="fig"><b>${st.chaptersMonth}</b><span>this month</span></div>
       </div>
     </div>
     <div class="slab"><h2>By shelf</h2>${bars(st.byStatus, st.total, true)}</div>
@@ -795,35 +793,11 @@ function renderStats(){
   </div>`;
 }
 
-function renderHistory(){
-  const h = S.data.history || [];
-  $('#main').innerHTML = `<div class="panel"><div class="slab">
-    <h2>Reading history <span>${h.length}</span></h2>
-    <p class="hint">Every chapter change, kept. This is the one thing a shelf of
-    markdown notes could never tell you — a note only ever holds the number you
-    are on now, and overwrites the answer each time you change it.</p>
-    ${h.length ? `<div class="list">${h.map(r => {
-      const d = (r.to_ch ?? 0) - (r.from_ch ?? r.to_ch ?? 0);
-      const move = r.from_ch === null ? `set to ${fmt(r.to_ch)}`
-        : `${fmt(r.from_ch)} → ${fmt(r.to_ch)}`;
-      return `<button data-open="${r.series_id}">
-        <span>${esc(r.title)}</span>
-        <em>${esc(move)}${d > 0 ? ` (+${fmt(d)})` : ''} · ${esc(ago(r.at))}</em>
-      </button>`;
-    }).join('')}</div>`
-    : '<p class="hint">Nothing yet. Press <b>+</b> on a cover and it will show up here.</p>'}
-  </div></div>`;
-}
-
-const AXIS_NOTE = {
-  setting: 'Where it takes place. One or two per series — the narrower one wins, '
-         + 'so a murim story is not also filed under Fantasy.',
-  genre:   'What reading it feels like.',
-  premise: 'The hook: the thing you would say first describing it to someone.',
-  other:   'Tags typed straight into a series that are not part of the '
-         + 'vocabulary yet. Nothing is wrong with them — they just do not '
-         + 'appear in the filters above until they are given an axis.',
-};
+/* No renderHistory(). The reading log is still written on every chapter change
+   and still served at /api/history — it is the one thing a shelf of markdown
+   notes could never hold, and throwing it away to hide a tab would be the
+   expensive half of a cheap decision. Putting the view back is a dock button
+   and a function; putting the history back would be impossible. */
 
 function renderTags(){
   const t = S.data.tags;
@@ -904,12 +878,12 @@ function openSheet(id){
       </div>
 
       <div class="field">
-        <span class="lbl">Still publishing</span>
+        <span class="lbl">Publication status</span>
         <div class="picks">${picks('pub', m.pub, s.pub)}</div>
       </div>
 
       <div class="field">
-        <span class="lbl">Medium</span>
+        <span class="lbl">Type</span>
         <div class="picks">${picks('type', m.type, s.type)}</div>
       </div>
 
@@ -1143,7 +1117,9 @@ document.addEventListener('click', ev => {
     // Tapping the active view returns to the shelf, except from the shelf
     // itself — the dock's Shelf button should never toggle to nothing.
     const want = view.dataset.view;
-    S.view = (S.view === want && want !== 'shelf') ? 'shelf' : want;
+    const next = (S.view === want && want !== 'shelf') ? 'shelf' : want;
+    if (next !== 'shelf') clearFilters();
+    S.view = next;
     scrollTo({ top: 0 });
     return render();
   }
@@ -1151,7 +1127,6 @@ document.addEventListener('click', ev => {
   if (!act) return;
   if (act.dataset.act === 'filter') $('#drawer').classList.toggle('open');
   if (act.dataset.act === 'new') $('#dlg').showModal();
-  if (act.dataset.act === 'theme') toggleTheme();
 });
 
 for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-sort','sort'],
@@ -1161,13 +1136,13 @@ for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-sort','sort'],
     if (S.view !== 'shelf') S.view = 'shelf';
     render();
   });
-$('#f-clear').addEventListener('click', () => {
+function clearFilters(){
   S.type = S.pub = ''; S.sort = 'updated';
   for (const a of AXES){ S[a] = ''; $('#f-' + a).value = ''; }
   $('#f-type').value = $('#f-pub').value = '';
   $('#f-sort').value = 'updated';
-  render();
-});
+}
+$('#f-clear').addEventListener('click', () => { clearFilters(); render(); });
 
 $('#dlg-form').addEventListener('submit', async ev => {
   if (ev.submitter && ev.submitter.value !== 'ok') return;
@@ -1182,21 +1157,6 @@ $('#dlg-form').addEventListener('submit', async ev => {
     toast(`Added “${title}”`);
   } catch (e) { toast(e.message); }
 });
-
-/* Theme: follow the system until told otherwise, then remember. */
-const THEME = 'reading-tracker-theme';
-// Falls back to the old key so renaming the app did not silently put everyone
-// back on the system theme.
-const savedTheme = localStorage.getItem(THEME)
-                || localStorage.getItem('reading-room-theme');
-if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-function toggleTheme(){
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const now = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
-  const next = now === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  localStorage.setItem(THEME, next);
-}
 
 /* Another tab, another device, or a phone left open on the shelf. Re-read when
    this one comes back into focus rather than showing a stale count. */

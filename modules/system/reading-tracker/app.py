@@ -334,17 +334,6 @@ def stats(db):
         SELECT CAST(ROUND(rating) AS INTEGER) AS b, COUNT(*) AS n
         FROM series WHERE rating IS NOT NULL GROUP BY b ORDER BY b""")]
 
-    # History. The whole point of owning a database rather than 300 files that
-    # can only ever describe the present.
-    recent = db.execute("""
-        SELECT CAST(COALESCE(SUM(MAX(to_ch - COALESCE(from_ch, to_ch), 0)), 0)
-                    AS INTEGER) AS n
-        FROM reading_log WHERE at >= datetime('now', '-30 days')""").fetchone()["n"]
-    week = db.execute("""
-        SELECT CAST(COALESCE(SUM(MAX(to_ch - COALESCE(from_ch, to_ch), 0)), 0)
-                    AS INTEGER) AS n
-        FROM reading_log WHERE at >= datetime('now', '-7 days')""").fetchone()["n"]
-
     return {
         "total": total,
         "chapters": agg["chapters"],
@@ -355,8 +344,6 @@ def stats(db):
         "byPub": _bucket(db, "pub", "pub_id"),
         "ratings": ratings,
         "byTag": _tag_bucket(db),
-        "chaptersWeek": week,
-        "chaptersMonth": recent,
     }
 
 
@@ -874,8 +861,6 @@ def print_stats():
     print()
     for row in st["byType"]:
         print(f"  {row['name']:<18} {row['count']:>4}")
-    print(f"\nread in the last 7 days: {st['chaptersWeek']} chapters"
-          f"   ·   30 days: {st['chaptersMonth']}")
     for group in st["byTag"]:
         top = ", ".join(f"{r['name']} {r['count']}" for r in group["rows"][:6])
         print(f"\n  {group['axis']:<8} {top}")

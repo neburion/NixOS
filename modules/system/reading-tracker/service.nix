@@ -63,6 +63,7 @@ let
     RT_DB = "${stateDir}/reading.db";
     RT_SEED = "${src}/seed.json";
     RT_TAGS = "${src}/tags.json";
+    RT_ANIME_PLANET = "${src}/anime-planet.json";
     RT_SCHEMA = "${src}/schema.sql";
     RT_UI = "${src}/ui.html";
     RT_FONTS = "${fonts}";
