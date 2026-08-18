@@ -198,6 +198,7 @@ they were computed from is still written on every chapter change — see below.
 
 ## No reading-history view, and no light mode
 
+
 Both are removals of a screen, not of a capability.
 
 `reading_log` is still appended on every chapter change and `/api/history` still
@@ -207,10 +208,50 @@ expensive half of a cheap decision — a note can only ever hold the number you
 are on now, which is the whole reason this is a database.
 
 The theme is dark, full stop: no toggle, no `prefers-color-scheme`, no stored
-preference. The shelf markers went with it. Reading / Later / Hold / Read /
-Dropped are now five greys running light to dark, so how present a book looks is
-how present it is — the old set had a mustard yellow on Hold that fought every
-cover on the page.
+preference.
+
+## The palette is a neutral scale, and there is no accent
+
+The first dark pass kept the old "paper" palette's warmth — `#14130F` ground,
+`#EDE9DC` text — which is a warm near-white on a warm near-black, and reads as
+cream rather than as white. The mustard on the Hold marker was only the most
+obvious part of it.
+
+It is now [Radix Colors](https://www.radix-ui.com/colors)' `gray` dark scale,
+used as designed: a true neutral where R, G and B are equal at every step, with
+each step having a documented job — 1 app background, 3 element background, 6
+border, 11 low-contrast text, 12 high-contrast text. That numbering is why a
+dark UI stops being guesswork about which grey goes where.
+
+**There is no brand accent.** Emphasis is carried by contrast: a selected
+control goes to the light end of the same scale. With nine hundred pieces of
+cover art on the page, any hue in the chrome competes with all of them and
+loses to most. Red survives on exactly one control — the one that deletes a
+series — because there it is semantic rather than decorative.
+
+The shelf markers are five greys running light to dark, so how present a book
+looks is how present it is. Placeholder plates for the 605 series with no
+artwork keep a per-title hue so they stay distinguishable, at 7% saturation,
+which reads as a shade rather than as a colour scheme.
+
+## Radius
+
+`--r-sm 4` · `--r-md 6` · `--r-lg 10` · `--r-xl 12`, and full-round for dots
+and nothing else.
+
+That is the scale every serious system converged on:
+[Vercel's Geist](https://vercel.com/geist) caps functional UI at 12px and uses
+6px as standard; [Linear](https://linear.app) uses exactly 6 for controls and
+12 for containers; [GitHub's Primer](https://primer.style) sits lower still.
+The pass before this one had 999px pills on every button and a 28px sheet lip,
+which is a phone-app costume rather than a scale.
+
+## The serif is for titles only
+
+Literata sets book titles — on the cover plates, in the fallback art, and at
+the top of the sheet — because that is a name and it is what an e-reader face
+is good at. Everything that is interface is Public Sans. Serif section
+headings on a tool make it look like a magazine.
 
 ## What Anime-Planet was asked, and what it can answer
 

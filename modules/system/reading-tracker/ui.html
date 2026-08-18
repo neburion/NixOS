@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#14130F">
+<meta name="theme-color" content="#111111">
 <title>Reading Tracker</title>
 <style>
 /* ── typefaces ──────────────────────────────────────────────────────────
@@ -28,51 +28,71 @@
   font-weight:400;font-display:swap}
 
 /* ── tokens ─────────────────────────────────────────────────────────────
-   One palette, dark. There is no light mode and no toggle: this is read on a
-   phone in the evening, and a theme switch is a control that exists to undo a
-   decision already made correctly.
+   Radix Colors' `gray` dark scale, used as designed. It is a true neutral —
+   R, G and B are equal at every step — which is the entire point here: the
+   palette this replaced was warm at both ends (#14130F ground, #EDE9DC text),
+   and a warm near-white on a warm near-black reads as cream, not as white.
 
-   The chrome stays close to neutral on purpose — nine hundred manhwa covers
-   supply all the colour this page can survive, and a tinted interface would
-   fight every one of them. The shelf markers are greys for the same reason:
-   they mark, they do not decorate.                                         */
+   The step numbering is Radix's and each one has a job, which is what keeps a
+   dark UI from turning into guesswork about which grey goes where:
+
+     1  app background          6  subtle border / separator
+     2  subtle background       7  element border, focus ring
+     3  element background      8  hovered border
+     4  hovered element         11 low-contrast text
+     5  active / selected       12 high-contrast text
+
+   https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale */
 :root{
   color-scheme:dark;
 
-  --paper:#14130F;
-  --card:#1D1C17;
-  --sunk:#0F0E0B;
-  --ink:#EDE9DC;
-  --ink-2:#B7B3A5;
-  --ink-3:#847F72;
-  --rule:#33312A;
-  --rule-2:#26241E;
-  --accent:#E08A76;        /* bookbinding red, used sparingly */
-  --accent-lit:#EFA491;
+  --g1:#111111;  --g2:#191919;  --g3:#222222;  --g4:#2a2a2a;
+  --g5:#313131;  --g6:#3a3a3a;  --g7:#484848;  --g8:#606060;
+  --g9:#6e6e6e;  --g10:#7b7b7b; --g11:#b4b4b4; --g12:#eeeeee;
 
-  /* Shelf markers, light to dark: where you are with a book reads as how
-     present it is. Reading is nearly the text colour, Dropped nearly the
-     background. */
-  --reading:#EDE9DC;
-  --later:#A6A196;
-  --hold:#6E6A60;
-  --read:#4A473F;
-  --dropped:#332F2A;
+  --paper:var(--g1);      /* the page */
+  --card:var(--g2);       /* raised surface */
+  --sunk:var(--g3);       /* inset: search field, chips, wells */
+  --ink:var(--g12);
+  --ink-2:var(--g11);
+  --ink-3:var(--g9);
+  --rule:var(--g6);
+  --rule-2:var(--g5);
+
+  /* There is no brand accent. Emphasis is carried by contrast — a selected
+     control goes to the light end of the same scale — which is how a UI with
+     nine hundred pieces of cover art in it stays legible: any hue put in the
+     chrome competes with all of them, and loses to most.
+
+     Red is the one colour left, and it is semantic rather than decorative: it
+     appears on exactly one control, the one that deletes a series. */
+  --danger:#e5484d;
+  --danger-dim:#b54548;
+
+  /* Shelf markers: five greys, light to dark. How present a book looks is how
+     present it is. */
+  --reading:var(--g12);
+  --later:var(--g10);
+  --hold:var(--g8);
+  --read:var(--g7);
+  --dropped:var(--g5);
 
   --gap:16px;
   --tap:44px;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.35);
 
-  /* Signal's geometry, on this palette. Its phone UI is built out of two
-     things: corners that are rounder than feels reasonable until you see them
-     next to a thumb, and separation by *tone* rather than by hairline — a
-     surface sits on a slightly different ground instead of being fenced off
-     with a 1px rule. Everything below is those two ideas applied. */
-  --r-pill:999px;      /* chips, buttons, the search field, the nav indicator */
-  --r-card:18px;       /* panels and slabs */
-  --r-art:14px;        /* cover plates and thumbnails */
-  --r-sheet:28px;      /* the bottom sheet's top corners */
-  --tint:rgba(224,138,118,.14);   /* accent at nav-indicator strength */
+  /* Radius, on the scale every serious design system converged on: ~6px for
+     controls, ~12px for containers, full-round for nothing but badges.
+     Vercel's Geist caps functional UI at 12px; Linear uses exactly 6 and 12;
+     GitHub's Primer sits lower still. The previous pass had 999px pills on
+     every button and a 28px sheet, which is a phone-app costume rather than a
+     scale. Full-round survives only where the shape *is* the content: the 8px
+     status dots. */
+  --r-sm:4px;          /* tags, counters, small inline chips */
+  --r-md:6px;          /* buttons, inputs, selects, tabs */
+  --r-lg:10px;         /* cover plates, thumbnails */
+  --r-xl:12px;         /* panels, slabs, dialogs, the sheet's lip */
+  --r-dot:999px;       /* dots, and nothing else */
 }
 
 *{box-sizing:border-box}
@@ -87,7 +107,7 @@ body{
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-a{color:var(--accent)}
+a{color:var(--ink);text-underline-offset:2px}
 .mono{font-family:Mono,ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;
   color:var(--ink-3);font-weight:600}
@@ -104,7 +124,7 @@ header{
 .bar{display:flex;align-items:center;gap:12px;min-height:36px}
 /* min-width:0 so the title truncates instead of shoving the toolbar off the
    right edge — without it a long name makes the whole page scroll sideways. */
-h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
+h1{font-size:16px;font-weight:600;margin:0;
   white-space:nowrap;letter-spacing:-.01em;
   min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tally{margin-left:auto;display:flex;align-items:baseline;gap:10px;flex:none}
@@ -118,17 +138,17 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
 @media (max-width:460px){.tally{display:none}}
 
 .ico{flex:none;width:36px;height:36px;display:grid;place-items:center;
-  background:none;border:1px solid transparent;color:var(--ink-2);border-radius:3px}
+  background:none;border:1px solid transparent;color:var(--ink-2);border-radius:var(--r-md)}
 @media (max-width:640px){.ico{width:var(--tap);height:var(--tap)}}
-.ico:hover{color:var(--accent);border-color:var(--rule)}
+.ico:hover{color:var(--ink);background:var(--g4)}
 .ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round}
-.ico.on{color:var(--accent);border-color:var(--rule);background:var(--sunk)}
+.ico.on{color:var(--ink);background:var(--g5)}
 
 .seek{display:flex;align-items:center;gap:9px;margin:8px 0 10px;
   border:1px solid transparent;background:var(--sunk);padding:0 14px;
-  height:40px;border-radius:var(--r-pill);transition:border-color .12s}
-.seek:focus-within{border-color:var(--accent)}
+  height:40px;border-radius:var(--r-md);transition:border-color .12s}
+.seek:focus-within{border-color:var(--g8)}
 .seek svg{width:15px;height:15px;flex:none;color:var(--ink-3);fill:none;
   stroke:currentColor;stroke-width:1.7}
 .seek input{flex:1;min-width:0;border:0;background:none;outline:none;height:100%;
@@ -142,7 +162,7 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
 .tabs::-webkit-scrollbar{display:none}
 .tab{
   flex:none;background:var(--sunk);border:1px solid transparent;
-  border-radius:var(--r-pill);
+  border-radius:var(--r-md);
   padding:0 13px;height:32px;color:var(--ink-2);font-size:13px;font-weight:500;
   display:flex;align-items:center;gap:7px;white-space:nowrap;
 }
@@ -154,7 +174,7 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
    from near-white to near-background, so half of them cannot carry dark text
    and the other half cannot carry light. One high-contrast selected state plus
    a dot says the same two things and is legible at both ends. */
-.tab::before{content:"";width:8px;height:8px;border-radius:var(--r-pill);
+.tab::before{content:"";width:8px;height:8px;border-radius:var(--r-dot);
   background:var(--dot,var(--ink-3));flex:none}
 .tab[aria-selected=true]{background:var(--ink);color:var(--paper);font-weight:600}
 .tab[aria-selected=true] em{opacity:.7}
@@ -176,12 +196,12 @@ h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
 .filt>.lbl{padding-left:2px}
 select,.chip{
   height:36px;border:1px solid var(--rule);background:var(--paper);
-  color:var(--ink-2);padding:0 12px;border-radius:var(--r-pill);font-size:13px;
+  color:var(--ink-2);padding:0 12px;border-radius:var(--r-md);font-size:13px;
   width:100%;
 }
 .chip{width:auto}
-select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
-.chip.on{background:var(--accent);border-color:var(--accent);color:var(--card)}
+select:hover,.chip:hover{border-color:var(--g8);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 /* Reset has no question of its own, so it aligns to the bottom of the row. */
 .filt.act{justify-content:flex-end}
 
@@ -208,12 +228,12 @@ select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
      active. Colouring the glyph alone gives a 20px target's worth of feedback
      on a 58px control; the pill is the part you can actually see land. */
   .dock i{display:grid;place-items:center;width:56px;height:30px;
-    border-radius:var(--r-pill);transition:background .14s}
+    border-radius:var(--r-md);transition:background .14s}
   .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round}
   .dock span{font-size:10.5px;letter-spacing:.01em;font-weight:500}
-  .dock button.on{color:var(--accent)}
-  .dock button.on i{background:var(--tint)}
+  .dock button.on{color:var(--ink)}
+  .dock button.on i{background:var(--g5)}
   .dock button.on span{font-weight:600}
   /* These live in the dock now; keeping both would be two ways to do one thing. */
   header .bar [data-view]{display:none}
@@ -229,12 +249,12 @@ select:hover,.chip:hover{border-color:var(--accent);color:var(--ink)}
     display:grid;place-items:center;position:fixed;z-index:46;
     right:max(16px,env(safe-area-inset-right));
     bottom:calc(74px + env(safe-area-inset-bottom));
-    width:56px;height:56px;border:0;border-radius:18px;
-    background:var(--accent);color:var(--card);box-shadow:var(--shadow);
+    width:52px;height:52px;border:0;border-radius:var(--r-xl);
+    background:var(--ink);color:var(--paper);box-shadow:var(--shadow);
   }
   .fab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;
     stroke-linecap:round}
-  .fab:active{background:var(--accent-lit)}
+  .fab:active{background:var(--g11)}
 }
 
 /* ── shelf ──────────────────────────────────────────────────────────── */
@@ -255,45 +275,45 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   --dot:var(--ink-3)}
 .plate{
   position:relative;aspect-ratio:2/3;background:var(--sunk);overflow:hidden;
-  border:1px solid var(--rule-2);border-radius:var(--r-art);box-shadow:var(--shadow);
+  border:1px solid var(--rule-2);border-radius:var(--r-lg);box-shadow:var(--shadow);
   cursor:pointer;
 }
 @media (max-width:640px){.plate{border-color:transparent}}
 .plate img{width:100%;height:100%;object-fit:cover;display:block}
-.book:hover .plate{border-color:var(--accent)}
+.book:hover .plate{border-color:var(--g8)}
 /* No artwork: set the title on a tinted ground rather than leave a hole. The
    hue comes from the title itself, so a book always looks like itself. */
 .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:10px;
   font-family:Lit,Georgia,serif;font-size:13px;line-height:1.3;text-align:center;
   color:var(--ink-2);background:
-    linear-gradient(160deg,hsl(var(--h) 16% 22%),hsl(var(--h) 20% 14%))}
+    linear-gradient(160deg,hsl(var(--h) 7% 24%),hsl(var(--h) 8% 15%))}
 
 /* The status stripe was flush to a square corner; on a rounded plate it has to
    be inset or it is clipped into a wedge. */
-.mark{position:absolute;top:9px;left:0;width:4px;height:28px;background:var(--dot);
-  border-radius:0 var(--r-pill) var(--r-pill) 0}
+.mark{position:absolute;top:10px;left:0;width:3px;height:26px;background:var(--dot);
+  border-radius:0 var(--r-sm) var(--r-sm) 0}
 .book[data-s=Reading]{--dot:var(--reading)} .book[data-s=Later]{--dot:var(--later)}
 .book[data-s=Hold]{--dot:var(--hold)}       .book[data-s=Read]{--dot:var(--read)}
 .book[data-s=Dropped]{--dot:var(--dropped)}
 
 .score{position:absolute;top:8px;right:8px;padding:3px 8px;
-  border-radius:var(--r-pill);
-  background:rgba(8,8,6,.78);color:var(--ink);font-family:Mono,monospace;
+  border-radius:var(--r-md);
+  background:rgba(0,0,0,.72);color:var(--ink);font-family:Mono,monospace;
   font-size:11px;backdrop-filter:blur(3px)}
 .foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;
   gap:6px;padding:22px 6px 6px;
-  background:linear-gradient(transparent,rgba(12,11,8,.82))}
+  background:linear-gradient(transparent,rgba(0,0,0,.85))}
 .ch{font-family:Mono,monospace;font-size:12px;color:var(--ink);
   text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .ch b{font-weight:400;font-size:9px;opacity:.7;letter-spacing:.06em}
 .plus{
-  margin-left:auto;width:28px;height:28px;flex:none;border-radius:var(--r-pill);
-  border:1px solid rgba(237,233,220,.3);background:rgba(8,8,6,.66);
+  margin-left:auto;width:28px;height:28px;flex:none;border-radius:var(--r-md);
+  border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.6);
   color:var(--ink);font-size:15px;line-height:1;display:grid;place-items:center;
   opacity:0;transition:opacity .12s;backdrop-filter:blur(3px);
 }
 .book:hover .plus,.plus:focus-visible{opacity:1}
-.plus:hover{background:var(--accent);border-color:var(--accent)}
+.plus:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 /* No hover to reveal it on a touch screen, and 28px is too small to hit while
    holding a phone — so it is always visible and grows to a real tap target. */
 @media (hover:none){.plus{opacity:1;width:38px;height:38px;font-size:19px}}
@@ -304,15 +324,14 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .sub{font-size:11px;color:var(--ink-3);display:flex;gap:6px;margin-top:-3px}
 .sub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.empty{padding:60px 20px;text-align:center;color:var(--ink-3);
-  font-family:Lit,Georgia,serif;font-size:16px}
+.empty{padding:60px 20px;text-align:center;color:var(--ink-3);font-size:14px}
 
 /* ── panels ─────────────────────────────────────────────────────────── */
 .panel{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
 .slab{background:var(--card);border:1px solid var(--rule);
-  border-radius:var(--r-card);padding:20px}
+  border-radius:var(--r-xl);padding:20px}
 @media (max-width:640px){.slab{border-color:transparent;background:var(--sunk)}}
-.slab h2{font-family:Lit,Georgia,serif;font-size:16px;font-weight:600;margin:0 0 14px}
+.slab h2{font-size:14px;font-weight:600;margin:0 0 14px;letter-spacing:-.01em}
 .slab h2 span{color:var(--ink-3);font-size:13px;font-family:Mono,monospace}
 .figs{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 .fig b{display:block;font-family:Mono,monospace;font-size:26px;font-weight:400;
@@ -326,31 +345,31 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   text-overflow:ellipsis}
 .row u{text-decoration:none;height:9px;background:var(--sunk);display:block;
   border-radius:1px;overflow:hidden}
-.row u b{display:block;height:100%;background:var(--bar,var(--accent))}
+.row u b{display:block;height:100%;background:var(--bar,var(--g8))}
 .row em{font-style:normal;font-family:Mono,monospace;font-size:12px;
   color:var(--ink-3);text-align:right}
 .list{display:flex;flex-direction:column;gap:1px}
 .list button{display:flex;gap:10px;align-items:baseline;text-align:left;width:100%;
-  background:none;border:0;padding:9px 12px;border-radius:12px;font-size:13.5px}
+  background:none;border:0;padding:9px 12px;border-radius:var(--r-md);font-size:13.5px}
 .list button:hover{background:var(--sunk)}
 .list button em{font-style:normal;margin-left:auto;font-family:Mono,monospace;
   font-size:11px;color:var(--ink-3);flex:none}
 .hint{font-size:13px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.55}
 .cloud{display:flex;flex-wrap:wrap;gap:6px}
 .cloud button{border:1px solid var(--rule);background:var(--paper);
-  border-radius:var(--r-pill);padding:5px 12px;font-size:12.5px;color:var(--ink-2)}
-.cloud button:hover{border-color:var(--accent);color:var(--ink)}
+  border-radius:var(--r-sm);padding:5px 10px;font-size:12.5px;color:var(--ink-2)}
+.cloud button:hover{border-color:var(--g8);color:var(--ink)}
 .cloud button em{font-style:normal;font-family:Mono,monospace;font-size:10px;
   color:var(--ink-3);margin-left:5px}
 .merge{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;
   border-bottom:1px solid var(--rule-2);font-size:13px}
 .merge:last-child{border-bottom:0}
 .merge code{font-family:Mono,monospace;font-size:12px;background:var(--sunk);
-  padding:3px 9px;border-radius:var(--r-pill)}
+  padding:3px 8px;border-radius:var(--r-sm)}
 .merge .go{margin-left:auto}
 
 /* ── the sheet ──────────────────────────────────────────────────────── */
-.veil{position:fixed;inset:0;z-index:50;background:rgba(12,11,8,.5);
+.veil{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);
   opacity:0;pointer-events:none;transition:opacity .16s}
 .veil.open{opacity:1;pointer-events:auto}
 .sheet{
@@ -363,7 +382,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .sheet.open{transform:none}
 @media (max-width:640px){
   .sheet{top:auto;left:0;width:100%;
-    border-left:0;border-top:0;border-radius:var(--r-sheet) var(--r-sheet) 0 0;
+    border-left:0;border-top:0;border-radius:var(--r-xl) var(--r-xl) 0 0;
     transform:translateY(101%);
     /* dvh tracks the shrinking/growing browser toolbar; vh does not, and a
        sheet sized in vh has its footer under the address bar half the time. */
@@ -378,7 +397,7 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 @media (max-width:640px){
   .sheet-top{padding-top:22px;border-bottom:0}
   .sheet-top::before{content:"";position:absolute;top:9px;left:50%;
-    transform:translateX(-50%);width:36px;height:4px;border-radius:var(--r-pill);
+    transform:translateX(-50%);width:36px;height:4px;border-radius:var(--r-dot);
     background:var(--rule)}
 }
 .sheet-top h2{font-family:Lit,Georgia,serif;font-size:17px;font-weight:600;
@@ -388,63 +407,64 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .field>.lbl{display:block;margin-bottom:6px}
 .field input[type=text],.field input[type=number],.field select,.field textarea{
   width:100%;height:40px;border:1px solid var(--rule);background:var(--paper);
-  border-radius:12px;padding:0 13px;font-size:16px;outline:none}
+  border-radius:var(--r-md);padding:0 12px;font-size:16px;outline:none}
 .field textarea{height:auto;padding:8px 10px;font-size:14px;resize:vertical;
   line-height:1.5}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g8)}
 .stepper{display:flex;gap:8px;align-items:center}
 .stepper input{text-align:center;font-family:Mono,monospace}
 .stepper button{width:var(--tap);height:40px;border:1px solid var(--rule);
-  background:var(--paper);border-radius:var(--r-pill);font-size:17px;flex:none}
-.stepper button:hover{border-color:var(--accent);color:var(--accent)}
+  background:var(--paper);border-radius:var(--r-md);font-size:17px;flex:none}
+.stepper button:hover{border-color:var(--g8);color:var(--ink)}
 .stars{display:flex;align-items:center;gap:10px}
-.stars input[type=range]{flex:1;accent-color:var(--accent);height:38px;min-width:0}
+.stars input[type=range]{flex:1;accent-color:var(--g11);height:38px;min-width:0}
 .stars output{font-family:Mono,monospace;font-size:17px;width:44px;text-align:right}
 .picks{display:flex;flex-wrap:wrap;gap:6px}
 .pick{height:34px;padding:0 14px;border:1px solid var(--rule);background:var(--paper);
-  border-radius:var(--r-pill);font-size:13px;color:var(--ink-2)}
-.pick:hover{border-color:var(--accent)}
+  border-radius:var(--r-md);font-size:13px;color:var(--ink-2)}
+.pick:hover{border-color:var(--g8)}
 /* Same reasoning as the shelf chips: one legible pressed state, and the shelf
    marker as a dot rather than as the fill. */
 .pick[aria-pressed=true]{background:var(--ink);border-color:var(--ink);
   color:var(--paper);font-weight:600}
 .pick[data-v]{--tone:none}
 .pick[data-status]::before{content:"";width:8px;height:8px;margin-right:8px;
-  border-radius:var(--r-pill);background:var(--tone,var(--ink-3));
+  border-radius:var(--r-dot);background:var(--tone,var(--ink-3));
   display:inline-block;vertical-align:middle}
 .pick[data-v=Reading]{--tone:var(--reading)} .pick[data-v=Later]{--tone:var(--later)}
 .pick[data-v=Hold]{--tone:var(--hold)}      .pick[data-v=Read]{--tone:var(--read)}
 .pick[data-v=Dropped]{--tone:var(--dropped)}
 .tagbox{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .tagbox span{display:inline-flex;align-items:center;gap:6px;height:30px;
-  padding:0 6px 0 13px;border:1px solid var(--rule);border-radius:var(--r-pill);
+  padding:0 5px 0 11px;border:1px solid var(--rule);border-radius:var(--r-sm);
   font-size:12.5px;color:var(--ink-2)}
 .tagbox span button{border:0;background:none;color:var(--ink-3);font-size:15px;
   line-height:1;padding:0 4px}
-.tagbox span button:hover{color:var(--accent)}
+.tagbox span button:hover{color:var(--ink)}
 .sheet-foot{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--rule-2);
   padding-bottom:calc(12px + env(safe-area-inset-bottom));background:var(--card)}
 .btn{height:var(--tap);padding:0 20px;border:1px solid var(--rule);
-  background:var(--paper);border-radius:var(--r-pill);font-size:14px;font-weight:500}
-.btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card);
-  flex:1}
-.btn.primary:hover{background:var(--accent-lit);border-color:var(--accent-lit);
-  color:var(--card)}
-.btn.danger:hover{border-color:#B4342A;color:#B4342A}
+  background:var(--paper);border-radius:var(--r-md);font-size:14px;font-weight:500}
+.btn:hover{border-color:var(--g8);color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper);
+  flex:1;font-weight:600}
+.btn.primary:hover{background:var(--g11);border-color:var(--g11)}
+.btn.danger{color:var(--ink-2)}
+.btn.danger:hover{border-color:var(--danger-dim);color:var(--danger)}
 .thumb{width:74px;flex:none;aspect-ratio:2/3;object-fit:cover;
-  border-radius:var(--r-art);border:1px solid var(--rule-2);background:var(--sunk)}
+  border-radius:var(--r-lg);border:1px solid var(--rule-2);background:var(--sunk)}
 .meta{font-size:11.5px;color:var(--ink-3);line-height:1.6;margin:0}
 
 /* ── toast ──────────────────────────────────────────────────────────── */
 #toast{position:fixed;z-index:60;left:50%;transform:translate(-50%,20px);
-  bottom:calc(18px + env(safe-area-inset-bottom));background:var(--ink);
-  color:var(--paper);padding:12px 18px;border-radius:var(--r-pill);font-size:13.5px;
+  bottom:calc(18px + env(safe-area-inset-bottom));background:var(--g12);
+  color:var(--g1);padding:12px 18px;border-radius:var(--r-md);font-size:13.5px;
   display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;
   max-width:calc(100vw - 28px)}
 #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-#toast button{background:none;border:0;color:var(--accent-lit);font-weight:600;
+#toast button{background:none;border:0;color:var(--paper);font-weight:600;
+  text-decoration:underline;text-underline-offset:3px;
   font-size:13px;padding:0;flex:none}
 
 /* ── touch sizing ───────────────────────────────────────────────────────
@@ -478,11 +498,11 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
   .drawer select,.field textarea,dialog select,dialog input{font-size:16px}
 }
 
-dialog{border:1px solid var(--rule);border-radius:var(--r-card);background:var(--card);
+dialog{border:1px solid var(--rule);border-radius:var(--r-xl);background:var(--card);
   color:var(--ink);padding:0;width:min(400px,calc(100vw - 28px));box-shadow:var(--shadow)}
-dialog::backdrop{background:rgba(12,11,8,.5)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
 dialog form{padding:18px}
-dialog h2{font-family:Lit,Georgia,serif;font-size:17px;margin:0 0 14px;font-weight:600}
+dialog h2{font-size:15px;margin:0 0 16px;font-weight:600}
 dialog .sheet-foot{border-top:0;padding:6px 0 0}
 </style>
 </head>
@@ -763,7 +783,7 @@ function card(s){
 
 function bars(rows, total, tone){
   return `<div class="rows">${rows.map(r => `
-    <div class="row"${tone ? ` style="--bar:var(--${r.name.toLowerCase()},var(--accent))"` : ''}>
+    <div class="row"${tone ? ` style="--bar:var(--${r.name.toLowerCase()},var(--g8))"` : ''}>
       <i>${esc(r.name)}</i>
       <u><b style="width:${(100 * r.count / Math.max(1, total)).toFixed(1)}%"></b></u>
       <em>${r.count}</em>
