@@ -35,7 +35,7 @@ from collections import Counter, defaultdict, deque
 from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode
 
 import seed as S
 
@@ -479,6 +479,111 @@ def search(db, q):
         WHERE series_fts MATCH ? ORDER BY rank LIMIT 300""", (match,))]
 
 
+# ------------------------------------------------------------- image search
+#
+# The cover picker, modelled on Playnite's: a globe next to the artwork field
+# opens a web image search seeded with the title, you look at a grid, you click
+# the one you want. Deliberately a *web image search* rather than a metadata
+# provider — AniList and Anime-Planet serve the official volume art, and the
+# covers on this shelf are the ones scan sites make, in the tall format the
+# grid is built around. A provider cannot offer that; a search can.
+#
+# DuckDuckGo, which needs no key and is where the vault's cover URLs came from
+# in the first place. Two requests: the HTML page carries a `vqd` token that
+# the JSON endpoint then requires.
+
+DDG_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+          "Chrome/126 Safari/537.36")
+# DuckDuckGo serves its image thumbnails off Bing's CDN, so the proxy allows
+# that family and nothing else. A pattern rather than a list because the shard
+# number varies per result; it is still one domain, not an open relay.
+THUMB_HOST = re.compile(r"^tse\d+(\.explicit)?\.mm\.bing\.net$|"
+                        r"^external-content\.duckduckgo\.com$")
+_vqd_cache = {}
+
+
+def _ddg(url, referer=None):
+    h = {"User-Agent": DDG_UA, "Accept-Language": "en-US,en;q=0.9"}
+    if referer:
+        h["Referer"] = referer
+    req = urllib.request.Request(url, headers=h)
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def _vqd(query):
+    hit = _vqd_cache.get(query)
+    if hit and time.time() - hit[1] < 900:
+        return hit[0]
+    page = _ddg("https://duckduckgo.com/?" + urlencode(
+        {"q": query, "iax": "images", "ia": "images"}))
+    m = re.search(r'vqd="?([\w-]+)"?', page) or re.search(r"vqd=([\d-]+)", page)
+    if not m:
+        return None
+    _vqd_cache[query] = (m.group(1), time.time())
+    return m.group(1)
+
+
+def image_search(query, page=0):
+    """[{url, thumb, w, h, host}] — biggest and most portrait first.
+
+    The shelf draws every plate at 2:3, so a wide screenshot is worse than a
+    small poster no matter how many pixels it has. Ranking on shape before
+    size puts the ones that will actually look right at the top.
+    """
+    query = (query or "").strip()
+    if not query:
+        return []
+    vqd = _vqd(query)
+    if not vqd:
+        return []
+    raw = _ddg("https://duckduckgo.com/i.js?" + urlencode(
+        {"l": "us-en", "o": "json", "q": query, "vqd": vqd,
+         "f": ",,,", "p": "1", "s": str(page * 100)}),
+        referer="https://duckduckgo.com/")
+    try:
+        results = json.loads(raw).get("results") or []
+    except ValueError:
+        return []
+    out = []
+    for r in results:
+        w, h = int(r.get("width") or 0), int(r.get("height") or 0)
+        if not (w and h) or w < 200 or h < 280:
+            continue          # too small to be cover art
+        ratio = w / h
+        if not (0.5 <= ratio <= 0.95):
+            continue          # landscape, or a square icon
+        out.append({
+            "url": r.get("image"),
+            "thumb": r.get("thumbnail"),
+            "w": w, "h": h,
+            "host": urlparse(r.get("image") or "").netloc,
+        })
+    # closest to 2:3 first, then largest
+    out.sort(key=lambda i: (abs(i["w"] / i["h"] - 2 / 3), -i["w"] * i["h"]))
+    return out[:60]
+
+
+def thumb_bytes(url):
+    """Proxy one DuckDuckGo thumbnail.
+
+    Two reasons it is not loaded straight from the browser: the tailnet reaches
+    this over plain HTTP and a browser blocks https images on an http page, and
+    it keeps the picker from telling a third party what is being searched for
+    from which address. Locked to one host so it cannot be used as a relay.
+    """
+    if not THUMB_HOST.match(urlparse(url).netloc or ""):
+        return None, None
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": DDG_UA,
+                                                   "Referer": "https://duckduckgo.com/"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = r.read(4_000_000)
+        return data, sniff(data)
+    except Exception:
+        return None, None
+
+
 # ------------------------------------------------------------------- covers
 #
 # The Cover values came across from the vault as DuckDuckGo image-proxy URLs
@@ -755,6 +860,12 @@ class Handler(BaseHTTPRequestHandler):
         if u.path in ("/", "/index.html"):
             return self._file(UI, "text/html; charset=utf-8")
 
+        if u.path == "/thumb":
+            data, ctype = thumb_bytes((parse_qs(u.query).get("u") or [""])[0])
+            if not data:
+                return self.send_error(404, "no such thumbnail")
+            return self._bytes(data, ctype, cache=True)
+
         if u.path.startswith("/cover/"):
             cid = u.path[len("/cover/"):]
             if not re.fullmatch(r"[0-9a-f]{20}", cid):
@@ -776,6 +887,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(payload(db))
             if u.path == "/api/search":
                 return self._send({"results": search(db, (qs.get("q") or [""])[0])})
+            if u.path == "/api/images":
+                return self._send({"results": image_search(
+                    (qs.get("q") or [""])[0], int((qs.get("p") or ["0"])[0]))})
             if u.path == "/api/history":
                 return self._send({"history": history(db, 200)})
             if u.path == "/api/export":

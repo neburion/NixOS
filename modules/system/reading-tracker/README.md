@@ -337,6 +337,37 @@ So the shelf carries Ongoing and Completed, which is what can be known, and
 only over a value that still matches what `anime-planet.json` wrote — a field
 edited since is his, and beats any lookup.
 
+## Picking cover art
+
+`Find`, next to the artwork field in the edit sheet, opens a web image search
+seeded with the series title — Playnite's shape, and the same job: you look at
+a grid and click the one you want.
+
+It is a **web image search, not a metadata provider**, and that is the point.
+AniList and Anime-Planet serve the official volume art; the covers on this
+shelf come from scan sites because those are the ones in the tall format the
+grid is built around. No provider offers that. A search does, and the choice
+stays with the person who has the taste.
+
+DuckDuckGo, which needs no API key and is where the vault's cover URLs came
+from originally. Two requests: the HTML page carries a `vqd` token the JSON
+endpoint requires. Results are filtered to things that could plausibly be
+cover art — at least 200×280, aspect between 0.5 and 0.95 — and sorted by how
+close they are to 2:3 before how large they are, because the shelf draws every
+plate at 2:3 and a wide screenshot is worse than a small poster no matter how
+many pixels it has. Each tile is drawn in that same 2:3, so what you pick is
+what you get.
+
+Picking fills the field; **Save** commits it, like every other field in the
+sheet. From there the normal cache takes over and the image is kept forever.
+
+`/thumb` proxies the thumbnails rather than letting the browser load them.
+Two reasons: the tailnet reaches this over plain HTTP and a browser blocks
+https images on an http page, and it keeps the picker from telling a third
+party what is being searched for from which address. It is locked by pattern
+to DuckDuckGo's thumbnail CDN, so it cannot be used as a relay — verified
+against another host, and against a loopback URL.
+
 ## Cover artwork
 
 The cover URLs came across from the vault as DuckDuckGo image-proxy links

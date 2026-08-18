@@ -513,6 +513,46 @@ dialog{border:1px solid var(--rule);border-radius:var(--r-xl);background:var(--c
 dialog::backdrop{background:rgba(0,0,0,.6)}
 dialog form{padding:18px}
 dialog h2{font-size:15px;margin:0 0 16px;font-weight:600}
+
+/* ── the cover picker ───────────────────────────────────────────────────
+   Playnite's shape: a globe next to the artwork field opens a web image
+   search seeded with the title, you look at a grid, you click one. It is a
+   search rather than a metadata lookup on purpose — the covers on this shelf
+   come from scan sites because those are the ones in the tall format the grid
+   is built around, and no metadata provider serves those. */
+.pickbar{display:flex;gap:8px}
+.pickbar input{flex:1;min-width:0}
+.pickbar .btn{flex:none;padding:0 14px;height:40px}
+@media (max-width:640px){.pickbar .btn{height:var(--tap)}}
+
+#art{border:0;padding:0;background:none;width:min(920px,calc(100vw - 24px));
+  max-width:none}
+#art .wrap{background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r-xl);display:flex;flex-direction:column;
+  max-height:min(86dvh,900px)}
+#art .head{display:flex;gap:8px;align-items:center;padding:14px 16px;
+  border-bottom:1px solid var(--rule-2)}
+#art .head input{flex:1;min-width:0;height:38px;border:1px solid var(--rule);
+  background:var(--paper);border-radius:var(--r-md);padding:0 12px;font-size:16px;
+  outline:none}
+#art .head input:focus{border-color:var(--a7)}
+#art .body{flex:1;overflow-y:auto;padding:14px 16px 18px}
+#art .shots{display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+@media (max-width:640px){#art .shots{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}}
+/* Each tile is the shape the shelf will draw it in, so what you pick is what
+   you get rather than a surprise after saving. */
+.shot{position:relative;padding:0;border:1px solid var(--rule);background:var(--sunk);
+  border-radius:var(--r-lg);overflow:hidden;aspect-ratio:2/3;cursor:pointer}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot:hover,.shot:focus-visible{border-color:var(--a7);outline:none}
+.shot em{position:absolute;left:0;right:0;bottom:0;font-style:normal;
+  font-family:Mono,monospace;font-size:10px;color:#fff;padding:10px 5px 4px;
+  background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.shot.on{border-color:var(--a9);box-shadow:0 0 0 2px var(--a9)}
+#art .foot{display:flex;gap:8px;align-items:center;padding:12px 16px;
+  border-top:1px solid var(--rule-2)}
+#art .note{font-size:12px;color:var(--ink-3);margin-right:auto}
 dialog .sheet-foot{border-top:0;padding:6px 0 0}
 </style>
 </head>
@@ -573,6 +613,22 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 <aside class="sheet" id="sheet" aria-hidden="true"></aside>
 
 <div id="toast"><span id="toast-msg"></span><button id="toast-do" hidden></button></div>
+
+<dialog id="art">
+  <div class="wrap">
+    <div class="head">
+      <input type="search" id="art-q" placeholder="Search for cover art" autocomplete="off">
+      <button class="btn" id="art-go">Search</button>
+      <button class="ico" data-art-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="body"><div class="shots" id="art-shots"></div></div>
+    <div class="foot">
+      <span class="note" id="art-note"></span>
+      <button class="btn" id="art-more">More</button>
+      <button class="btn" data-art-close>Cancel</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="dlg">
   <form method="dialog" id="dlg-form">
@@ -932,8 +988,11 @@ function openSheet(id){
       </div>
 
       <div class="field">
-        <span class="lbl">Cover image URL</span>
-        <input type="text" id="e-cover" value="${esc(s.cover)}" placeholder="https://…">
+        <span class="lbl">Cover image</span>
+        <div class="pickbar">
+          <input type="text" id="e-cover" value="${esc(s.cover)}" placeholder="https://… or search">
+          <button class="btn" id="e-cover-find" title="Search the web for cover art">Find</button>
+        </div>
       </div>
 
       <div class="field">
@@ -1001,6 +1060,50 @@ async function saveSheet(){
   } catch (e) { toast(e.message); }
 }
 
+/* ══ the cover picker ═════════════════════════════════════════════════
+   The query is seeded the way Playnite seeds its own — the title, plus a word
+   for what kind of thing it is, because "Solo Leveling" alone returns anime
+   stills and "Solo Leveling manhwa cover" returns covers. It stays editable;
+   the seed is a starting point, not a rule. */
+const artState = { q:'', page:0, chosen:null };
+
+function seedQuery(s){
+  const kind = (s.type || '').toLowerCase().includes('novel') ? 'novel' : (s.type || '');
+  return [s.title, kind, 'cover'].filter(Boolean).join(' ');
+}
+
+async function artSearch(reset){
+  const box = $('#art-shots'), note = $('#art-note');
+  if (reset){ artState.page = 0; box.innerHTML = ''; artState.chosen = null; }
+  artState.q = $('#art-q').value.trim();
+  if (!artState.q) return;
+  note.textContent = 'Searching…';
+  try {
+    const r = await api(`/api/images?q=${encodeURIComponent(artState.q)}&p=${artState.page}`);
+    const hits = r.results || [];
+    box.insertAdjacentHTML('beforeend', hits.map(i => `
+      <button class="shot" data-pick="${esc(i.url)}" title="${esc(i.host)}">
+        <img src="/thumb?u=${encodeURIComponent(i.thumb)}" alt="" loading="lazy"
+             onerror="this.closest('.shot').remove()">
+        <em>${i.w}×${i.h}</em>
+      </button>`).join(''));
+    const n = box.children.length;
+    note.textContent = n ? `${n} results — click one` : 'Nothing that looked like cover art.';
+  } catch (e){ note.textContent = e.message; }
+}
+
+function openArt(){
+  const s = byId(S.open);
+  if (!s) return;
+  // Reseeded from the series every time it opens. Carrying the last query over
+  // would mean opening the picker on one book and searching for another.
+  $('#art-q').value = seedQuery(s);
+  $('#art').showModal();
+  artSearch(true);
+}
+
+function closeArt(){ $('#art').close(); }
+
 /* ══ actions ══════════════════════════════════════════════════════════ */
 async function bump(id){
   const s = byId(Number(id));
@@ -1059,6 +1162,23 @@ document.addEventListener('click', async ev => {
 
   const merge = hit('[data-merge]');
   if (merge) return mergeTags(JSON.parse(merge.dataset.merge));
+
+  if (ev.target.id === 'e-cover-find') return openArt();
+  if (hit('[data-art-close]')) return closeArt();
+  if (ev.target.id === 'art-go') return artSearch(true);
+  if (ev.target.id === 'art-more'){ artState.page++; return artSearch(false); }
+
+  const shot = hit('[data-pick]');
+  if (shot){
+    // Fill the field rather than saving outright: the picker chooses artwork,
+    // Save commits the edit, same as every other field in the sheet.
+    $('#e-cover').value = shot.dataset.pick;
+    for (const el of document.querySelectorAll('.shot.on')) el.classList.remove('on');
+    shot.classList.add('on');
+    closeArt();
+    toast('Cover chosen — Save to keep it');
+    return;
+  }
 
   if (hit('[data-close]') || ev.target.id === 'veil') return closeSheet();
   if (hit('[data-save]')) return saveSheet();
@@ -1124,7 +1244,13 @@ document.addEventListener('keydown', ev => {
       ev.target.tagName === 'INPUT' && ev.target.type !== 'range'){
     ev.preventDefault(); return saveSheet();
   }
-  if (ev.key === 'Escape'){ if (S.open) closeSheet(); else hideToast(); }
+  if (ev.target.id === 'art-q' && ev.key === 'Enter'){
+    ev.preventDefault(); return artSearch(true);
+  }
+  if (ev.key === 'Escape'){
+    if ($('#art').open) return;      // the dialog closes itself
+    if (S.open) closeSheet(); else hideToast();
+  }
   if (ev.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)){
     ev.preventDefault(); $('#q').focus();
   }
