@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F4F1E9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14130F" media="(prefers-color-scheme: dark)">
-<title>The Reading Room</title>
+<title>Reading Tracker</title>
 <style>
 /* ── typefaces ──────────────────────────────────────────────────────────
    Self-hosted, converted to woff2 in the Nix store by service.nix. Literata
@@ -102,10 +102,6 @@ header{
 h1{font-family:Lit,Georgia,serif;font-size:19px;font-weight:600;margin:0;
   white-space:nowrap;letter-spacing:-.01em;
   min-width:0;overflow:hidden;text-overflow:ellipsis}
-h1 i{font-style:normal}
-/* "The" is decorative; the name is "Reading Room". Dropping it beats
-   truncating to "The Readin…", which is what happens at 360px otherwise. */
-@media (max-width:420px){h1 i{display:none}}
 .tally{margin-left:auto;display:flex;align-items:baseline;gap:10px;flex:none}
 .tally b{font-family:Mono,monospace;font-size:16px;font-weight:400}
 .tally i{font-style:normal;font-size:11px;color:var(--ink-3);letter-spacing:.06em;
@@ -423,7 +419,7 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 
 <header>
   <div class="bar">
-    <h1><i>The </i>Reading Room</h1>
+    <h1>Reading Tracker</h1>
     <div class="tally">
       <span><b id="t-count">—</b> <i>series</i></span>
       <span><b id="t-ch">—</b> <i>chapters</i></span>

@@ -163,6 +163,13 @@ HTTP Basic Auth, on whenever a password is present — the systemd credential
 one the app refuses to bind anything but loopback, so a misconfigured deploy
 fails to start rather than serving the ledger to the internet.
 
+A successful login also sets `er_session`, a signed cookie good for 30 days and
+re-issued whenever it drops under 21 days left, so the password is typed about
+once a month instead of once per browser session. It is a signed expiry
+timestamp rather than a session id, so a restart logs nobody out; the signing
+key is derived from the password, so rotating the sops secret invalidates every
+outstanding cookie. Same mechanism as the reading tracker.
+
 That is a second gate, not the only one: the `tailscale0`-scoped firewall rule
 in `service.nix` still limits who can reach :8777, and the Cloudflare tunnel to
 `eldenring.azuresalt.app` wants an Access policy in front of it — `cf-reconcile`

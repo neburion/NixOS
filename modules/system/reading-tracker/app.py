@@ -11,7 +11,8 @@ ui.html, and caches cover artwork on disk.
 
 Auth is HTTP Basic, enabled whenever a password is present (systemd credential
 'password', or $RT_PASSWORD). Binding anything other than loopback without one
-is refused — see main().
+is refused — see main(). A successful login also sets a signed cookie good for
+a month, so the password is typed once rather than once per browser session.
 
 The database is the store. It was imported once from an Obsidian vault by
 import-vault.py, and that vault is not consulted again: seed.json is a snapshot
@@ -19,6 +20,7 @@ of it, seeding is additive, and edits made here never travel back. See README.
 """
 import argparse
 import base64
+import hashlib
 import hmac
 import json
 import os
@@ -30,6 +32,7 @@ import unicodedata
 import urllib.request
 import webbrowser
 from collections import Counter, defaultdict, deque
+from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -103,6 +106,53 @@ def check_auth(header, ip):
         return True, ""
     _rate_fail(ip)
     return False, "bad"
+
+
+# ------------------------------------------------------------------ session
+#
+# Basic Auth on its own is a login per browser session, which on a phone means
+# retyping the password most times the app is opened — Safari drops the cached
+# credential when the tab goes away. So a successful login also hands out a
+# cookie that stands in for it for a month.
+#
+# It is a signed timestamp, not a session id: there is no server-side table to
+# store, sweep, or lose across a restart. The signing key is derived from the
+# password, which is what makes rotation work — change the sops secret and
+# every cookie in the wild stops verifying, for free.
+
+SESSION_COOKIE = "rt_session"
+SESSION_TTL = 30 * 86400
+# Re-issued once a cookie is down to its last three weeks, so a browser that
+# visits at all never reaches the expiry — the month is a floor, not a clock
+# that runs out mid-use.
+SESSION_REFRESH = 21 * 86400
+
+
+def _session_key():
+    return hashlib.sha256(b"rt-session\x00" + PASSWORD.encode("utf-8")).digest()
+
+
+def _session_sig(exp):
+    return hmac.new(_session_key(), str(exp).encode("ascii"),
+                    hashlib.sha256).hexdigest()
+
+
+def make_session(now=None):
+    exp = int(now or time.time()) + SESSION_TTL
+    return f"{exp}.{_session_sig(exp)}"
+
+
+def check_session(value):
+    """(ok, seconds_left). Unsigned, malformed and expired all read as False."""
+    if not AUTH_ON or not value:
+        return False, 0
+    exp, _, sig = value.partition(".")
+    if not exp.isdigit() or not sig:
+        return False, 0
+    if not hmac.compare_digest(sig, _session_sig(exp)):
+        return False, 0
+    left = int(exp) - int(time.time())
+    return left > 0, max(0, left)
 
 
 # ----------------------------------------------------------------- database
@@ -598,16 +648,59 @@ class Handler(BaseHTTPRequestHandler):
         return (self.headers.get("CF-Connecting-IP")
                 or self.client_address[0] or "unknown")
 
+    def cookie(self, name):
+        raw = self.headers.get("Cookie")
+        if not raw:
+            return ""
+        try:
+            jar = SimpleCookie()
+            jar.load(raw)
+        except CookieError:
+            return ""
+        got = jar.get(name)
+        return got.value if got else ""
+
+    def _secure_link(self):
+        # Set-Cookie; Secure is dropped outright by the browser over plain
+        # HTTP, and the tailnet reaches this on http://…:8778 — so the flag is
+        # set from what the request actually arrived on rather than always.
+        return ((self.headers.get("X-Forwarded-Proto") or "").lower() == "https"
+                or "https" in (self.headers.get("CF-Visitor") or ""))
+
+    def _issue_session(self):
+        self._cookie_out = (
+            f"{SESSION_COOKIE}={make_session()}; Max-Age={SESSION_TTL}; "
+            f"Path=/; HttpOnly; SameSite=Lax"
+            + ("; Secure" if self._secure_link() else ""))
+
+    def end_headers(self):
+        # One hook for every response path — _send, _bytes, _file and
+        # send_error all funnel through here, so the cookie rides out on
+        # whatever the authenticated request happened to be.
+        out = getattr(self, "_cookie_out", "")
+        if out:
+            self._cookie_out = ""
+            self.send_header("Set-Cookie", out)
+        super().end_headers()
+
     def authed(self):
+        ok, left = check_session(self.cookie(SESSION_COOKIE))
+        if ok:
+            if left < SESSION_REFRESH:
+                self._issue_session()
+            return True
+
         ok, why = check_auth(self.headers.get("Authorization"), self.client_ip())
         if ok:
+            if AUTH_ON:
+                self._issue_session()
             return True
         if why == "rate":
             self.send_response(429)
             self.send_header("Retry-After", str(RATE_WINDOW))
         else:
             self.send_response(401)
-            self.send_header("WWW-Authenticate", 'Basic realm="Reading Room"')
+            self.send_header("WWW-Authenticate", 'Basic realm="Reading Tracker"')
         self.send_header("Content-Length", "0")
         self.end_headers()
         return False

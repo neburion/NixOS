@@ -191,6 +191,16 @@ in `service.nix`, since it is not a secret. Failed attempts are rate-limited to
 20 per hour per client IP, read from `CF-Connecting-IP` so the tunnel does not
 bucket the whole internet into one key.
 
+A successful login also sets `rt_session`, a signed cookie good for 30 days and
+re-issued whenever it drops under 21 days left, so the password is typed about
+once a month instead of once per browser session — which on a phone was most
+times the app was opened. The cookie is a signed expiry timestamp rather than a
+session id, so there is no session table to keep and a service restart does not
+log anyone out. The signing key is derived from the password: rotating the sops
+secret invalidates every outstanding cookie, which is also the way to force a
+logout everywhere. `Secure` is set only when the request arrived over HTTPS, so
+the same cookie works on the plain-HTTP tailnet address.
+
 Three layers gate `reading.azuresalt.app`, and two of them are set by hand:
 
 1. **Cloudflare Access policy** — dashboard only, *not* managed by cf-reconcile,
