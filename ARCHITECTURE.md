@@ -91,8 +91,9 @@ through a Cloudflare tunnel; it is the first host to expose something whose gate
 is not solely a Cloudflare Access policy — the app carries HTTP Basic Auth from
 the `elden-ring-password` sops secret and refuses to bind a non-loopback address
 without it, so a missing Access policy weakens the gate rather than removing it.
-Set the policy anyway. The **reading tracker** is at `http://personal-server:8778`
-and `https://reading.azuresalt.app`, behind the same Basic Auth and fail-closed
+Set the policy anyway. The **media tracker** is at `http://personal-server:8778`,
+`https://media.azuresalt.app` and `https://reading.azuresalt.app` — two tunnels
+onto one service, not a redirect — behind the same Basic Auth and fail-closed
 bind check. It wants an Access policy more than the Elden Ring tracker does: a
 wiped playthrough is re-seedable, a deleted series takes its chapter history
 with it.
@@ -135,10 +136,14 @@ elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracke
                          ExecStartPre, migrates the DB in place, re-attaches
                          progress by natural key, and aborts on a bad link)
 
-reading-tracker/         aggregator → service.nix (stdlib-Python SQLite tracker
-                         + web UI on :8778, personal-server; 300 series imported
-                         once from the Reading-Ob Obsidian vault. Tailnet, plus
-                         reading.azuresalt.app via the Cloudflare tunnel.
+media-tracker/           aggregator → service.nix (stdlib-Python SQLite tracker
+                         + web UI on :8778, personal-server. Reading, anime,
+                         shows, films and games, with `kind` as the axis above
+                         everything; 300 series imported once from the
+                         Reading-Ob Obsidian vault and 617 more from an
+                         Anime-Planet export, all filed under Reading. Tailnet,
+                         plus media.azuresalt.app and reading.azuresalt.app via
+                         the Cloudflare tunnel.
                          HTTP Basic Auth from a sops secret
                          via LoadCredential, same fail-closed bind check as the
                          Elden Ring tracker).

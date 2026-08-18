@@ -1,10 +1,17 @@
-# Reading tracker
+# Media tracker
 
 SQLite + a small web UI. Stdlib Python only — no Flask, no pip.
 
+Reading, anime, shows, films and games in one shelf. It began as a reading
+tracker, which is why the 921 series it started with are all filed under
+`Reading` and why the progress column in the database is still called
+`chapter`.
+
 Deployed by `service.nix` on `personal-server`: **http://personal-server:8778**
-on the tailnet, and publicly at **https://reading.azuresalt.app** through the
-Cloudflare tunnel declared in the host's `cloudflare-layout.nix`.
+on the tailnet, and publicly at **https://media.azuresalt.app** — and at
+**https://reading.azuresalt.app**, which is the same service on a second tunnel
+rather than a redirect, because a redirect would land on a hostname the saved
+Basic Auth credential is not scoped to and ask for the password every visit.
 See the module tree entry in `ARCHITECTURE.md`.
 
 918 series. 300 came from the **Reading-Ob** Obsidian vault on pod042; the
@@ -95,6 +102,32 @@ One check is deliberately loose. **Mushoku Tensei is rated −10.** That is not
 corrupt data, it is an opinion, and clamping it to fit a 0–10 scale would be
 editing a verdict to suit a schema — so the range admits it and the UI slider
 goes down to −10.
+
+## Kind is the axis above everything
+
+| kind | progress counts | types |
+|---|---|---|
+| Reading | `ch` | Manhwa, Manhua, Manga, Web Novel, Indonesian Comic |
+| Anime | `ep` | TV, Movie, OVA, ONA, Special |
+| Shows | `ep` | Series, Miniseries, Documentary |
+| Films | — | Film, Short, Documentary |
+| Games | `hrs` | PC, Console, Handheld, Mobile |
+
+Everything else in the schema was already kind-agnostic and needed no change:
+status, rating, tags and both history tables mean the same thing about a book,
+a season and a playthrough. Only two things vary by kind, and both live on the
+`kind` row — what `type` may be, and what the progress number counts.
+
+The shelves are no longer **Reading** and **Read**. Those named the medium
+rather than the state, and a game sitting on a shelf called Reading reads as a
+bug. They are **Current** and **Finished**; the ids did not change, so every
+status change already in `status_log` still resolves.
+
+The progress column is still called `chapter` in the database. Renaming it
+would mean rewriting the view, both history tables, every read and write in
+`app.py` and the whole of `ui.html`, against a live database with reading
+history hanging off it — a lot of blast radius for a word. What it *means* is
+carried by `kind.unit`, which is the part anyone sees.
 
 ## Tags are on two axes
 
@@ -373,7 +406,7 @@ against another host, and against a loopback URL.
 The cover URLs came across from the vault as DuckDuckGo image-proxy links
 pointing at a dozen hosts. Hotlinking 300 of them on every page load is slow,
 leaks the shelf to whoever is on the other end, and breaks the day a host
-disappears — so each is cached under `/var/lib/reading-tracker/covers/`, keyed
+disappears — so each is cached under `/var/lib/media-tracker/covers/`, keyed
 by a hash of the URL. Change a series' cover and the key changes with it, so
 there is no cache to bust.
 
@@ -393,12 +426,12 @@ parameter, so `unproxy()` fetches that instead. Expect the second to matter more
 over time as signatures age out.
 
 Failures are remembered for six hours so a dead host is not retried on every
-page load. `reading-tracker-covers.timer` warms the cache three minutes after
+page load. `media-tracker-covers.timer` warms the cache three minutes after
 boot and weekly after, purely so the first page load is not the slow one.
 
 ## Where the data lives
 
-`/var/lib/reading-tracker/reading.db` — a `StateDirectory`, so it survives
+`/var/lib/media-tracker/media.db` — a `StateDirectory`, so it survives
 deploys and reboots. The covers beside it are a cache and cost one re-download
 each.
 
@@ -415,7 +448,7 @@ Paths fall back to beside the script, so a plain checkout works with no
 arguments:
 
 ```bash
-cd modules/system/reading-tracker
+cd modules/system/media-tracker
 python3 seed.py && python3 app.py --open   # 127.0.0.1:8778, db in this directory
 python3 app.py --stats                     # print the shelf and exit
 python3 app.py --warm-covers
@@ -424,7 +457,7 @@ python3 app.py --warm-covers
 Overrides: `RT_DB`, `RT_SEED`, `RT_SCHEMA`, `RT_UI`, `RT_FONTS`, `RT_CACHE`,
 `RT_HOST`, `RT_PORT`, `RT_USERNAME`, `RT_PASSWORD`.
 
-`reading-tracker --stats` is also on `PATH` on the host.
+`media-tracker --stats` is also on `PATH` on the host.
 
 ## API
 
@@ -446,7 +479,7 @@ A field whose value did not change is not written and does not appear in
 ## Security
 
 HTTP Basic Auth, on whenever a password is present — the systemd credential
-`password` (the `reading-tracker-password` sops secret in
+`password` (the `media-tracker-password` sops secret in
 `secrets/personal-server.yaml`) or `$RT_PASSWORD`. Without one the app refuses
 to bind anything but loopback, so a misconfigured deploy fails to start rather
 than putting a writable API on the network. The username is `tracker` and lives

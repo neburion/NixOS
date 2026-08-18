@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reading tracker — web server.
+"""Media tracker — web server.
 
 Stdlib only: no Flask, no pip. Serves a JSON API over reading.db plus the UI in
 ui.html, and caches cover artwork on disk.
@@ -10,7 +10,7 @@ ui.html, and caches cover artwork on disk.
     python3 app.py --warm-covers   # fetch every cover into the cache and exit
 
 Auth is HTTP Basic, enabled whenever a password is present (systemd credential
-'password', or $RT_PASSWORD). Binding anything other than loopback without one
+'password', or $MT_PASSWORD). Binding anything other than loopback without one
 is refused — see main(). A successful login also sets a signed cookie good for
 a month, so the password is typed once rather than once per browser session.
 
@@ -41,11 +41,11 @@ import seed as S
 
 HERE = Path(__file__).resolve().parent
 DB = S.DB
-UI = Path(os.environ.get("RT_UI") or HERE / "ui.html")
-FONTS = Path(os.environ["RT_FONTS"]) if os.environ.get("RT_FONTS") else None
-CACHE = Path(os.environ.get("RT_CACHE") or HERE / ".cache")
-DEFAULT_HOST = os.environ.get("RT_HOST", "127.0.0.1")
-DEFAULT_PORT = int(os.environ.get("RT_PORT", "8778"))
+UI = Path(os.environ.get("MT_UI") or HERE / "ui.html")
+FONTS = Path(os.environ["MT_FONTS"]) if os.environ.get("MT_FONTS") else None
+CACHE = Path(os.environ.get("MT_CACHE") or HERE / ".cache")
+DEFAULT_HOST = os.environ.get("MT_HOST", "127.0.0.1")
+DEFAULT_PORT = int(os.environ.get("MT_PORT", "8778"))
 
 SEP = "\x1f"          # what v_series joins tags with
 
@@ -61,11 +61,11 @@ def _load_password():
         p = Path(creds) / "password"
         if p.exists():
             return p.read_text().strip()
-    return (os.environ.get("RT_PASSWORD") or "").strip()
+    return (os.environ.get("MT_PASSWORD") or "").strip()
 
 
 PASSWORD = _load_password()
-USERNAME = os.environ.get("RT_USERNAME", "tracker")
+USERNAME = os.environ.get("MT_USERNAME", "tracker")
 AUTH_ON = bool(PASSWORD)
 
 RATE_WINDOW = 3600
@@ -120,7 +120,7 @@ def check_auth(header, ip):
 # password, which is what makes rotation work — change the sops secret and
 # every cookie in the wild stops verifying, for free.
 
-SESSION_COOKIE = "rt_session"
+SESSION_COOKIE = "mt_session"
 SESSION_TTL = 30 * 86400
 # Re-issued once a cookie is down to its last three weeks, so a browser that
 # visits at all never reaches the expiry — the month is a floor, not a clock
@@ -129,7 +129,7 @@ SESSION_REFRESH = 21 * 86400
 
 
 def _session_key():
-    return hashlib.sha256(b"rt-session\x00" + PASSWORD.encode("utf-8")).digest()
+    return hashlib.sha256(b"mt-session\x00" + PASSWORD.encode("utf-8")).digest()
 
 
 def _session_sig(exp):
@@ -166,6 +166,10 @@ def row_to_series(r):
     return {
         "id": r["id"],
         "title": r["title"],
+        "kind": r["kind"],
+        # What `chapter` counts for this kind — "ch", "ep", "hrs", or nothing
+        # at all for a film. The number is generic; the word is not.
+        "unit": r["unit"],
         "chapter": r["chapter"],
         "rating": r["rating"],
         "status": r["status"],
@@ -194,11 +198,31 @@ def one_series(db, sid):
     return row_to_series(r)
 
 
+def kinds(db):
+    return [{"name": r["name"], "unit": r["unit"]}
+            for r in db.execute("SELECT name, unit FROM kind ORDER BY pos")]
+
+
+def types_by_kind(db):
+    """{kind: [type…]} — a Manhwa menu on a game is noise."""
+    out = defaultdict(list)
+    for r in db.execute("""
+            SELECT t.name AS type, COALESCE(k.name, '') AS kind
+            FROM type t LEFT JOIN kind k ON k.id = t.kind_id
+            ORDER BY t.pos"""):
+        out[r["kind"]].append(r["type"])
+    return dict(out)
+
+
 def vocab(db):
-    """The three closed sets, in their stored presentation order."""
-    return {name: [r["name"] for r in
-                   db.execute(f"SELECT name FROM {name} ORDER BY pos")]
-            for name in ("status", "pub", "type")}
+    """The closed sets, in their stored presentation order."""
+    out = {name: [r["name"] for r in
+                  db.execute(f"SELECT name FROM {name} ORDER BY pos")]
+           for name in ("status", "pub", "type")}
+    out["kind"] = [k["name"] for k in kinds(db)]
+    out["units"] = {k["name"]: k["unit"] for k in kinds(db)}
+    out["typesByKind"] = types_by_kind(db)
+    return out
 
 
 # --------------------------------------------------------------------- tags
@@ -339,6 +363,7 @@ def stats(db):
         "chapters": agg["chapters"],
         "rated": agg["rated"],
         "avg": agg["avg"],
+        "byKind": _bucket(db, "kind", "kind_id"),
         "byStatus": _bucket(db, "status", "status_id"),
         "byType": _bucket(db, "type", "type_id"),
         "byPub": _bucket(db, "pub", "pub_id"),
@@ -361,8 +386,8 @@ def payload(db):
 
 # ------------------------------------------------------------------ writing
 
-FIELDS = {"title", "chapter", "rating", "status", "pub", "type", "cover",
-          "notes", "tags"}
+FIELDS = {"title", "chapter", "rating", "kind", "status", "pub", "type",
+          "cover", "notes", "tags"}
 
 
 def _num(v):
@@ -405,7 +430,8 @@ def update_series(db, sid, fields):
                 args.append(new)
                 changed.append(field)
 
-    for field, table in (("status", "status"), ("pub", "pub"), ("type", "type")):
+    for field, table in (("kind", "kind"), ("status", "status"),
+                        ("pub", "pub"), ("type", "type")):
         if field in fields:
             new = str(fields[field] or "").strip()
             if new != before[field]:
@@ -450,7 +476,9 @@ def create_series(db, title, fields):
         raise ValueError("a series needs a title")
     if db.execute("SELECT 1 FROM series WHERE title = ?", (title,)).fetchone():
         raise FileExistsError(title)
-    sid = db.execute("INSERT INTO series(title) VALUES (?)", (title,)).lastrowid
+    sid = db.execute(
+        "INSERT INTO series(title, kind_id) VALUES (?, "
+        "(SELECT id FROM kind WHERE name = 'Reading'))", (title,)).lastrowid
     update_series(db, sid, {k: v for k, v in (fields or {}).items() if k in FIELDS})
     S.reindex(db, sid)
     db.commit()
@@ -742,7 +770,7 @@ def warm_covers():
 # ------------------------------------------------------------------- server
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "ReadingTracker/2.0"
+    server_version = "MediaTracker/3.0"
     protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt, *args):
@@ -806,7 +834,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Retry-After", str(RATE_WINDOW))
         else:
             self.send_response(401)
-            self.send_header("WWW-Authenticate", 'Basic realm="Reading Tracker"')
+            self.send_header("WWW-Authenticate", 'Basic realm="Media Tracker"')
         self.send_header("Content-Length", "0")
         self.end_headers()
         return False
@@ -931,7 +959,7 @@ class Handler(BaseHTTPRequestHandler):
                 # Reading a chapter of something shelved means you picked it back
                 # up. Nobody wants to change two fields for that.
                 if b.get("resume") and cur["status"] in ("Hold", "Later", ""):
-                    fields["status"] = "Reading"
+                    fields["status"] = "Current"
                 changed = update_series(db, sid, fields)
                 return self._send({"ok": True, "series": one_series(db, sid),
                                    "changed": changed, "stats": stats(db),
@@ -990,7 +1018,7 @@ def print_stats():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Reading tracker")
+    ap = argparse.ArgumentParser(description="Media tracker")
     ap.add_argument("--port", type=int, default=DEFAULT_PORT)
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--stats", action="store_true", help="print the shelf and exit")
@@ -1010,11 +1038,11 @@ def main():
     # a series; binding a reachable interface with no password would put that on
     # the network. A restart loop is the better failure.
     loopback = a.host in ("127.0.0.1", "localhost", "::1")
-    if not AUTH_ON and not loopback and not os.environ.get("RT_ALLOW_NO_AUTH"):
+    if not AUTH_ON and not loopback and not os.environ.get("MT_ALLOW_NO_AUTH"):
         raise SystemExit(
             f"refusing to bind {a.host} with no password set.\n"
-            "Set RT_PASSWORD, provide a systemd credential named 'password', "
-            "or bind 127.0.0.1. Override with RT_ALLOW_NO_AUTH=1 if you mean it.")
+            "Set MT_PASSWORD, provide a systemd credential named 'password', "
+            "or bind 127.0.0.1. Override with MT_ALLOW_NO_AUTH=1 if you mean it.")
 
     db = connect()
     n = db.execute("SELECT COUNT(*) FROM series").fetchone()[0]
@@ -1023,7 +1051,7 @@ def main():
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     url = f"http://{a.host}:{a.port}"
     auth = "password required" if AUTH_ON else "NO AUTH (loopback only)"
-    print(f"Reading tracker → {url}   [{auth}]   {n} series")
+    print(f"Media tracker → {url}   [{auth}]   {n} series")
     if a.open:
         webbrowser.open(url)
     try:

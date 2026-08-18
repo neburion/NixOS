@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#111111">
-<title>Reading Tracker</title>
+<title>Media Tracker</title>
 <style>
 /* ── typefaces ──────────────────────────────────────────────────────────
    Self-hosted, converted to woff2 in the Nix store by service.nix. Literata
@@ -76,10 +76,13 @@
      The mustard that was on Hold is now Radix `orange` at step 11 — the same
      idea, at a lightness that reads as orange on a dark ground instead of as
      something spilled on it. */
-  --reading:#3dd68c;   /* green-11  — you are in it */
+  /* Named for the shelves, which are no longer named after reading: the token
+     names have to track them because the stats bars resolve --<status> from
+     the status name itself. */
+  --current:#3dd68c;   /* green-11  — you are in it */
   --later:#70b8ff;     /* blue-11   — queued */
   --hold:#ffa057;      /* orange-11 — paused */
-  --read:#b4b4b4;      /* gray-11   — done */
+  --finished:#b4b4b4;  /* gray-11   — done */
   --dropped:#7b7b7b;   /* gray-10   — abandoned; dimmest of the five, but 3:1 */
 
   /* Semantic, on one control: the one that deletes a series. */
@@ -189,8 +192,8 @@ h1{font-size:16px;font-weight:600;margin:0;
 .tab[aria-selected=true]{background:var(--a3);border-color:var(--a7);
   color:var(--a11);font-weight:600}
 .tab[aria-selected=true] em{opacity:.8}
-.tab[data-s=Reading]{--dot:var(--reading)} .tab[data-s=Later]{--dot:var(--later)}
-.tab[data-s=Hold]{--dot:var(--hold)}      .tab[data-s=Read]{--dot:var(--read)}
+.tab[data-s=Current]{--dot:var(--current)} .tab[data-s=Later]{--dot:var(--later)}
+.tab[data-s=Hold]{--dot:var(--hold)}       .tab[data-s=Finished]{--dot:var(--finished)}
 .tab[data-s=Dropped]{--dot:var(--dropped)}
 /* "All" is not a shelf and has no marker of its own. */
 .tab[data-s=All]::before{display:none}
@@ -200,6 +203,20 @@ h1{font-size:16px;font-weight:600;margin:0;
    now carries its own question above it, and the tag filter is split into the
    three axes the vocabulary actually has, so choosing a setting and a genre
    at once is possible rather than a choice between them. */
+/* Kind sits above the shelves because it is the wider cut: which library you
+   are in, before which shelf of it. Same chip shape, one step quieter, so the
+   two rows read as a hierarchy rather than as two of the same thing. */
+.kinds{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  padding:2px 0 2px;margin:0 -2px}
+.kinds::-webkit-scrollbar{display:none}
+.kind{flex:none;background:none;border:0;border-radius:var(--r-md);
+  padding:0 10px;height:28px;color:var(--ink-3);font-size:12.5px;font-weight:500;
+  display:flex;align-items:center;gap:6px;white-space:nowrap}
+@media (max-width:640px){.kind{height:32px;padding:0 12px}}
+.kind em{font-style:normal;font-family:Mono,monospace;font-size:10px;opacity:.7}
+.kind:hover{color:var(--ink)}
+.kind[aria-selected=true]{background:var(--g3);color:var(--ink);font-weight:600}
+
 .drawer{display:none;gap:10px 12px;padding:4px 0 12px;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .drawer.open{display:grid}
@@ -303,8 +320,8 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
    be inset or it is clipped into a wedge. */
 .mark{position:absolute;top:10px;left:0;width:3px;height:26px;background:var(--dot);
   border-radius:0 var(--r-sm) var(--r-sm) 0}
-.book[data-s=Reading]{--dot:var(--reading)} .book[data-s=Later]{--dot:var(--later)}
-.book[data-s=Hold]{--dot:var(--hold)}       .book[data-s=Read]{--dot:var(--read)}
+.book[data-s=Current]{--dot:var(--current)} .book[data-s=Later]{--dot:var(--later)}
+.book[data-s=Hold]{--dot:var(--hold)}       .book[data-s=Finished]{--dot:var(--finished)}
 .book[data-s=Dropped]{--dot:var(--dropped)}
 
 .score{position:absolute;top:8px;right:8px;padding:3px 8px;
@@ -441,8 +458,8 @@ main{padding:var(--gap) max(14px,env(safe-area-inset-right)) 96px
 .pick[data-status]::before{content:"";width:8px;height:8px;margin-right:8px;
   border-radius:var(--r-dot);background:var(--tone,var(--ink-3));
   display:inline-block;vertical-align:middle}
-.pick[data-v=Reading]{--tone:var(--reading)} .pick[data-v=Later]{--tone:var(--later)}
-.pick[data-v=Hold]{--tone:var(--hold)}      .pick[data-v=Read]{--tone:var(--read)}
+.pick[data-v=Current]{--tone:var(--current)} .pick[data-v=Later]{--tone:var(--later)}
+.pick[data-v=Hold]{--tone:var(--hold)}       .pick[data-v=Finished]{--tone:var(--finished)}
 .pick[data-v=Dropped]{--tone:var(--dropped)}
 .tagbox{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .tagbox span{display:inline-flex;align-items:center;gap:6px;height:30px;
@@ -560,7 +577,7 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
 
 <header>
   <div class="bar">
-    <h1>Reading Tracker</h1>
+    <h1>Media Tracker</h1>
     <div class="tally">
       <span><b id="t-count">—</b> <i>series</i></span>
       <span><b id="t-ch">—</b> <i>chapters</i></span>
@@ -596,6 +613,7 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
     <div class="filt act"><button class="chip" id="f-clear">Reset filters</button></div>
   </div>
 
+  <div class="kinds" id="kinds"></div>
   <div class="tabs" id="tabs"></div>
 </header>
 
@@ -636,6 +654,10 @@ dialog .sheet-foot{border-top:0;padding:6px 0 0}
     <div class="field">
       <label class="lbl" for="n-title">Title</label>
       <input type="text" id="n-title" required placeholder="What is it called?">
+    </div>
+    <div class="field">
+      <label class="lbl" for="n-kind">Kind</label>
+      <select id="n-kind"></select>
     </div>
     <div class="field">
       <label class="lbl" for="n-type">Type</label>
@@ -706,11 +728,16 @@ async function api(path, body){
 
 /* ══ state ════════════════════════════════════════════════════════════ */
 const S = {
-  data:null, view:'shelf', shelf:'Reading', q:'',
-  type:'', pub:'', setting:'', genre:'', sort:'updated', open:null,
+  data:null, view:'shelf', shelf:'Current', q:'',
+  kind:'All', type:'', pub:'', setting:'', genre:'', sort:'updated', open:null,
 };
 const AXES = ['setting','genre'];
 const AXIS_LABEL = { setting:'Setting', genre:'Genre', other:'Unfiled' };
+/* What the progress number is called, per kind. The column behind it is one
+   number either way; this is the word that makes it mean something. */
+const PROGRESS_LABEL = {
+  Reading:'Chapter', Anime:'Episode', Shows:'Episode', Films:'', Games:'Hours',
+};
 const byId = id => S.data.series.find(s => s.id === id);
 
 /* ══ load ═════════════════════════════════════════════════════════════ */
@@ -737,7 +764,12 @@ function fillPickers(){
       items.map(v => `<option>${esc(v)}</option>`).join('');
     sel.value = items.includes(keep) ? keep : '';
   };
-  opt($('#f-type'), m.type, 'Any');
+  // Only the types belonging to the kind you are in. "Any" over all of them is
+  // a menu offering Manhwa and OVA and PC together, which is no menu at all.
+  const typesHere = S.kind === 'All'
+    ? m.type
+    : (m.typesByKind || {})[S.kind] || [];
+  opt($('#f-type'), typesHere, 'Any');
   opt($('#f-pub'), m.pub, 'Any');
   // One dropdown per axis, each holding only its own tags. The old single
   // "Any tag" menu was 59 items long and mixed all three together.
@@ -745,15 +777,27 @@ function fillPickers(){
     opt($('#f-' + axis), tagsOn(axis).map(t => t.tag), 'Any');
   $('#f-sort').value = S.sort;
 
-  $('#n-type').innerHTML = '<option value="">—</option>' +
-    m.type.map(v => `<option>${esc(v)}</option>`).join('');
+  // The add dialog opens on whichever kind you are browsing, which is nearly
+  // always the one you are adding to.
+  const startKind = S.kind !== 'All' ? S.kind : m.kind[0];
+  $('#n-kind').innerHTML = m.kind
+    .map(v => `<option${v === startKind ? ' selected' : ''}>${esc(v)}</option>`).join('');
+  fillNewTypes();
   $('#n-status').innerHTML = m.status
     .map(v => `<option${v === 'Later' ? ' selected' : ''}>${esc(v)}</option>`).join('');
+}
+
+function fillNewTypes(){
+  const k = $('#n-kind').value;
+  const list = (S.data.meta.typesByKind || {})[k] || [];
+  $('#n-type').innerHTML = '<option value="">—</option>' +
+    list.map(v => `<option>${esc(v)}</option>`).join('');
 }
 
 /* ══ selection ════════════════════════════════════════════════════════ */
 function shown(){
   let list = S.data.series;
+  if (S.kind !== 'All') list = list.filter(s => s.kind === S.kind);
   if (S.shelf !== 'All') list = list.filter(s => s.status === S.shelf);
   if (S.type) list = list.filter(s => s.type === S.type);
   if (S.pub)  list = list.filter(s => s.pub === S.pub);
@@ -782,9 +826,22 @@ function render(){
   $('#t-count').textContent = st.total;
   $('#t-ch').textContent = st.chapters.toLocaleString();
 
-  const counts = Object.fromEntries(st.byStatus.map(r => [r.name, r.count]));
+  const kindCount = Object.fromEntries((st.byKind || []).map(r => [r.name, r.count]));
+  $('#kinds').innerHTML = ['All', ...S.data.meta.kind].map(k => {
+    const n = k === 'All' ? st.total : (kindCount[k] || 0);
+    return `<button class="kind" data-k="${esc(k)}" role="tab"
+      aria-selected="${S.kind === k}">${esc(k)} <em>${n}</em></button>`;
+  }).join('');
+
+  // Shelf counts are of the kind you are looking at, not of everything. A
+  // Games tab reading "Current 3" next to a shelf holding 900 books would be
+  // two numbers about two different questions sitting side by side.
+  const pool = S.kind === 'All' ? S.data.series
+                                : S.data.series.filter(x => x.kind === S.kind);
+  const counts = {};
+  for (const x of pool) counts[x.status] = (counts[x.status] || 0) + 1;
   $('#tabs').innerHTML = [...S.data.meta.status, 'All'].map(s => {
-    const n = s === 'All' ? st.total : (counts[s] || 0);
+    const n = s === 'All' ? pool.length : (counts[s] || 0);
     return `<button class="tab" data-s="${esc(s)}" role="tab"
       aria-selected="${S.view === 'shelf' && S.shelf === s}">${esc(s)} <em>${n}</em></button>`;
   }).join('');
@@ -835,7 +892,8 @@ function card(s){
       ${s.rating !== null ? `<div class="score">${esc(fmt(s.rating))}</div>` : ''}
       <div class="foot">
         <div class="ch">${s.chapter !== null
-          ? `<b>CH</b> ${esc(fmt(s.chapter))}` : '<b>UNREAD</b>'}</div>
+          ? `${s.unit ? `<b>${esc(s.unit.toUpperCase())}</b> ` : ''}${esc(fmt(s.chapter))}`
+          : `<b>${s.kind === 'Films' ? 'UNSEEN' : 'UNSTARTED'}</b>`}</div>
         <button class="plus" data-bump="${s.id}" title="Read one more chapter"
           aria-label="Read one more chapter of ${esc(s.title)}">+</button>
       </div>
@@ -867,6 +925,8 @@ function renderStats(){
         <div class="fig"><b>${st.avg ?? '—'}</b><span>mean rating</span></div>
       </div>
     </div>
+    ${(st.byKind || []).length > 1
+      ? `<div class="slab"><h2>By kind</h2>${bars(st.byKind, st.total)}</div>` : ''}
     <div class="slab"><h2>By shelf</h2>${bars(st.byStatus, st.total, true)}</div>
     <div class="slab"><h2>By type</h2>${bars(st.byType, st.total)}</div>
     <div class="slab"><h2>By publication status</h2>${bars(st.byPub, st.total)}</div>
@@ -939,7 +999,7 @@ function openSheet(id){
     </div>
     <div class="sheet-body">
       <div class="field">
-        <span class="lbl">Chapter</span>
+        <span class="lbl">${esc(PROGRESS_LABEL[s.kind] || 'Progress')}</span>
         <div class="stepper">
           <button data-step="-1" aria-label="Back one chapter">−</button>
           <input type="number" id="e-chapter" inputmode="numeric" min="0"
@@ -959,6 +1019,11 @@ function openSheet(id){
       </div>
 
       <div class="field">
+        <span class="lbl">Kind</span>
+        <div class="picks">${picks('kind', m.kind, s.kind)}</div>
+      </div>
+
+      <div class="field">
         <span class="lbl">Shelf — where you are with it</span>
         <div class="picks">${picks('status', m.status, s.status)}</div>
       </div>
@@ -970,7 +1035,8 @@ function openSheet(id){
 
       <div class="field">
         <span class="lbl">Type</span>
-        <div class="picks">${picks('type', m.type, s.type)}</div>
+        <div class="picks" id="e-types">${
+          picks('type', (m.typesByKind || {})[s.kind] || m.type, s.type)}</div>
       </div>
 
       <div class="field">
@@ -1045,6 +1111,7 @@ async function saveSheet(){
     title:   $('#e-title').value.trim(),
     chapter: chapRaw === '' ? null : Number(chapRaw),
     rating:  $('#e-rating-out').textContent === '—' ? null : Number($('#e-rating').value),
+    kind:    $('#sheet [data-kind][aria-pressed=true]')?.dataset.kind || '',
     status:  $('#sheet [data-status][aria-pressed=true]')?.dataset.status || '',
     pub:     $('#sheet [data-pub][aria-pressed=true]')?.dataset.pub || '',
     type:    $('#sheet [data-type][aria-pressed=true]')?.dataset.type || '',
@@ -1150,6 +1217,16 @@ document.addEventListener('click', async ev => {
   const tab = hit('.tab');
   if (tab){ S.view = 'shelf'; S.shelf = tab.dataset.s; return render(); }
 
+  const kindBtn = hit('.kind');
+  if (kindBtn){
+    S.kind = kindBtn.dataset.k;
+    S.view = 'shelf';
+    // The type filter belongs to a kind, so it cannot survive changing kind.
+    S.type = ''; if ($('#f-type')) $('#f-type').value = '';
+    fillPickers();
+    return render();
+  }
+
   const tag = hit('[data-tag]');
   if (tag){
     const name = tag.dataset.tag, axis = axisOf(name);
@@ -1215,13 +1292,22 @@ document.addEventListener('click', async ev => {
   if (untag){ sheetTags.splice(Number(untag.dataset.untag), 1); return drawTags(); }
 
   // Single-choice pill groups: pressing the pressed one clears the field.
-  for (const key of ['status','pub','type']){
+  for (const key of ['kind','status','pub','type']){
     const p = hit(`[data-${key}]`);
     if (p && p.classList.contains('pick')){
       const was = p.getAttribute('aria-pressed') === 'true';
       p.closest('.picks').querySelectorAll('.pick')
         .forEach(x => x.setAttribute('aria-pressed', 'false'));
       p.setAttribute('aria-pressed', was ? 'false' : 'true');
+      // Changing kind changes what a type can be, and the old choice is
+      // almost certainly wrong now — a manhwa that became a game is not a
+      // Manhwa. Redraw the row and leave it unset.
+      if (key === 'kind' && !was){
+        const box = $('#e-types');
+        if (box) box.innerHTML = ((S.data.meta.typesByKind || {})[p.dataset.kind] || [])
+          .map(v => `<button class="pick" data-type="${esc(v)}" data-v="${esc(v)}"
+                       aria-pressed="false">${esc(v)}</button>`).join('');
+      }
       return;
     }
   }
@@ -1285,6 +1371,8 @@ document.addEventListener('click', ev => {
   if (act.dataset.act === 'new') $('#dlg').showModal();
 });
 
+$('#n-kind').addEventListener('change', fillNewTypes);
+
 for (const [id, key] of [['#f-type','type'],['#f-pub','pub'],['#f-sort','sort'],
                         ...AXES.map(a => ['#f-' + a, a])])
   $(id).addEventListener('change', e => {
@@ -1306,7 +1394,8 @@ $('#dlg-form').addEventListener('submit', async ev => {
   if (!title) return;
   try {
     const r = await api('/api/create', { title, fields: {
-      type: $('#n-type').value, status: $('#n-status').value } });
+      kind: $('#n-kind').value, type: $('#n-type').value,
+      status: $('#n-status').value } });
     $('#n-title').value = '';
     await load();
     openSheet(r.series.id);

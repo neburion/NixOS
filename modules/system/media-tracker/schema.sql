@@ -14,6 +14,23 @@ PRAGMA foreign_keys = ON;
 -- which is not alphabetical: what you are reading now belongs at the top of the
 -- shelf and what you abandoned belongs at the bottom.
 
+-- `kind` is what turned a reading tracker into a media tracker: the axis above
+-- everything else. A series, a season, a film and a playthrough are all "one
+-- thing you are working through", and they differ in three ways that this
+-- table carries — what its `type` values are, what its progress counts, and
+-- nothing else. Everything below (status, rating, tags, history) was already
+-- kind-agnostic and needed no changes at all.
+--
+-- `unit` is what the progress column counts here: chapters, episodes, hours.
+-- Empty for a film, which you have either watched or not.
+
+CREATE TABLE IF NOT EXISTS kind (
+  id   INTEGER PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  pos  INTEGER NOT NULL,
+  unit TEXT NOT NULL DEFAULT ''
+);
+
 CREATE TABLE IF NOT EXISTS status (
   id   INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -30,10 +47,14 @@ CREATE TABLE IF NOT EXISTS pub (
   pos  INTEGER NOT NULL
 );
 
+-- `type` hangs off a kind: Manhwa belongs to Reading, OVA to Anime, and
+-- offering all of them in one menu is the same mistake the flat tag list was.
+-- Nullable kind_id for a value that predates the split.
 CREATE TABLE IF NOT EXISTS type (
-  id   INTEGER PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  pos  INTEGER NOT NULL
+  id      INTEGER PRIMARY KEY,
+  name    TEXT NOT NULL UNIQUE,
+  pos     INTEGER NOT NULL,
+  kind_id INTEGER REFERENCES kind(id) ON DELETE SET NULL
 );
 
 -- ── series ───────────────────────────────────────────────────────────────
@@ -47,6 +68,11 @@ CREATE TABLE IF NOT EXISTS type (
 CREATE TABLE IF NOT EXISTS series (
   id         INTEGER PRIMARY KEY,
   title      TEXT NOT NULL UNIQUE,
+  -- Still called `chapter`, and it now counts episodes and hours too. Renaming
+  -- it would mean rewriting the view, both history tables, every read and
+  -- write in app.py and the whole of ui.html, against a live database with
+  -- reading history hanging off it — a lot of blast radius for a word. What it
+  -- means is carried by kind.unit, which is the part the reader sees.
   chapter    REAL,
   -- 0-10. This once admitted -10, to hold a single series rated in anger; that
   -- was a verdict rather than a score, and it has been set to 0. Databases
@@ -55,6 +81,7 @@ CREATE TABLE IF NOT EXISTS series (
   -- but nothing can write a negative any more: app.py clamps on the way in and
   -- seed.py clamps on import, which are the only two writers there are.
   rating     REAL CHECK (rating IS NULL OR (rating >= 0 AND rating <= 10)),
+  kind_id    INTEGER REFERENCES kind(id)   ON DELETE RESTRICT,
   status_id  INTEGER REFERENCES status(id) ON DELETE RESTRICT,
   pub_id     INTEGER REFERENCES pub(id)    ON DELETE RESTRICT,
   type_id    INTEGER REFERENCES type(id)   ON DELETE RESTRICT,
@@ -160,6 +187,8 @@ CREATE VIEW IF NOT EXISTS v_series AS
 SELECT
   s.id, s.title, s.chapter, s.rating, s.cover, s.notes,
   s.created_at, s.updated_at,
+  COALESCE(kn.name, '') AS kind,
+  COALESCE(kn.unit, '') AS unit,
   COALESCE(st.name, '') AS status,
   COALESCE(pb.name, '') AS pub,
   COALESCE(ty.name, '') AS type,
@@ -171,6 +200,7 @@ SELECT
     WHERE stg.series_id = s.id
     ORDER BY t.name) AS tags
 FROM series s
+LEFT JOIN kind   kn ON kn.id = s.kind_id
 LEFT JOIN status st ON st.id = s.status_id
 LEFT JOIN pub    pb ON pb.id = s.pub_id
 LEFT JOIN type   ty ON ty.id = s.type_id;

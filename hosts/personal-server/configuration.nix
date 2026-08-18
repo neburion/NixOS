@@ -34,7 +34,7 @@
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/elden-ring-tracker
-    ../../modules/system/reading-tracker
+    ../../modules/system/media-tracker
 
     ../../users/server-admin
 

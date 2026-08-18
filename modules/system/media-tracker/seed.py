@@ -29,7 +29,7 @@ vocabularies (status / pub / type) are the one exception: those are closed sets
 and are upserted every time, so fixing an ordering or adding a status is just an
 edit and a redeploy.
 
-    python3 seed.py                # $RT_DB, or ./reading.db from a checkout
+    python3 seed.py                # $MT_DB, or ./media.db from a checkout
     python3 seed.py --force-import # re-apply seed.json over existing rows
 """
 import argparse
@@ -40,16 +40,16 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DB = Path(os.environ.get("RT_DB") or HERE / "reading.db")
-SEED = Path(os.environ.get("RT_SEED") or HERE / "seed.json")
+DB = Path(os.environ.get("MT_DB") or HERE / "media.db")
+SEED = Path(os.environ.get("MT_SEED") or HERE / "seed.json")
 # Title -> tags, on the two axes below. Applied once; see apply_tags().
-TAGSFILE = Path(os.environ.get("RT_TAGS") or HERE / "tags.json")
+TAGSFILE = Path(os.environ.get("MT_TAGS") or HERE / "tags.json")
 # Title -> {pub, type} looked up on Anime-Planet for the series imported from
 # there, which the export itself did not carry. Applied once; see apply_ap().
-APFILE = Path(os.environ.get("RT_ANIME_PLANET") or HERE / "anime-planet.json")
+APFILE = Path(os.environ.get("MT_ANIME_PLANET") or HERE / "anime-planet.json")
 # The handful Anime-Planet got wrong, confirmed one at a time. See apply_verified().
-VERIFIED = Path(os.environ.get("RT_VERIFIED") or HERE / "verified.json")
-SCHEMA = Path(os.environ.get("RT_SCHEMA") or HERE / "schema.sql")
+VERIFIED = Path(os.environ.get("MT_VERIFIED") or HERE / "verified.json")
+SCHEMA = Path(os.environ.get("MT_SCHEMA") or HERE / "schema.sql")
 
 # Presentation order for the three closed vocabularies.
 #
@@ -58,9 +58,33 @@ SCHEMA = Path(os.environ.get("RT_SCHEMA") or HERE / "schema.sql")
 # vault had it on one note and it made the filter menu unreadable, because two
 # menus offered the same word for two different things.
 VOCAB = {
-    "status": ["Reading", "Later", "Hold", "Read", "Dropped"],
+    # Shelves, and deliberately not "Reading" and "Read" any more: those two
+    # named the medium rather than the state, and a game on a shelf called
+    # Reading reads as a bug. `Current` and `Finished` say the same thing about
+    # a book, an anime and a playthrough alike. The ids do not change, so the
+    # status history written before the rename still resolves.
+    "status": ["Current", "Later", "Hold", "Finished", "Dropped"],
     "pub": ["Ongoing", "Hiatus", "Completed", "Cancelled"],
-    "type": ["Manhwa", "Manhua", "Manga", "Web Novel", "Indonesian Comic"],
+}
+
+# The kinds, and what progress counts for each. A film has no unit: you have
+# watched it or you have not, and a half-watched film is a Hold, not a number.
+KINDS = [
+    ("Reading", "ch"),
+    ("Anime", "ep"),
+    ("Shows", "ep"),
+    ("Films", ""),
+    ("Games", "hrs"),
+]
+
+# Types, per kind. One flat list would put Manhwa and OVA and PC in the same
+# menu, which is the mistake the 59-tag pile made.
+TYPES = {
+    "Reading": ["Manhwa", "Manhua", "Manga", "Web Novel", "Indonesian Comic"],
+    "Anime": ["TV", "Movie", "OVA", "ONA", "Special"],
+    "Shows": ["Series", "Miniseries", "Documentary"],
+    "Films": ["Film", "Short", "Documentary"],
+    "Games": ["PC", "Console", "Handheld", "Mobile"],
 }
 
 # The tag vocabulary, on two axes.
@@ -113,6 +137,10 @@ def vocab_id(db, table, name):
         f"INSERT INTO {table}(name, pos) VALUES (?,?)", (name, pos)).lastrowid
 
 
+def kind_units(db):
+    return {r["name"]: r["unit"] for r in db.execute("SELECT name, unit FROM kind")}
+
+
 def tag_id(db, name):
     name = name.strip()
     row = db.execute("SELECT id FROM tag WHERE name = ?", (name,)).fetchone()
@@ -123,14 +151,17 @@ def tag_id(db, name):
 
 def reindex(db, series_id):
     """Rebuild one series' FTS row. The single place search text is defined."""
-    r = db.execute("SELECT title, type, notes, tags FROM v_series WHERE id = ?",
+    r = db.execute("SELECT title, kind, type, notes, tags FROM v_series WHERE id = ?",
                    (series_id,)).fetchone()
     db.execute("DELETE FROM series_fts WHERE rowid = ?", (series_id,))
     if r:
+        # Kind rides in the `type` column of the index rather than getting one
+        # of its own: an FTS5 table's columns cannot be added later without
+        # rebuilding it, and "anime" and "OVA" are the same kind of search term.
         db.execute(
             "INSERT INTO series_fts(rowid, title, tags, type, notes) VALUES (?,?,?,?,?)",
             (series_id, r["title"], (r["tags"] or "").replace("\x1f", " "),
-             r["type"] or "", r["notes"] or ""))
+             f"{r['kind'] or ''} {r['type'] or ''}".strip(), r["notes"] or ""))
 
 
 def upsert_vocab(db):
@@ -139,6 +170,24 @@ def upsert_vocab(db):
             db.execute(
                 f"INSERT INTO {table}(name, pos) VALUES (?,?) "
                 f"ON CONFLICT(name) DO UPDATE SET pos = excluded.pos", (name, pos))
+
+    for pos, (name, unit) in enumerate(KINDS, start=1):
+        db.execute("INSERT INTO kind(name, pos, unit) VALUES (?,?,?) "
+                   "ON CONFLICT(name) DO UPDATE SET pos = excluded.pos, "
+                   "unit = excluded.unit", (name, pos, unit))
+
+    kinds = {r["name"]: r["id"] for r in db.execute("SELECT id, name FROM kind")}
+    pos = 0
+    for kind, names in TYPES.items():
+        for name in names:
+            pos += 1
+            # A type name can be shared across kinds — Documentary is both a
+            # show and a film — and `name` is UNIQUE, so the first kind to
+            # claim it keeps it. Not worth a composite key for one word.
+            db.execute("INSERT INTO type(name, pos, kind_id) VALUES (?,?,?) "
+                       "ON CONFLICT(name) DO UPDATE SET pos = excluded.pos, "
+                       "kind_id = COALESCE(type.kind_id, excluded.kind_id)",
+                       (name, pos, kinds.get(kind)))
     # Tags are upserted by name too, but only their axis is authoritative here:
     # a tag the user invented in the sheet keeps existing with axis NULL, and
     # one of ours gets its axis restored if it was somehow cleared.
@@ -172,6 +221,32 @@ def add_column(db, table, column, decl):
 def migrate(db):
     """One-time repairs. Each runs once, on whichever start first sees it."""
     add_column(db, "tag", "axis", "TEXT")
+    add_column(db, "series", "kind_id", "INTEGER REFERENCES kind(id)")
+    add_column(db, "type", "kind_id", "INTEGER REFERENCES kind(id)")
+
+    # v_series gained kind and unit. A view is not a table: dropping and
+    # recreating it costs nothing and is the only way to change one, and
+    # `CREATE VIEW IF NOT EXISTS` in schema.sql will not touch an existing one.
+    if once(db, "view-kind"):
+        db.execute("DROP VIEW IF EXISTS v_series")
+
+    # Reading and Read named the medium, not the state. Renaming the rows keeps
+    # their ids, so every status change already in status_log still resolves.
+    if once(db, "status-kind-neutral"):
+        for old_name, new_name in (("Reading", "Current"), ("Read", "Finished")):
+            db.execute("UPDATE status SET name = ? WHERE name = ?",
+                       (new_name, old_name))
+        print("  migrate: shelves renamed Reading→Current, Read→Finished")
+
+    # Everything that existed before there were kinds is Reading.
+    if once(db, "kind-backfill"):
+        db.execute("INSERT INTO kind(name, pos, unit) VALUES ('Reading',1,'ch') "
+                   "ON CONFLICT(name) DO NOTHING")
+        rid = db.execute("SELECT id FROM kind WHERE name='Reading'").fetchone()[0]
+        n = db.execute("UPDATE series SET kind_id = ? WHERE kind_id IS NULL",
+                       (rid,)).rowcount
+        db.execute("UPDATE type SET kind_id = ? WHERE kind_id IS NULL", (rid,))
+        print(f"  migrate: {n} series filed under Reading")
 
     # A rating of -10 was a verdict rather than a score. Clamping it is the
     # user's own call, recorded here rather than done silently every start.
@@ -279,6 +354,7 @@ def apply_series(db, s, series_id=None):
     """Insert, or overwrite an existing row when --force-import is given."""
     vals = (
         s["title"], s.get("chapter"), clamp_rating(s.get("rating")),
+        vocab_id(db, "kind", s.get("kind") or "Reading"),
         vocab_id(db, "status", s.get("status")),
         vocab_id(db, "pub", s.get("pub")),
         vocab_id(db, "type", s.get("type")),
@@ -286,13 +362,13 @@ def apply_series(db, s, series_id=None):
     )
     if series_id is None:
         series_id = db.execute(
-            "INSERT INTO series(title, chapter, rating, status_id, pub_id, type_id,"
-            " cover, notes) VALUES (?,?,?,?,?,?,?,?)", vals).lastrowid
+            "INSERT INTO series(title, chapter, rating, kind_id, status_id, pub_id,"
+            " type_id, cover, notes) VALUES (?,?,?,?,?,?,?,?,?)", vals).lastrowid
     else:
         db.execute(
-            "UPDATE series SET title=?, chapter=?, rating=?, status_id=?, pub_id=?,"
-            " type_id=?, cover=?, notes=?, updated_at=datetime('now') WHERE id=?",
-            vals + (series_id,))
+            "UPDATE series SET title=?, chapter=?, rating=?, kind_id=?, status_id=?,"
+            " pub_id=?, type_id=?, cover=?, notes=?, updated_at=datetime('now')"
+            " WHERE id=?", vals + (series_id,))
         db.execute("DELETE FROM series_tag WHERE series_id = ?", (series_id,))
 
     for t in s.get("tags") or []:
@@ -387,8 +463,14 @@ def main():
 
     DB.parent.mkdir(parents=True, exist_ok=True)
     db = connect()
-    db.executescript(SCHEMA.read_text(encoding="utf-8"))
+    schema = SCHEMA.read_text(encoding="utf-8")
+    db.executescript(schema)
     migrate(db)
+    # Again, deliberately. Everything in schema.sql is IF NOT EXISTS, so the
+    # second run is a no-op except for whatever `migrate` just dropped —
+    # which is how a view gets changed at all, `CREATE VIEW IF NOT EXISTS`
+    # having no opinion about a view that already exists and is wrong.
+    db.executescript(schema)
     upsert_vocab(db)
 
     payload = json.loads(SEED.read_text(encoding="utf-8"))

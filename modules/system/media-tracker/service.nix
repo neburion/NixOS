@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
-# Reading tracker — SQLite + a small web UI on :8778, tailnet only.
+# Media tracker — SQLite + a small web UI on :8778, tailnet only.
+#
+# Reading, anime, shows, films and games in one shelf; `kind` is the axis above
+# everything else. It started as a reading tracker and the 921 series it began
+# with are all filed under Reading.
 #
 # Stdlib Python only: no Flask, no pip. `sqlite3` ships with pkgs.python3 and
 # nixpkgs builds it with FTS5, which the search endpoint needs. Same shape as
@@ -22,14 +26,14 @@
 # apply_tags() in seed.py.
 #
 # Store vs. state. app.py/seed.py/seed.json live in the read-only store; the
-# database and the cover cache do not. Both read RT_* from the environment and
+# database and the cover cache do not. Both read MT_* from the environment and
 # fall back to paths next to the script, so the same files run straight out of a
 # git checkout with no arguments.
 
 let
   port = 8778;
 
-  stateDir = "/var/lib/reading-tracker";
+  stateDir = "/var/lib/media-tracker";
 
   src = ./.;
 
@@ -38,7 +42,7 @@ let
   # carries the interface and Plex Mono the figures, so chapter counts and
   # ratings line up in a column. No CDN is reachable from a tunnel-only host
   # anyway, and a default system-sans stack is the loudest "generated page" tell.
-  fonts = pkgs.runCommand "reading-tracker-fonts" { } ''
+  fonts = pkgs.runCommand "media-tracker-fonts" { } ''
     mkdir -p $out
     lit=${pkgs.literata}/share/fonts/truetype
     pub=${pkgs.public-sans}/share/fonts/truetype
@@ -60,20 +64,20 @@ let
   '';
 
   env = {
-    RT_DB = "${stateDir}/reading.db";
-    RT_SEED = "${src}/seed.json";
-    RT_TAGS = "${src}/tags.json";
-    RT_ANIME_PLANET = "${src}/anime-planet.json";
-    RT_VERIFIED = "${src}/verified.json";
-    RT_SCHEMA = "${src}/schema.sql";
-    RT_UI = "${src}/ui.html";
-    RT_FONTS = "${fonts}";
-    RT_CACHE = stateDir;
-    RT_HOST = "0.0.0.0";
-    RT_PORT = toString port;
+    MT_DB = "${stateDir}/media.db";
+    MT_SEED = "${src}/seed.json";
+    MT_TAGS = "${src}/tags.json";
+    MT_ANIME_PLANET = "${src}/anime-planet.json";
+    MT_VERIFIED = "${src}/verified.json";
+    MT_SCHEMA = "${src}/schema.sql";
+    MT_UI = "${src}/ui.html";
+    MT_FONTS = "${fonts}";
+    MT_CACHE = stateDir;
+    MT_HOST = "0.0.0.0";
+    MT_PORT = toString port;
     # The half of the login that is not secret. Its password is the sops secret
     # below; keeping both halves in one file beats splitting them across two.
-    RT_USERNAME = "tracker";
+    MT_USERNAME = "tracker";
   };
 
   python = pkgs.python3;
@@ -81,26 +85,49 @@ let
   # `${src}/…`, not `${./app.py}`: app.py imports seed.py from beside itself, so
   # the whole directory has to land in the store rather than one file.
   seedDb = pkgs.writeShellApplication {
-    name = "reading-tracker-seed";
+    name = "media-tracker-seed";
     runtimeInputs = [ python ];
     text = ''exec python3 ${src}/seed.py "$@"'';
   };
 
   tracker = pkgs.writeShellApplication {
-    name = "reading-tracker";
+    name = "media-tracker";
     runtimeInputs = [ python ];
     text = ''exec python3 ${src}/app.py "$@"'';
   };
 in
 {
-  users.users.reading = {
+  # The state directory, the database inside it and the user that owns them
+  # were all called `reading`. Moving them by hand on the server would work
+  # once and then not be in the repo, so it happens here — guarded so it is a
+  # no-op on every boot after the first, and on a machine that never had the
+  # old layout.
+  #
+  # The chown matters as much as the move: `reading` and `media` are different
+  # system users, so the files carry a uid the new service cannot write to.
+  # StateDirectory= chowns the directory it creates, not one that was already
+  # there under another name.
+  system.activationScripts.mediaTrackerRename = ''
+    if [ -d /var/lib/reading-tracker ] && [ ! -e /var/lib/media-tracker ]; then
+      mv /var/lib/reading-tracker /var/lib/media-tracker
+    fi
+    if [ -d /var/lib/media-tracker ]; then
+      for f in /var/lib/media-tracker/reading.db*; do
+        [ -e "$f" ] || continue
+        mv "$f" "/var/lib/media-tracker/media.db''${f##*/reading.db}"
+      done
+      chown -R media:media /var/lib/media-tracker || true
+    fi
+  '';
+
+  users.users.media = {
     isSystemUser = true;
-    group = "reading";
+    group = "media";
   };
-  users.groups.reading = { };
+  users.groups.media = { };
 
   # HTTP Basic Auth password for the UI. Rotate with:
-  #   sops secrets/personal-server.yaml   (edit reading-tracker-password)
+  #   sops secrets/personal-server.yaml   (edit media-tracker-password)
   #   git commit && git push && rebuild personal-server
   #
   # `restartUnits` is load-bearing, not tidiness. LoadCredential snapshots the
@@ -110,37 +137,37 @@ in
   # process keeps the old password in memory, and the deploy prints
   # "modifying secret: …" and a cheerful "Done." while the credential you just
   # retired still works. Found exactly that way.
-  sops.secrets.reading-tracker-password = {
+  sops.secrets.media-tracker-password = {
     sopsFile = ../../../secrets/personal-server.yaml;
     mode = "0400";
-    restartUnits = [ "reading-tracker.service" ];
+    restartUnits = [ "media-tracker.service" ];
   };
 
-  systemd.services.reading-tracker = {
-    description = "Reading tracker";
+  systemd.services.media-tracker = {
+    description = "Media tracker";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
     environment = env;
 
     serviceConfig = {
-      ExecStartPre = "${seedDb}/bin/reading-tracker-seed";
-      ExecStart = "${tracker}/bin/reading-tracker";
+      ExecStartPre = "${seedDb}/bin/media-tracker-seed";
+      ExecStart = "${tracker}/bin/media-tracker";
 
       # Read as root at unit start, handed to the service at
       # $CREDENTIALS_DIRECTORY/password after the User= drop. Same approach as
       # the Elden Ring tracker and the print server: avoids EnvironmentFile's
       # ordering problem and keeps the password out of the process environment.
-      LoadCredential = "password:${config.sops.secrets.reading-tracker-password.path}";
+      LoadCredential = "password:${config.sops.secrets.media-tracker-password.path}";
 
       Restart = "on-failure";
       RestartSec = "5s";
-      User = "reading";
-      Group = "reading";
+      User = "media";
+      Group = "media";
 
-      # Creates and chowns /var/lib/reading-tracker and keeps it across deploys
+      # Creates and chowns /var/lib/media-tracker and keeps it across deploys
       # and reboots. The database is the only thing here worth backing up; the
       # covers beside it are a cache and cost one re-download each.
-      StateDirectory = "reading-tracker";
+      StateDirectory = "media-tracker";
       StateDirectoryMode = "0750";
 
       # Nothing here touches hardware or other users' files. It does reach the
@@ -167,17 +194,17 @@ in
   # shortly after boot and weekly thereafter to pick up newly added series. It
   # is a convenience, not a dependency: the tracker works with it switched off
   # or with every image host gone, drawing a tinted plate with the title on it.
-  systemd.services.reading-tracker-covers = {
-    description = "Warm the reading tracker's cover cache";
-    after = [ "network-online.target" "reading-tracker.service" ];
+  systemd.services.media-tracker-covers = {
+    description = "Warm the media tracker's cover cache";
+    after = [ "network-online.target" "media-tracker.service" ];
     wants = [ "network-online.target" ];
     environment = env;
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${tracker}/bin/reading-tracker --warm-covers";
-      User = "reading";
-      Group = "reading";
-      StateDirectory = "reading-tracker";
+      ExecStart = "${tracker}/bin/media-tracker --warm-covers";
+      User = "media";
+      Group = "media";
+      StateDirectory = "media-tracker";
       ProtectSystem = "strict";
       ProtectHome = true;
       PrivateTmp = true;
@@ -186,7 +213,7 @@ in
     };
   };
 
-  systemd.timers.reading-tracker-covers = {
+  systemd.timers.media-tracker-covers = {
     wantedBy = [ "timers.target" ];
     timerConfig = {
       OnBootSec = "3min";
@@ -195,7 +222,7 @@ in
     };
   };
 
-  # `reading-tracker --stats` prints the shelf from a terminal on the host.
+  # `media-tracker --stats` prints the shelf from a terminal on the host.
   environment.systemPackages = [ tracker ];
 
   # The listener binds 0.0.0.0, but the only interface the port is opened on is
