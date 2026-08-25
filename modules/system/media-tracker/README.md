@@ -105,18 +105,38 @@ goes down to −10.
 
 ## Kind is the axis above everything
 
+Three verbs, because that is how many ways there are to be partway through
+something here.
+
 | kind | progress counts | types |
 |---|---|---|
 | Reading | `ch` | Manhwa, Manhua, Manga, Web Novel, Indonesian Comic |
-| Anime | `ep` | TV, Movie, OVA, ONA, Special |
-| Shows | `ep` | Series, Miniseries, Documentary |
-| Films | — | Film, Short, Documentary |
-| Games | `hrs` | PC, Console, Handheld, Mobile |
+| Watching | `ep` | TV, Series, Miniseries, Film, Short, OVA, ONA, Special, Documentary |
+| Playing | `hrs` | PC, Console, Handheld, Mobile |
 
 Everything else in the schema was already kind-agnostic and needed no change:
 status, rating, tags and both history tables mean the same thing about a book,
 a season and a playthrough. Only two things vary by kind, and both live on the
 `kind` row — what `type` may be, and what the progress number counts.
+
+**Anime, Shows and Films were three kinds for one activity.** Nothing below
+them differed: same shelves, same ratings, same tags, the same episode counter
+spelled out twice. The split bought a filter answering a question nobody asks
+and charged for it up front, by making "is this an anime film or a film" a
+thing to settle before typing a title. What the thing *is* still lives on
+`type`, one level down, which is where a distinction belongs when it is a real
+one. `Movie` went with them: it was the word `Film` wearing an anime badge.
+
+The cost, stated plainly: Films used to carry no unit at all, on the argument
+that you have watched a film or you have not and a half-watched one is a Hold.
+Sharing a kind means sharing a unit, so a film is now `1 ep` when it is done.
+That is the price of not having to file a documentary twice.
+
+`kind-three-verbs` in `seed.py` does it by **renaming** — Anime becomes the
+Watching row and Games becomes Playing — so `kind_id` keeps pointing where it
+did and nothing is re-filed. Shows and Films hand their types over first and
+are deleted after, because `type.kind_id` is `ON DELETE SET NULL` and dropping
+a kind out from under Series and Miniseries would strand them in no menu.
 
 The shelves are no longer **Reading** and **Read**. Those named the medium
 rather than the state, and a game sitting on a shelf called Reading reads as a

@@ -736,8 +736,11 @@ const AXIS_LABEL = { setting:'Setting', genre:'Genre', other:'Unfiled' };
 /* What the progress number is called, per kind. The column behind it is one
    number either way; this is the word that makes it mean something. */
 const PROGRESS_LABEL = {
-  Reading:'Chapter', Anime:'Episode', Shows:'Episode', Films:'', Games:'Hours',
+  Reading:'Chapter', Watching:'Episode', Playing:'Hours',
 };
+/* The + button used to promise "one more chapter" whatever it was sitting on.
+   Same word as the label above, lowercased. */
+const bumpWord = s => (PROGRESS_LABEL[s.kind] || 'unit').toLowerCase();
 const byId = id => S.data.series.find(s => s.id === id);
 
 /* ══ load ═════════════════════════════════════════════════════════════ */
@@ -893,9 +896,9 @@ function card(s){
       <div class="foot">
         <div class="ch">${s.chapter !== null
           ? `${s.unit ? `<b>${esc(s.unit.toUpperCase())}</b> ` : ''}${esc(fmt(s.chapter))}`
-          : `<b>${s.kind === 'Films' ? 'UNSEEN' : 'UNSTARTED'}</b>`}</div>
-        <button class="plus" data-bump="${s.id}" title="Read one more chapter"
-          aria-label="Read one more chapter of ${esc(s.title)}">+</button>
+          : `<b>UNSTARTED</b>`}</div>
+        <button class="plus" data-bump="${s.id}" title="One more ${esc(bumpWord(s))}"
+          aria-label="One more ${esc(bumpWord(s))} of ${esc(s.title)}">+</button>
       </div>
     </div>
     <div>

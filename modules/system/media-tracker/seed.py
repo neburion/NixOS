@@ -67,24 +67,32 @@ VOCAB = {
     "pub": ["Ongoing", "Hiatus", "Completed", "Cancelled"],
 }
 
-# The kinds, and what progress counts for each. A film has no unit: you have
-# watched it or you have not, and a half-watched film is a Hold, not a number.
+# The kinds, and what progress counts for each. Three verbs, because that is
+# how many ways there are to be partway through something here.
+#
+# Anime, Shows and Films were three kinds for one activity. Nothing about the
+# shelf below them differed — same statuses, same ratings, same tags, same
+# episode counter twice over — so the split bought a filter that answered a
+# question nobody was asking and made "is this an anime film or a film" a
+# thing to decide before typing a title. What the thing *is* still lives on
+# `type`, which is where a distinction belongs when it is one.
 KINDS = [
     ("Reading", "ch"),
-    ("Anime", "ep"),
-    ("Shows", "ep"),
-    ("Films", ""),
-    ("Games", "hrs"),
+    ("Watching", "ep"),
+    ("Playing", "hrs"),
 ]
 
 # Types, per kind. One flat list would put Manhwa and OVA and PC in the same
 # menu, which is the mistake the 59-tag pile made.
+#
+# Watching keeps every distinction the three kinds used to carry, one level
+# down: a film is a Film whether it was animated or not. `Movie` is gone
+# because it was the same word as Film wearing an anime badge.
 TYPES = {
     "Reading": ["Manhwa", "Manhua", "Manga", "Web Novel", "Indonesian Comic"],
-    "Anime": ["TV", "Movie", "OVA", "ONA", "Special"],
-    "Shows": ["Series", "Miniseries", "Documentary"],
-    "Films": ["Film", "Short", "Documentary"],
-    "Games": ["PC", "Console", "Handheld", "Mobile"],
+    "Watching": ["TV", "Series", "Miniseries", "Film", "Short",
+                 "OVA", "ONA", "Special", "Documentary"],
+    "Playing": ["PC", "Console", "Handheld", "Mobile"],
 }
 
 # The tag vocabulary, on two axes.
@@ -303,6 +311,38 @@ def migrate(db):
                            (hiatus["id"], row["id"])).rowcount
             db.execute("DELETE FROM pub WHERE id = ?", (row["id"],))
             print(f"  migrate: pub 'Hold' retired, {n} series moved to Hiatus")
+
+    # Anime, Shows and Films collapse into Watching, and Games becomes Playing.
+    # Renaming rather than replacing, so kind_id keeps pointing where it did
+    # and nothing has to be re-filed: Anime *is* the Watching row now. The
+    # other two are re-pointed and then deleted, types first — type.kind_id is
+    # ON DELETE SET NULL, so dropping a kind out from under Series and
+    # Miniseries would strand them in no menu at all.
+    if once(db, "kind-three-verbs"):
+        db.execute("UPDATE kind SET name = 'Watching' WHERE name = 'Anime'")
+        db.execute("UPDATE kind SET name = 'Playing' WHERE name = 'Games'")
+        row = db.execute("SELECT id FROM kind WHERE name = 'Watching'").fetchone()
+        if row:
+            gone = "SELECT id FROM kind WHERE name IN ('Shows', 'Films')"
+            db.execute(f"UPDATE type SET kind_id = ? WHERE kind_id IN ({gone})",
+                       (row["id"],))
+            n = db.execute(f"UPDATE series SET kind_id = ? WHERE kind_id IN ({gone})",
+                           (row["id"],)).rowcount
+            db.execute(f"DELETE FROM kind WHERE id IN ({gone})")
+            print(f"  migrate: Anime/Shows/Films are one kind, Watching"
+                  + (f" ({n} series moved)" if n else ""))
+
+        # Movie and Film were the same word in two kinds. One kind, one word —
+        # but only if nothing is filed under it, because retyping somebody's
+        # library is not a rename.
+        film = db.execute("SELECT id FROM type WHERE name = 'Film'").fetchone()
+        movie = db.execute("SELECT id FROM type WHERE name = 'Movie'").fetchone()
+        if film and movie:
+            n = db.execute("UPDATE series SET type_id = ? WHERE type_id = ?",
+                           (film["id"], movie["id"])).rowcount
+            db.execute("DELETE FROM type WHERE id = ?", (movie["id"],))
+            print(f"  migrate: type 'Movie' retired into 'Film'"
+                  + (f", {n} series moved" if n else ""))
 
 
 def apply_tags(db, plan):
