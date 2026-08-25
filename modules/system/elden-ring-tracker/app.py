@@ -176,6 +176,24 @@ def default_profile(db):
     return row["id"] if row else None
 
 
+def weight(kind, target):
+    """What an item is worth against the totals.
+
+    A tally is worth its target: 47 gestures really are 47 things to find. A
+    gauge is worth one, because "Vigor 99" is a single line of this list even
+    though the number written on it runs to 99 — weighting it by the figure
+    would bury all sixteen other sections under the eight attributes.
+    """
+    return 1 if kind == "gauge" else target
+
+
+def earned(kind, target, value):
+    """How much of that weight is settled. A gauge is all or nothing."""
+    if kind == "gauge":
+        return 1 if value >= target else 0
+    return min(value, target)
+
+
 def implication_graph(db):
     """{target_id: [(source_id, needed)]} plus the set of derived ids."""
     graph = {}
@@ -224,13 +242,14 @@ def profiles(db):
     rows = db.execute(
         "SELECT id, name, note, created_at, archived FROM profile "
         "ORDER BY archived, id").fetchall()
-    total = db.execute("SELECT COALESCE(SUM(target), 0) FROM item").fetchone()[0]
-    caps = {r[0]: r[1] for r in db.execute("SELECT id, target FROM item")}
+    caps = {r[0]: (r[1], r[2]) for r in
+            db.execute("SELECT id, kind, target FROM item")}
+    total = sum(weight(k, t) for k, t in caps.values())
     graph = implication_graph(db)
     out = []
     for r in rows:
         vals = effective_values(db, r["id"], graph)
-        done = sum(min(v, caps.get(i, v)) for i, v in vals.items())
+        done = sum(earned(*caps[i], v) for i, v in vals.items() if i in caps)
         out.append(dict(r) | {"done": done, "total": total})
     return out
 
@@ -293,7 +312,7 @@ def tree(db, profile_id):
 def stats(db, profile_id):
     vals = effective_values(db, profile_id)
     meta = db.execute("""
-        SELECT i.id, i.target, s.id AS sid, s.slug, s.title, s.pos
+        SELECT i.id, i.kind, i.target, s.id AS sid, s.slug, s.title, s.pos
         FROM item i JOIN grp g ON g.id = i.group_id JOIN section s ON s.id = g.section_id
         ORDER BY s.pos
     """).fetchall()
@@ -301,13 +320,14 @@ def stats(db, profile_id):
     per = {}
     done = total = 0
     for r in meta:
-        got = min(vals.get(r["id"], 0), r["target"])
+        cap = weight(r["kind"], r["target"])
+        got = earned(r["kind"], r["target"], vals.get(r["id"], 0))
         done += got
-        total += r["target"]
+        total += cap
         e = per.setdefault(r["sid"], {"id": r["sid"], "slug": r["slug"],
                                       "title": r["title"], "done": 0, "total": 0})
         e["done"] += got
-        e["total"] += r["target"]
+        e["total"] += cap
 
     return {"done": done, "total": total, "sections": list(per.values())}
 
@@ -323,17 +343,18 @@ def coverage(db):
                 best[iid] = v
 
     rows = db.execute("""
-        SELECT v.item_id, v.name, v.title, v.group_name, v.target
+        SELECT v.item_id, v.name, v.title, v.group_name, v.kind, v.target
         FROM v_item v ORDER BY v.spos, v.gpos, v.ipos
     """).fetchall()
 
     done = total = 0
     missing = []
     for r in rows:
-        got = min(best.get(r["item_id"], 0), r["target"])
+        cap = weight(r["kind"], r["target"])
+        got = earned(r["kind"], r["target"], best.get(r["item_id"], 0))
         done += got
-        total += r["target"]
-        if got < r["target"]:
+        total += cap
+        if got < cap:
             missing.append(dict(r))
     return {"done": done, "total": total, "missing": missing}
 

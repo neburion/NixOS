@@ -9,6 +9,7 @@ Run it any time you change seed.json:
 """
 import json
 import os
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -24,8 +25,19 @@ ICONS = Path(os.environ.get("ER_ICON_MAP") or HERE / "icons.json")
 
 
 def split_detail(raw):
-    """'Name::detail' -> ('Name', 'detail'); dict -> tally item."""
+    """'Name::detail' -> ('Name', 'detail'); dict -> tally or gauge item.
+
+        {"n": …, "max": N}    tally: N separate finds, each worth a unit.
+        {"n": …, "gauge": N}  gauge: one number climbing to N, worth one unit.
+
+    The difference is what the number means. Forty-seven gestures are
+    forty-seven things to go and get; Vigor 99 is one thing to do that happens
+    to be measured in points, and counting it as ninety-nine would let
+    levelling outweigh every item in the game.
+    """
     if isinstance(raw, dict):
+        if "gauge" in raw:
+            return raw["n"], raw.get("d", ""), "gauge", int(raw["gauge"])
         return raw["n"], raw.get("d", ""), "tally", int(raw["max"])
     head, sep, tail = raw.partition("::")
     return head, tail if sep else "", "check", 1
@@ -59,19 +71,64 @@ def migrate_columns(db):
         print("migrated: added item.icon")
 
 
+def migrate_kinds(db, schema_sql):
+    """Widen item.kind's CHECK when the database predates a kind seed.json uses.
+
+    Same trap as migrate_columns: schema.sql is written with CREATE TABLE IF
+    NOT EXISTS, so an existing item table keeps the CHECK constraint it was
+    born with, and the first insert of a newer kind fails against it. SQLite
+    cannot alter a constraint in place, and the table is about to be emptied
+    and rebuilt from seed.json anyway — so it is dropped here and recreated by
+    the schema script. The caller has already read progress out; it is
+    re-attached by ukey afterwards like any other reseed.
+    """
+    live = db.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'item'"
+    ).fetchone()
+    if live is None:
+        return False
+
+    def kinds(sql):
+        m = re.search(r"kind\s+TEXT\s+NOT NULL\s+CHECK\s*\(\s*kind\s+IN\s*\(([^)]*)\)",
+                      sql, re.IGNORECASE)
+        return {k.strip().strip("'\"") for k in m.group(1).split(",")} if m else set()
+
+    want, have = kinds(schema_sql), kinds(live[0])
+    if not want or want <= have:
+        return False
+
+    db.execute("PRAGMA foreign_keys = OFF")
+    db.execute("DROP TABLE item")
+    # These pointed at rows in the table just dropped. implies is rebuilt from
+    # links.json below; progress comes back from `saved`.
+    db.execute("DELETE FROM progress")
+    db.execute("DELETE FROM implies")
+    db.execute("PRAGMA foreign_keys = ON")
+    print(f"migrated: item.kind now accepts {', '.join(sorted(want))}")
+    return True
+
+
+
 def main():
     data = json.loads(SEED.read_text(encoding="utf-8"))
     icons = load_icons()
+    schema_sql = SCHEMA.read_text(encoding="utf-8")
     db = sqlite3.connect(DB)
     db.execute("PRAGMA foreign_keys = ON")
     migrate_columns(db)
-    db.executescript(SCHEMA.read_text(encoding="utf-8"))
 
     # Preserve progress across a reseed by remembering it under the natural key.
+    # Read before any migration below, because widening a constraint means
+    # rebuilding the table these rows point at.
+    have_item = db.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'item'").fetchone()
     saved = db.execute(
-        "SELECT p.profile_id, i.ukey, p.value, p.updated_at "
+        "SELECT p.profile_id, i.ukey, p.value, p.updated_at, i.kind "
         "FROM progress p JOIN item i ON i.id = p.item_id"
-    ).fetchall()
+    ).fetchall() if have_item else []
+
+    migrate_kinds(db, schema_sql)
+    db.executescript(schema_sql)
 
     db.execute("DELETE FROM section")  # cascades to grp -> item -> progress
     # a contentless fts5 table has no DELETE; this is the supported way to empty it
@@ -126,13 +183,24 @@ def main():
     for iid, ukey in db.execute("SELECT id, ukey FROM item"):
         by_name.setdefault(ukey.rsplit("\x1f", 1)[0], []).append(iid)
 
+    # An entry can change kind between seeds — the eight attributes started as
+    # plain boxes and became gauges. A ticked box meant "done", so it has to
+    # land on the gauge as the figure itself; left as 1 it would silently
+    # demote a finished row to 1/99.
+    now_kind = {iid: (kind, target) for iid, kind, target
+                in db.execute("SELECT id, kind, target FROM item")}
+
     restored = 0
-    for profile_id, ukey, value, updated_at in saved:
+    for profile_id, ukey, value, updated_at, was in saved:
         row = db.execute("SELECT id FROM item WHERE ukey = ?", (ukey,)).fetchone()
         if not row:
             moved_ids = by_name.get(ukey.rsplit("\x1f", 1)[0], ())
             row = (moved_ids[0],) if len(moved_ids) == 1 else None
         if row:
+            kind, target = now_kind[row[0]]
+            if kind == "gauge" and was == "check" and value:
+                value = target
+            value = min(value, target)
             db.execute(
                 "INSERT OR REPLACE INTO progress(profile_id, item_id, value, updated_at) "
                 "VALUES (?,?,?,?)",
@@ -282,8 +350,11 @@ def backfill_derived(db):
 
 
 def db_total(path):
+    """Tickable units: a tally is worth its target, a gauge worth one."""
     db = sqlite3.connect(path)
-    n = db.execute("SELECT COALESCE(SUM(target), 0) FROM item").fetchone()[0]
+    n = db.execute(
+        "SELECT COALESCE(SUM(CASE WHEN kind = 'gauge' THEN 1 ELSE target END), 0) "
+        "FROM item").fetchone()[0]
     db.close()
     return n
 

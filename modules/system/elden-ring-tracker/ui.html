@@ -223,6 +223,27 @@ ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-faint
 .count button:hover{border-color:var(--mark);color:var(--mark)}
 .count.done .num b{color:var(--settled)}
 
+/* gauges — a figure you carry rather than a pile of things to find, so the
+   row shows where you are on the way to it instead of an empty box */
+.dial{display:flex;align-items:center;gap:10px;padding:8px 4px;min-height:var(--tap)}
+.dial .what{flex:1;min-width:0;font-size:15px}
+.dial input{width:58px;height:36px;flex:none;background:var(--field);
+  border:1px solid var(--rule);color:var(--ink);font-family:PlexMono,monospace;
+  font-size:15px;text-align:right;padding:0 7px;font-variant-numeric:tabular-nums}
+.dial input:hover{border-color:var(--mark)}
+.dial input:disabled{color:var(--ink-faint);border-style:dotted;background:transparent}
+.dial input::-webkit-outer-spin-button,
+.dial input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.dial input[type=number]{-moz-appearance:textfield}
+.dial .cap{font-family:PlexMono,monospace;font-size:15px;color:var(--ink-faint);
+  min-width:30px;font-variant-numeric:tabular-nums}
+.dial .meter{position:relative;flex:none;width:60px;height:3px;
+  background:var(--rule-faint);overflow:hidden}
+.dial .meter i{position:absolute;inset:0 auto 0 0;background:var(--mark-lit);
+  transition:width .25s}
+.dial.done input,.dial.done .cap{color:var(--settled)}
+.dial.done .meter i{background:var(--settled)}
+
 /* ── notices ────────────────────────────────────────────────────────── */
 .notice{margin-top:22px;padding:14px 0;border-top:1px solid var(--rule);
   border-bottom:1px solid var(--rule)}
@@ -367,7 +388,21 @@ function draw(){
                aria-hidden="true" loading="lazy" decoding="async"
                width="${face?46:32}" height="${face?30:32}">`
           : "";
-        if (it.kind === "tally"){
+        if (it.kind === "gauge"){
+          // One unit of the list however large the number on it, so data-unit
+          // parts ways with data-cap here and nowhere else.
+          rows += `<li class="row" ${at} data-kind="gauge" data-unit="1">
+            <div class="dial${it.value>=it.target?" done":""}">
+              <input type="number" min="0" max="${it.target}" step="1"
+                inputmode="numeric" value="${it.value}" data-id="${it.id}"
+                aria-label="${esc(it.name)} out of ${it.target}"${it.derived?" disabled":""}>
+              <span class="cap">/${it.target}</span>
+              <span class="meter"><i style="width:${Math.min(100,Math.round(100*it.value/it.target))}%"></i></span>
+              ${pic}
+              <span class="what"><span class="name">${esc(it.name)}</span>
+                ${it.detail?`<span class="where">${esc(it.detail)}</span>`:""}</span>
+            </div></li>`;
+        } else if (it.kind === "tally"){
           rows += `<li class="row" ${at} data-kind="tally">
             <div class="count${it.value>=it.target?" done":""}">
               <button type="button" data-step="-1" data-id="${it.id}"
@@ -409,16 +444,25 @@ function draw(){
   recount(); sift();
 }
 
+/* The client half of weight()/earned() in app.py: what a row is worth against
+   the totals, and how much of that it has settled. Kept in one place because
+   three passes below used to spell the same sum out by hand. */
+function rowUnit(row){ return row.dataset.unit ? +row.dataset.unit : +row.dataset.cap; }
+function rowGot(row){
+  const cap = +row.dataset.cap;
+  if (row.dataset.kind === "tally") return +row.querySelector(".num b").textContent;
+  if (row.dataset.kind === "gauge") return +row.querySelector("input").value >= cap ? 1 : 0;
+  return row.querySelector("input").checked ? cap : 0;
+}
+function rowFull(row){ return rowGot(row) >= rowUnit(row); }
+
 /* count locally so a tap feels instant */
 function recount(){
   let all=0, got=0;
   for (const part of document.querySelectorAll(".part")){
     let a=0,g=0;
     for (const row of part.querySelectorAll(".row")){
-      const cap=+row.dataset.cap; a+=cap;
-      g += row.dataset.kind==="tally"
-        ? +row.querySelector(".num b").textContent
-        : (row.querySelector("input").checked ? cap : 0);
+      a += rowUnit(row); g += rowGot(row);
     }
     all+=a; got+=g;
     const slug=part.dataset.part, frac = a? g/a : 0;
@@ -430,10 +474,7 @@ function recount(){
     for (const band of part.querySelectorAll(".band")){
       let x=0,y=0;
       for (const row of band.querySelectorAll(".row")){
-        const cap=+row.dataset.cap; y+=cap;
-        x += row.dataset.kind==="tally"
-          ? +row.querySelector(".num b").textContent
-          : (row.querySelector("input").checked ? cap : 0);
+        y += rowUnit(row); x += rowGot(row);
       }
       band.querySelector("h3 .n").textContent = `${x}/${y}`;
     }
@@ -453,9 +494,7 @@ function sift(){
       let bandOn=false;
       for (const row of band.querySelectorAll(".row")){
         const dlc = row.dataset.dlc==="1";
-        const full = row.dataset.kind==="tally"
-          ? +row.querySelector(".num b").textContent >= +row.dataset.cap
-          : row.querySelector("input").checked;
+        const full = rowFull(row);
         let show = true;
         if (SCOPE==="base" && dlc) show=false;
         if (SCOPE==="dlc" && !dlc) show=false;
@@ -491,7 +530,27 @@ function paintAuto(map){
   }
 }
 
+function paintDial(row, now){
+  const cap = +row.dataset.cap;
+  row.querySelector(".dial").classList.toggle("done", now >= cap);
+  row.querySelector(".meter i").style.width =
+    Math.min(100, Math.round(100*now/cap)) + "%";
+}
+
 document.addEventListener("change", async e => {
+  // A gauge commits on blur or Enter, not per keystroke, so a half-typed 9 on
+  // the way to 99 never reaches the server.
+  const dial = e.target.closest('.dial input[type=number][data-id]');
+  if (dial){
+    const row = dial.closest(".row"), cap = +row.dataset.cap;
+    const was = +dial.defaultValue;
+    const now = Math.max(0, Math.min(cap, Math.round(+dial.value || 0)));
+    dial.value = now; paintDial(row, now); recount(); sift();
+    try { dial.defaultValue = dial.value = await put(+dial.dataset.id, now); }
+    catch { dial.value = was; paintDial(row, was); recount(); sift(); }
+    paintDial(row, +dial.value); recount(); sift();
+    return;
+  }
   const box = e.target.closest('input[type=checkbox][data-id]');
   if (!box) return;
   const row = box.closest(".row");

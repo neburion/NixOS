@@ -211,23 +211,63 @@
     "name": "Level & stats",
     "items": [
      "Rune Level 713::All eight attributes at 99. Roughly 1.69 billion runes.",
-     "Vigor 99",
-     "Mind 99",
-     "Endurance 99",
-     "Strength 99",
-     "Dexterity 99",
-     "Intelligence 99",
-     "Faith 99",
-     "Arcane 99"
+     {
+      "n": "Vigor",
+      "gauge": 99
+     },
+     {
+      "n": "Mind",
+      "gauge": 99
+     },
+     {
+      "n": "Endurance",
+      "gauge": 99
+     },
+     {
+      "n": "Strength",
+      "gauge": 99
+     },
+     {
+      "n": "Dexterity",
+      "gauge": 99
+     },
+     {
+      "n": "Intelligence",
+      "gauge": 99
+     },
+     {
+      "n": "Faith",
+      "gauge": 99
+     },
+     {
+      "n": "Arcane",
+      "gauge": 99
+     }
     ]
    },
    {
     "name": "Flasks & slots",
     "items": [
-     "14 total flask charges::Requires 30 Golden Seeds.",
-     "Flask potency +12::Requires 12 Sacred Tears.",
-     "10 memory slots::All 8 Memory Stones.",
-     "4 talisman slots::All 3 Talisman Pouches.",
+     {
+      "n": "Flask charges",
+      "gauge": 14,
+      "d": "Requires 30 Golden Seeds."
+     },
+     {
+      "n": "Flask potency",
+      "gauge": 12,
+      "d": "Requires 12 Sacred Tears."
+     },
+     {
+      "n": "Memory slots",
+      "gauge": 10,
+      "d": "All 8 Memory Stones."
+     },
+     {
+      "n": "Talisman slots",
+      "gauge": 4,
+      "d": "All 3 Talisman Pouches."
+     },
      "Flask of Wondrous Physick::Third Church of Marika, Limgrave.",
      "Upgrade a weapon to max::+25 standard or +10 somber — the God-Slaying Armament achievement."
     ]
@@ -236,8 +276,16 @@
     "name": "Shadow Realm blessings",
     "dlc": 1,
     "items": [
-     "Scadutree Blessing +20::All 50 Scadutree Fragments.",
-     "Revered Spirit Ash Blessing +10::All 25 Revered Spirit Ashes."
+     {
+      "n": "Scadutree Blessing",
+      "gauge": 20,
+      "d": "All 50 Scadutree Fragments."
+     },
+     {
+      "n": "Revered Spirit Ash Blessing",
+      "gauge": 10,
+      "d": "All 25 Revered Spirit Ashes."
+     }
     ]
    }
   ]

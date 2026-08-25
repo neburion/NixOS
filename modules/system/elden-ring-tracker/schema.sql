@@ -28,7 +28,12 @@ CREATE TABLE IF NOT EXISTS item (
   ukey     TEXT    NOT NULL UNIQUE,
   name     TEXT    NOT NULL,
   detail   TEXT    NOT NULL DEFAULT '',
-  kind     TEXT    NOT NULL CHECK (kind IN ('check','tally')),
+  -- check: one box.  tally: N boxes' worth, every point counts toward the
+  -- total.  gauge: a number you carry (Vigor, flask charges) shown against
+  -- where it has to end up — worth exactly one unit like a check, because
+  -- levelling to 99 eight times is one line of the list, not 792 of them.
+  kind     TEXT    NOT NULL CHECK (kind IN ('check','tally','gauge')),
+  -- For a gauge this is the figure to reach, not the unit weight.
   target   INTEGER NOT NULL DEFAULT 1 CHECK (target > 0),
   pos      INTEGER NOT NULL,
   -- Filename in icons/, from icons.json. Empty for the ~100 abstract entries

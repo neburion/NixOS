@@ -77,6 +77,34 @@ already ticked it, the tick is pushed down onto its sources — ticking
 is removed so the computed value takes over. Without that, turning items derived
 would silently zero them.
 
+## Gauges
+
+Three kinds of row. A **check** is one box. A **tally** is worth its target and
+every point counts — 47 gestures really are 47 things to find. A **gauge** is a
+figure you carry rather than a pile of things to collect: Vigor, flask charges,
+Scadutree Blessing. It shows where you are on the way there (`55/99`, with a
+bar), takes a typed number rather than a checkbox, and is worth **one** unit
+like the check it replaced.
+
+That last part is the point. Weighting the eight attributes by their figures
+would add 792 units to a 1,704-unit list and let levelling drown out every item
+in the game. `weight()` and `earned()` in `app.py` are the one place that
+distinction lives; `rowUnit()`/`rowGot()` in `ui.html` are the same sum on the
+client so a keystroke feels instant.
+
+```json
+{"n": "Vigor", "gauge": 99}
+{"n": "Gestures", "max": 47}
+```
+
+`schema.sql` is written with `CREATE TABLE IF NOT EXISTS`, so an existing
+database keeps the `CHECK (kind IN …)` it was born with and rejects a kind
+added later. `migrate_kinds()` compares the live constraint against the schema
+file and rebuilds the table when the schema has grown a kind — progress is read
+out first and re-attached by `ukey` afterwards, exactly like any other reseed.
+A row that changes from check to gauge carries its tick across as the full
+figure, because a ticked box meant done and `1/99` would not.
+
 ## Artwork
 
 1,543 of the 1,640 rows carry a picture, served from `icons/` at `/img/…`
