@@ -85,13 +85,16 @@ Every host is a peer. There is no control node, no "primary" that other hosts de
 headless, `server-admin`, always-on) split by *audience*: the family depends on
 one, so it stays boring; the other is mine to break. Per the fleet principle
 neither depends on the other — the split is about blast radius, not topology.
-`personal-server` runs two services. The **Elden Ring tracker** is on the tailnet
-at `http://personal-server:8777` and publicly at `https://eldenring.azuresalt.app`
-through a Cloudflare tunnel; it is the first host to expose something whose gate
-is not solely a Cloudflare Access policy — the app carries HTTP Basic Auth from
-the `elden-ring-password` sops secret and refuses to bind a non-loopback address
-without it, so a missing Access policy weakens the gate rather than removing it.
-Set the policy anyway. The **media tracker** is at `http://personal-server:8778`,
+`personal-server` runs two services, and **neither of them lives in this repo**.
+Both are ordinary projects on GitHub carrying an `app.json`; `apps/platform.nix`
+reads that manifest and generates the unit, user, state directory, credential
+wiring, firewall rule and tunnel. See *The app platform* below. The **Elden Ring
+tracker** is on the tailnet at `http://personal-server:8777` and publicly at
+`https://eldenring.azuresalt.app` through a Cloudflare tunnel; it is the first
+host to expose something whose gate is not solely a Cloudflare Access policy —
+the app carries HTTP Basic Auth from the `elden-ring-tracker-password` sops
+secret and refuses to bind a non-loopback address without it, so a missing
+Access policy weakens the gate rather than removing it. Set the policy anyway. The **media tracker** is at `http://personal-server:8778`,
 `https://media.azuresalt.app` and `https://reading.azuresalt.app` — two tunnels
 onto one service, not a redirect — behind the same Basic Auth and fail-closed
 bind check. It wants an Access policy more than the Elden Ring tracker does: a
@@ -126,38 +129,32 @@ flatpak.nix
 power-profiles.nix
 always-on.nix            keep host awake: no lid handling, no sleep targets
 
-elden-ring-tracker/      aggregator → service.nix (stdlib-Python SQLite tracker
-                         + web UI on :8777; firewall opens the port on tailscale0
-                         only, cloudflared reaches it via loopback. HTTP Basic
-                         Auth from a sops secret via LoadCredential; refuses to
-                         bind non-loopback without it. links.json declares an
-                         implication graph so one boss tick settles its
-                         achievement/Remembrance/Great Rune; seed.py runs as
-                         ExecStartPre, migrates the DB in place, re-attaches
-                         progress by natural key, and aborts on a bad link)
+apps/platform.nix        the app platform: projects that live in their own
+                         repos, deployed here. A host names the repos in
+                         hardware-layout/apps-layout.nix; each repo carries an
+                         app.json at its root declaring a port, its URLs, which
+                         secrets it wants and whether it needs state, and this
+                         module turns that into a systemd unit, a system user,
+                         /var/lib/<name>, LoadCredential wiring, the tailnet
+                         firewall rule and the Cloudflare tunnel.
 
-media-tracker/           aggregator → service.nix (stdlib-Python SQLite tracker
-                         + web UI on :8778, personal-server. Reading, anime,
-                         shows, films and games, with `kind` as the axis above
-                         everything; 300 series imported once from the
-                         Reading-Ob Obsidian vault and 617 more from an
-                         Anime-Planet export, all filed under Reading. Tailnet,
-                         plus media.azuresalt.app and reading.azuresalt.app via
-                         the Cloudflare tunnel.
-                         HTTP Basic Auth from a sops secret
-                         via LoadCredential, same fail-closed bind check as the
-                         Elden Ring tracker).
-                         Unlike that module, seeding is ADDITIVE, not a rebuild:
-                         every field in seed.json is mutable state the app
-                         edits, so a rebuild would hand back last week's
-                         reading. It keys on a seed_applied table rather than on
-                         "is this title in series?", because titles are
-                         renameable and the naive version resurrects renamed
-                         rows and undoes deletions on the next restart.
-                         import-vault.py is hand-run and read-only: the vault is
-                         a snapshot, not a link, and nothing flows back to it.
-                         reading_log/status_log are what the markdown notes
-                         could never hold — they only ever stored the present.
+                         The manifest is bounded, not obeyed: ports must sit in
+                         8700-8799, hostnames under azuresalt.app, secrets
+                         resolve to sops keys prefixed with the app's own name,
+                         the runtime must be one of a known few, and `run` may
+                         not contain shell metacharacters. A repo can only ever
+                         reach its own password, and push access to it is not
+                         code execution here.
+
+                         Contract for an app: listen on $PORT, keep durable
+                         things in $STATE_DIR, read secrets from
+                         $CREDENTIALS_DIRECTORY/<name>, exit non-zero if it
+                         cannot start. Nothing else — no Nix in the project.
+
+                         Currently: neburion/media-tracker (:8778) and
+                         neburion/elden-ring-tracker (:8777), both pinned in
+                         flake.lock, so `nixos-rebuild --rollback` takes the app
+                         version back with the system generation.
 
 boot/                    grub, systemd-boot, limine (pick one)
 networking/              networkmanager, ssh, syncthing, localsend

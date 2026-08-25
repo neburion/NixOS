@@ -10,9 +10,12 @@
 # principle in ARCHITECTURE.md.
 #
 # Base: boot, network, tailnet, ssh, secrets, admin user.
-# Services get added as their own modules under modules/system/, one import
-# line each. Currently: the Elden Ring completion tracker (tailnet-only :8777)
-# and the reading tracker (tailnet-only :8778).
+#
+# The services themselves are no longer modules here. They live in their own
+# repos and are deployed by modules/system/apps/platform.nix, which reads an
+# app.json out of each one; which repos this host runs is declared in
+# hardware-layout/apps-layout.nix. Currently the media tracker (:8778) and the
+# Elden Ring ledger (:8777), both tailnet-only with public Cloudflare tunnels.
 
 {
   imports = [
@@ -33,8 +36,7 @@
     ../../modules/system/always-on.nix
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix
-    ../../modules/system/elden-ring-tracker
-    ../../modules/system/media-tracker
+    ../../modules/system/apps/platform.nix
 
     ../../users/server-admin
 

@@ -29,7 +29,24 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # ── apps ────────────────────────────────────────────────────────────────
+    # Projects that live in their own repos and are deployed by
+    # modules/system/apps/platform.nix, which reads the app.json at each root.
+    # `flake = false` because they contain no Nix at all — that is the point.
+    #
+    # Updating one is `nix flake update <name>`, which moves the pin and puts
+    # the new version in the next system generation, rollback included.
+    media-tracker = {
+      url = "github:neburion/media-tracker";
+      flake = false;
+    };
+    elden-ring-tracker = {
+      url = "github:neburion/elden-ring-tracker";
+      flake = false;
+    };
   };
+
   outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:
   let
     themes = import ./modules/home/themes;

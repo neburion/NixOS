@@ -21,6 +21,22 @@
         "type": "github"
       }
     },
+    "elden-ring-tracker": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787695739,
+        "narHash": "sha256-jESR/b1GVFf9ZRRdPxCUvKJvbaHujUMBF1KfNFAM9sw=",
+        "owner": "neburion",
+        "repo": "elden-ring-tracker",
+        "rev": "167ae7a59d4c1ce96117cacddafa49fd42f1911b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "neburion",
+        "repo": "elden-ring-tracker",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -76,6 +92,22 @@
         "owner": "nix-community",
         "ref": "release-26.05",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "media-tracker": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787695739,
+        "narHash": "sha256-UnN8kB+GXUC+WygEpSGbXJrtoqQeh0CB1rGVcVrsbOo=",
+        "owner": "neburion",
+        "repo": "media-tracker",
+        "rev": "d6a9c473a28185989cb841c26ca6ee15e6ba7c9c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "neburion",
+        "repo": "media-tracker",
         "type": "github"
       }
     },
@@ -176,7 +208,9 @@
     "root": {
       "inputs": {
         "disko": "disko",
+        "elden-ring-tracker": "elden-ring-tracker",
         "home-manager": "home-manager",
+        "media-tracker": "media-tracker",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nvf": "nvf",

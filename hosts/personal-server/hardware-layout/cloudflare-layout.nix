@@ -30,17 +30,12 @@
 # front of these two.
 
 {
-  config.cloudflare.declaredTunnels = {
-    "eldenring.azuresalt.app" = { service = "http://localhost:8777"; };
-
-    # The shelf answers on both names. `media` is what it is now — it tracks
-    # anime, shows, films and games alongside the reading — and `reading` stays
-    # because it is in a phone's home screen and a bookmark bar, and breaking
-    # those to make a point about naming is not worth it. Two tunnels, one
-    # service, no redirect: a redirect would send the browser to a hostname the
-    # saved Basic Auth credential is not scoped to, and ask for the password
-    # again on every visit.
-    "media.azuresalt.app" = { service = "http://localhost:8778"; };
-    "reading.azuresalt.app" = { service = "http://localhost:8778"; };
-  };
+  # Empty on purpose. Every hostname this host answers to belongs to an app,
+  # and each app declares its own in the `urls` of its app.json — the platform
+  # module turns those into declaredTunnels entries, so eldenring, media and
+  # reading are all still here, just not written down twice.
+  #
+  # A tunnel that belongs to no app — something pointing at a service this
+  # config runs directly — would be declared here.
+  config.cloudflare.declaredTunnels = { };
 }
