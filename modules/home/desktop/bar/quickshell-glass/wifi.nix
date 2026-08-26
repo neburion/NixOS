@@ -124,24 +124,45 @@
     Item {
         id: root
         implicitHeight: 20
-        implicitWidth:  icon.implicitWidth
+        implicitWidth:  Math.max(track.implicitWidth, strength.implicitWidth)
 
-        readonly property string bars:
-              NetworkState.isEthernet   ? ""
-            : !NetworkState.wifiEnabled ? ""
-            : !NetworkState.connected   ? ""
-            : NetworkState.signal >= 70 ? ""
-            : NetworkState.signal >= 40 ? ""
-            :                             ""
+        readonly property bool wifiMode: !NetworkState.isEthernet && NetworkState.wifiEnabled
+
+        // Material's wifi_1_bar / wifi_2_bar are not a dimmed full icon — they
+        // omit the upper arcs entirely, so a weak signal looked like a broken
+        // glyph with its top missing. They ARE geometric subsets of `wifi` on
+        // the same grid though, so drawing the full cone faintly underneath
+        // puts the unreached arcs back as an outline.
+        Text {
+            id: track
+            anchors.centerIn: parent
+            visible: root.wifiMode
+            font.family: Glass.fontIcon
+            font.pixelSize: 17
+            font.variableAxes: Glass.iconIdle
+            color: Glass.faint
+            text:  ""
+        }
 
         Text {
-            id: icon
+            id: strength
             anchors.centerIn: parent
             font.family: Glass.fontIcon
             font.pixelSize: 17
             font.variableAxes: NetworkState.connected ? Glass.iconActive : Glass.iconIdle
             color: NetworkState.connected ? Glass.text : Glass.muted
-            text:  root.bars
+
+            text: {
+                if (NetworkState.isEthernet)    return "";
+                if (!NetworkState.wifiEnabled)  return "";
+                // Radio on but no link: the faint cone behind is the whole
+                // story, so draw nothing over it.
+                if (!NetworkState.connected)    return "";
+                if (NetworkState.signal >= 70)  return "";
+                if (NetworkState.signal >= 40)  return "";
+                return "";
+            }
+
             Behavior on color { ColorAnimation { duration: 200 } }
         }
 
@@ -198,6 +219,7 @@
                             delegate: PopupRow {
                                 required property var modelData
                                 width: col.width
+                                track: ""
                                 glyph: modelData.signal >= 70 ? ""
                                      : modelData.signal >= 40 ? ""
                                      :                          ""

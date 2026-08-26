@@ -65,6 +65,11 @@
         radius: Glass.rowRadius
 
         property string glyph:    ""
+        // Optional full-strength glyph drawn faintly behind `glyph`. The wifi
+        // bar icons omit the arcs they do not reach rather than dimming them,
+        // so without this a weak network in the list renders with its top cut
+        // off. Same trick as the bar indicator.
+        property string track:    ""
         property string label:    ""
         property string trailing: ""
         property bool   active:   false
@@ -77,13 +82,31 @@
             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
             spacing: 10
 
-            Text {
+            Item {
                 anchors.verticalCenter: parent.verticalCenter
-                font.family: Glass.fontIcon
-                font.pixelSize: 16
-                font.variableAxes: root.active ? Glass.iconActive : Glass.iconIdle
-                color: root.active ? Glass.text : Glass.muted
-                text:  root.glyph
+                width:  Math.max(rowTrack.implicitWidth, rowGlyph.implicitWidth)
+                height: rowGlyph.implicitHeight
+
+                Text {
+                    id: rowTrack
+                    anchors.centerIn: parent
+                    visible: root.track !== ""
+                    font.family: Glass.fontIcon
+                    font.pixelSize: 16
+                    font.variableAxes: Glass.iconIdle
+                    color: Glass.faint
+                    text:  root.track
+                }
+
+                Text {
+                    id: rowGlyph
+                    anchors.centerIn: parent
+                    font.family: Glass.fontIcon
+                    font.pixelSize: 16
+                    font.variableAxes: root.active ? Glass.iconActive : Glass.iconIdle
+                    color: root.active ? Glass.text : Glass.muted
+                    text:  root.glyph
+                }
             }
 
             Text {

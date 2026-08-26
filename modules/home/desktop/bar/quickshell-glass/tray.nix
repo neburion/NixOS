@@ -73,8 +73,8 @@
                 id: shell
                 strong: true
                 implicitWidth: Math.max(
-                    iconsRow.implicitWidth + 28,
-                    root.activeMenuItem !== null ? 240 : 76
+                    iconsRow.implicitWidth + 20,
+                    root.activeMenuItem !== null ? 240 : 56
                 )
                 implicitHeight: contentCol.implicitHeight + 16
 
@@ -84,14 +84,23 @@
                     spacing: 6
 
                     // ---- icons ----
+                    //
+                    // Left-aligned on the same 10px inset as the menu rows
+                    // below. Centring them meant they drifted to the middle of
+                    // a container that jumps to 240px wide as soon as a menu
+                    // opens, leaving a wide gap either side of two icons.
                     Item {
                         width: parent.width
                         height: 30
 
                         RowLayout {
                             id: iconsRow
-                            anchors.centerIn: parent
-                            spacing: 12
+                            anchors {
+                                left: parent.left
+                                leftMargin: 10
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: 10
                             visible: SystemTray.items.values.length > 0
 
                             Repeater {
@@ -144,7 +153,11 @@
                         }
 
                         Text {
-                            anchors.centerIn: parent
+                            anchors {
+                                left: parent.left
+                                leftMargin: 10
+                                verticalCenter: parent.verticalCenter
+                            }
                             visible: SystemTray.items.values.length === 0
                             font.family: Glass.fontUi
                             font.pixelSize: 12

@@ -45,7 +45,11 @@
 
     decoration = {
       rounding         = 10;
-      rounding_power   = 1;
+      # 1.0 is documented as "a triangular corner" — it is the sharpest value
+      # in the range, not the roundest, which is why the corners read as cut
+      # rather than curved. 2.0 is a true circle, matching the plain `radius`
+      # the QML panels use, so windows and shell chrome share one geometry.
+      rounding_power   = 2.0;
       active_opacity   = 1.0;
       inactive_opacity = 1.0;
       shadow = {

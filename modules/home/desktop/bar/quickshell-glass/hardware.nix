@@ -138,6 +138,9 @@
     import "../Common"
     import "../Widgets"
 
+    // Glyphs, so the swap is reviewable: developer_board is a circuit board
+    // (GPU), memory is the chip (CPU), memory_alt is the DIMM (RAM). `memory`
+    // was on RAM and `speed` — a speedometer — was on CPU.
     Row {
         id: root
         spacing: 13
@@ -169,14 +172,14 @@
 
         BarStat {
             anchors.verticalCenter: parent.verticalCenter
-            glyph: ""
+            glyph: ""
             value: SystemStats.cpuPercent + "%"
             alert: SystemStats.cpuPercent >= 90
         }
 
         BarStat {
             anchors.verticalCenter: parent.verticalCenter
-            glyph: ""
+            glyph: ""
             value: SystemStats.memPercent + "%"
             alert: SystemStats.memPercent >= 85
         }

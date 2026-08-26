@@ -18,7 +18,10 @@
         // ---- surfaces ----------------------------------------------------
         readonly property color ink:         "#05070B"
         readonly property color panel:       Qt.rgba(0.071, 0.082, 0.110, 0.44)
-        readonly property color panelStrong: Qt.rgba(0.071, 0.082, 0.110, 0.64)
+        // Menus, not chrome. These carry text you have to read against
+        // whatever the wallpaper happens to be, so they trade transparency
+        // for legibility — the blur still shows through at this alpha.
+        readonly property color panelStrong: Qt.rgba(0.071, 0.082, 0.110, 0.88)
         readonly property color stroke:      Qt.rgba(1, 1, 1, 0.11)
         readonly property color hover:       Qt.rgba(1, 1, 1, 0.10)
 
