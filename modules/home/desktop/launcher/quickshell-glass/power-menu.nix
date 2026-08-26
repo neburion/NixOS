@@ -30,9 +30,12 @@
         // zone and the scrim stops short of the top of the screen.
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
+        // Open on the screen you are working on, not on whichever one
+        // quickshell enumerated first.
+        screen: HyprlandIpc.focusedScreen
+
         readonly property color accent:
-            WallpaperState.accentFor(HyprlandIpc.focusedMonitor
-                                     ? HyprlandIpc.focusedMonitor.name : "")
+            WallpaperState.accentFor(HyprlandIpc.focusedName)
 
         readonly property var actions: [
             { glyph: "",   label: "Shut down", key: "s", cmd: "shutdown" },

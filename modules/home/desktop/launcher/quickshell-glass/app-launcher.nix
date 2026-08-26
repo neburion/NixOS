@@ -39,9 +39,12 @@
         onQueryChanged: list.currentIndex = 0
 
         // The accent belongs to whichever screen you are looking at.
+        // Open on the screen you are working on, not on whichever one
+        // quickshell enumerated first.
+        screen: HyprlandIpc.focusedScreen
+
         readonly property color accent:
-            WallpaperState.accentFor(HyprlandIpc.focusedMonitor
-                                     ? HyprlandIpc.focusedMonitor.name : "")
+            WallpaperState.accentFor(HyprlandIpc.focusedName)
 
         // Rank, don't just filter. A prefix match on the name beats a match on
         // the second word, which beats a match buried mid-string, which beats

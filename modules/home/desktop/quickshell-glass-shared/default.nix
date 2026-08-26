@@ -13,6 +13,7 @@
   imports = [
     ../quickshell-shared/core.nix
     ./palette.nix
+    ./hypr-ipc.nix
     ./surface.nix
     ./wallpaper-state.nix
     ./accent.nix

@@ -20,6 +20,7 @@
   quickshell.modules.WallpaperPicker = ''
     import Quickshell
     import Quickshell.Wayland
+    import Quickshell.Widgets
     import Quickshell.Io
     import QtQuick
     import "../Services"
@@ -37,27 +38,13 @@
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        readonly property var mon: HyprlandIpc.focusedMonitor
-        readonly property string monName: root.mon ? root.mon.name : ""
+        readonly property string monName:     HyprlandIpc.focusedName
+        readonly property string orientation: HyprlandIpc.focusedOrientation
 
-        // HyprlandMonitor has no `transform` property, and its width/height are
-        // the physical mode rather than the rotated logical size — so a portrait
-        // screen still reports 2560x1440 there. ShellScreen is rotation-aware,
-        // so match the focused monitor by name and ask the screen itself.
-        //
-        // "Is it taller than it is wide" is also the question that actually
-        // matters when picking a wallpaper: it stays correct for a natively
-        // portrait panel, not just for a rotated landscape one.
-        readonly property var shellScreen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === root.monName) return screens[i];
-            return null;
-        }
-
-        readonly property string orientation:
-            (root.shellScreen && root.shellScreen.height > root.shellScreen.width)
-                ? "Vertical" : "Horizontal"
+        // Render on the screen it is going to dress. Without this the picker
+        // lands on whichever screen quickshell picked first, so you could be
+        // choosing a wallpaper for HDMI-A-1 while looking at DP-1.
+        screen: HyprlandIpc.focusedScreen
 
         readonly property color accent: WallpaperState.accentFor(root.monName)
         readonly property string activePath: WallpaperState.pathFor(root.monName)
@@ -216,7 +203,14 @@
                 readonly property bool isVid:     root.isVideo(cell.path)
                 readonly property bool isActive:  root.activePath === cell.path
 
-                Rectangle {
+                // ClippingRectangle, not Rectangle: QtQuick's `clip` clips to
+                // the bounding rect, NOT to the corner radius, so a plain
+                // Rectangle left the image's square corners poking out past the
+                // rounded border. This one clips to the actual shape, and
+                // insets content by the border width itself — which also stops
+                // the preview shifting a pixel when the active frame's border
+                // goes 1 -> 2.
+                ClippingRectangle {
                     id: frame
                     anchors.centerIn: parent
                     width:   cell.isCurrent ? carousel.frameW : Math.round(carousel.frameW * 0.4)
@@ -224,7 +218,7 @@
                     opacity: cell.isCurrent ? 1.0 : 0.38
                     radius:  14
                     color:   Glass.ink
-                    clip:    true
+                    antialiasing: true
 
                     border.width: cell.isActive ? 2 : 1
                     border.color: cell.isActive  ? root.accent
@@ -237,7 +231,6 @@
 
                     Image {
                         anchors.fill: parent
-                        anchors.margins: frame.border.width
                         visible: !cell.isVid
                         source: cell.isVid ? "" : "file://" + cell.path
                         fillMode: Image.PreserveAspectCrop
@@ -262,7 +255,6 @@
                     Rectangle {
                         visible: cell.isCurrent
                         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-                        anchors.margins: frame.border.width
                         height: 34
                         color: Qt.rgba(Glass.ink.r, Glass.ink.g, Glass.ink.b, 0.72)
 

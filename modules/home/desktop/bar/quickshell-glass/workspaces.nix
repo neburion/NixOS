@@ -1,29 +1,14 @@
 { ... }:
 
-# HyprlandIpc service + workspace pager. The focused workspace is marked by an
-# accent pip rather than a colour change, so the digits stay one hue and the
-# only coloured thing on the bar is genuinely "live".
+# Workspace pager. The focused workspace is marked by an accent pip rather
+# than a colour change, so the digits stay one hue and the only coloured thing
+# on the bar is genuinely "live".
+#
+# HyprlandIpc itself lives in quickshell-glass-shared — the launcher, power
+# menu and picker read it too, and registering it here made them depend on the
+# bar being imported.
 
 {
-  quickshell.services.HyprlandIpc = ''
-    pragma Singleton
-    import Quickshell
-    import Quickshell.Hyprland
-    import QtQuick
-
-    Singleton {
-        id: root
-
-        readonly property var workspaces:     Hyprland.workspaces
-        readonly property var monitors:       Hyprland.monitors
-        readonly property var focused:        Hyprland.focusedWorkspace
-        readonly property var focusedMonitor: Hyprland.focusedMonitor
-        readonly property var focusedClient:  Hyprland.focusedClient
-
-        function dispatch(cmd) { Hyprland.dispatch(cmd); }
-    }
-  '';
-
   quickshell.modules.BarWorkspaces = ''
     import Quickshell.Hyprland
     import QtQuick
