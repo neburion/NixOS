@@ -1,60 +1,53 @@
 { pkgs, hostConfig, ... }:
 
-# Per-monitor rotation. Toggles between landscape (transform 0) and portrait
-# (transform 3) on the focused monitor (or a monitor named as arg 1).
-# State persists to ~/.local/state/monitor-transforms/<monitor-name>.
+# Per-monitor rotation, and the layout planner behind it.
 #
-# After rotating, monitors are reflowed left-to-right (in current x order)
-# so no gap opens up when a landscape monitor becomes portrait — otherwise
-# the cursor can't cross the dead zone between mismatched-width monitors.
+# State: ~/.local/state/monitor-transforms/<monitor-name>, one file per output
+# holding a Hyprland transform (0 landscape, 3 portrait). That directory is the
+# only source of truth; `monitor-layout.py` reads it and makes reality match.
 #
-# On Hyprland startup (exec-once) and on `configreloaded` events (systemd
-# watcher), the restore script re-applies every persisted transform and
-# then reflows.
+# Why a planner rather than three scripts each poking hyprctl:
+#
+# Hyprland re-validates the WHOLE layout after every `keyword monitor`, and
+# warns — with a desktop notification — whenever it finds an overlap. Rotating
+# one screen changes its effective width, so any arrangement packed tightly
+# around it is momentarily wrong. The old code set the transform first, then
+# repositioned each output in its own hyprctl call, so a single flip walked
+# through several overlapping states and produced one notification per step.
+# Six, in practice, on a three-monitor setup.
+#
+# monitor-layout.py computes the final layout up front and then chooses an
+# order to apply it in such that every step lands clear of the monitors that
+# have not moved yet — placing left to right when the layout shrinks, right to
+# left when it grows, and parking an output far to the right in the rare case
+# where neither works. It emits one `hyprctl --batch`. No intermediate state
+# ever overlaps, so Hyprland has nothing to complain about.
 
 let
-  # Reads current monitors, sorts by declared x, lays them out horizontally
-  # starting at x=0. Each monitor keeps its declared y. Effective width is
-  # (transform in {1,3,5,7} ? height : width) / scale.
+  planner = ./monitor-layout.py;
+
+  # The single entry point. Reads persisted transforms, packs the outputs left
+  # to right by effective width, applies transform and position together.
   reflow-monitors = pkgs.writeShellApplication {
     name = "reflow-monitors";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk xrandr ];
+    runtimeInputs = with pkgs; [ hyprland python3 xrandr ];
     text = ''
-      set -euo pipefail
+      python3 ${planner} "$@"
 
-      x=0
-      hyprctl -j monitors | jq -c 'sort_by(.x)[]' | while read -r mon; do
-        name=$(jq -r '.name' <<<"$mon")
-        w=$(jq -r '.width' <<<"$mon")
-        h=$(jq -r '.height' <<<"$mon")
-        rr=$(jq -r '.refreshRate' <<<"$mon" | awk '{printf "%.0f", $1}')
-        y=$(jq -r '.y' <<<"$mon")
-        scale=$(jq -r '.scale' <<<"$mon")
-        transform=$(jq -r '.transform' <<<"$mon")
-
-        case "$transform" in
-          1|3|5|7) eff_w=$(awk -v a="$h" -v s="$scale" 'BEGIN{printf "%.0f", a/s}') ;;
-          *)       eff_w=$(awk -v a="$w" -v s="$scale" 'BEGIN{printf "%.0f", a/s}') ;;
-        esac
-
-        hyprctl keyword monitor \
-          "$name,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${transform}" \
-          >/dev/null
-        x=$((x + eff_w))
-      done
-
-      # Re-assert xrandr primary so XWayland (Proton/Wine games) reads mode
-      # list from the main display, not whichever monitor happens to be first.
+      # Re-assert xrandr primary so XWayland (Proton/Wine games) reads its mode
+      # list from the main display rather than whichever output happens to be
+      # first. Hyprland resets this whenever outputs are reconfigured.
       xrandr --output ${hostConfig.displays.monitors.external.name} --primary 2>/dev/null || true
     '';
   };
 
+  # Flips one monitor's persisted transform and lets the planner apply it.
+  # Deliberately does NOT touch hyprctl itself — doing so is what produced the
+  # intermediate overlap the planner exists to avoid.
   rotate-monitor = pkgs.writeShellApplication {
     name = "rotate-monitor";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk reflow-monitors ];
+    runtimeInputs = with pkgs; [ hyprland jq coreutils reflow-monitors ];
     text = ''
-      set -euo pipefail
-
       state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/monitor-transforms"
       mkdir -p "$state_dir"
 
@@ -73,64 +66,25 @@ let
       cur_t=$(jq -r '.transform' <<<"$mon")
       if [[ "$cur_t" == "0" ]]; then new_t=3; else new_t=0; fi
 
-      w=$(jq -r '.width' <<<"$mon")
-      h=$(jq -r '.height' <<<"$mon")
-      rr=$(jq -r '.refreshRate' <<<"$mon" | awk '{printf "%.0f", $1}')
-      x=$(jq -r '.x' <<<"$mon")
-      y=$(jq -r '.y' <<<"$mon")
-      scale=$(jq -r '.scale' <<<"$mon")
-
-      hyprctl keyword monitor \
-        "$target,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${new_t}" \
-        >/dev/null
       printf '%s' "$new_t" > "$state_dir/$target"
-
       reflow-monitors
     '';
   };
 
+  # Replays persisted state. Identical work to reflow-monitors — kept as its
+  # own name because that is what the exec-once and the watcher below call.
   restore-monitor-transforms = pkgs.writeShellApplication {
     name = "restore-monitor-transforms";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils gawk reflow-monitors ];
+    runtimeInputs = [ reflow-monitors ];
     text = ''
-      set -euo pipefail
-
-      state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/monitor-transforms"
-      [[ -d "$state_dir" ]] || exit 0
-
-      monitors_json=$(hyprctl -j monitors)
-      changed=0
-
-      for f in "$state_dir"/*; do
-        [[ -f "$f" ]] || continue
-        name=$(basename "$f")
-        want=$(cat "$f")
-
-        mon=$(jq --arg n "$name" '.[] | select(.name == $n)' <<<"$monitors_json")
-        [[ -z "$mon" || "$mon" == "null" ]] && continue
-
-        cur=$(jq -r '.transform' <<<"$mon")
-        [[ "$cur" == "$want" ]] && continue
-
-        w=$(jq -r '.width' <<<"$mon")
-        h=$(jq -r '.height' <<<"$mon")
-        rr=$(jq -r '.refreshRate' <<<"$mon" | awk '{printf "%.0f", $1}')
-        x=$(jq -r '.x' <<<"$mon")
-        y=$(jq -r '.y' <<<"$mon")
-        scale=$(jq -r '.scale' <<<"$mon")
-
-        hyprctl keyword monitor \
-          "$name,''${w}x''${h}@''${rr},''${x}x''${y},''${scale},transform,''${want}" \
-          >/dev/null
-        changed=1
-      done
-
-      if [[ "$changed" == "1" ]]; then
-        reflow-monitors
-      fi
+      reflow-monitors
     '';
   };
 
+  # A nix rebuild reloads hyprland.conf, which re-applies the declared monitor
+  # lines and drops any runtime rotation. hardware-layout declares the resting
+  # orientation so the common case needs no correction at all; this covers the
+  # case where the live state differs from it.
   watcher-script = pkgs.writeShellScript "monitor-transforms-watch" ''
     set -eu
     sock="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
