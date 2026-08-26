@@ -6,9 +6,13 @@
 # the final layout is fine. Rotating one screen used to emit six of those
 # notifications. Everything below exists to emit zero.
 
-import json, subprocess, sys, os
+import json, os, subprocess, sys, time
 
 STATE = os.path.expanduser("~/.local/state/monitor-transforms")
+
+# Gap between modesets. Long enough for the DRM page-flip to retire,
+# short enough that a rotation still feels immediate.
+SETTLE = 0.15
 ROTATED = (1, 3, 5, 7)
 
 
@@ -86,9 +90,9 @@ def order(mons, final):
     return steps
 
 
-def keyword(m, x, transform):
+def spec(m, x, transform):
     rr = round(float(m["refreshRate"]))
-    return (f"keyword monitor {m['name']},{m['width']}x{m['height']}@{rr},"
+    return (f"{m['name']},{m['width']}x{m['height']}@{rr},"
             f"{x}x{m['y']},{m['scale']},transform,{transform}")
 
 
@@ -99,16 +103,34 @@ def main():
     by_name = {m["name"]: m for m in mons}
     final = plan(mons)
 
-    cmds = [keyword(by_name[name], x, final[name]["transform"])
-            for name, x in order(mons, final)]
-
-    # One connection, one pass. Still validated per command by Hyprland, which
-    # is exactly why the order above matters.
-    subprocess.run(["hyprctl", "--batch", " ; ".join(cmds)],
-                   stdout=subprocess.DEVNULL, check=False)
+    specs = [spec(by_name[name], x, final[name]["transform"])
+             for name, x in order(mons, final)]
 
     if "--print" in sys.argv:
-        print("\n".join(cmds) if cmds else "(layout already correct, nothing to do)")
+        print("\n".join(specs) if specs else "(layout already correct, nothing to do)")
+        return
+
+    # One at a time, not `hyprctl --batch`.
+    #
+    # Batching is not what keeps Hyprland quiet — the ordering above is, and it
+    # holds whether the commands arrive together or apart. What batching did do
+    # was fire every modeset within the same frame, which aquamarine answers
+    # with "Cannot commit when a page-flip is awaiting"; the output that lost
+    # the race kept displaying its old contents at its new geometry, so half of
+    # it went black until something forced a repaint. Taking a screenshot was
+    # enough to force one, which is what made the bug look like it fixed itself.
+    for i, sp in enumerate(specs):
+        if i:
+            time.sleep(SETTLE)
+        subprocess.run(["hyprctl", "keyword", "monitor", sp],
+                       stdout=subprocess.DEVNULL, check=False)
+
+    if specs:
+        # Belt and braces for the same failure: repaint every output once the
+        # geometry has settled, rather than relying on the next damage event.
+        time.sleep(SETTLE)
+        subprocess.run(["hyprctl", "dispatch", "forcerendererreload"],
+                       stdout=subprocess.DEVNULL, check=False)
 
 
 main()
