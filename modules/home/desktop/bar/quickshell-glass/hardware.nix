@@ -108,7 +108,9 @@
         Row {
             id: line
             anchors.centerIn: parent
-            spacing: 6
+            // Tight: an icon and its own number are one thing. The gap
+            // between separate stats (13) does the grouping.
+            spacing: 4
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter

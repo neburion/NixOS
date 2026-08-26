@@ -32,19 +32,22 @@
       background-blur      = true;
       unfocused-split-opacity = 1.0;
 
-      background            = "#0B0E14";
-      foreground            = "#EDF0F5";
-      cursor-color          = "#EDF0F5";
-      selection-background  = "#252A35";
-      selection-foreground  = "#EDF0F5";
+      # Neutral dark, not a blue-black. The first version tinted both the
+      # ground (#0B0E14) and most of the palette toward blue, which read as a
+      # blue terminal rather than a glass one. Greys are now near-achromatic
+      # and the cool hues are pulled back toward grey; the semantic colours
+      # (red, green, yellow) keep enough chroma to still mean something.
+      background            = "#101113";
+      foreground            = "#E8EAEC";
+      cursor-color          = "#E8EAEC";
+      selection-background  = "#26282C";
+      selection-foreground  = "#E8EAEC";
 
-      # Cool-neutral base16, tuned to sit under translucent chrome rather than
-      # to be maximally saturated.
       palette = [
-        "0=#1B1F27"  "1=#FF8A80"  "2=#9DEBD0"  "3=#E2C9A2"
-        "4=#A2BEE2"  "5=#C4AEE8"  "6=#A2D4E2"  "7=#C6CCD6"
-        "8=#3A414F"  "9=#FFA79E"  "10=#B6F2DE" "11=#EDD9BA"
-        "12=#BDD1EE" "13=#D6C6F0" "14=#BFE2EC" "15=#EDF0F5"
+        "0=#191B1E"  "1=#E8837A"  "2=#8FCFB4"  "3=#D8BE96"
+        "4=#9FB0C2"  "5=#B7A9C6"  "6=#9CBCC0"  "7=#C8CBCF"
+        "8=#3B3E44"  "9=#F09B92"  "10=#A8E0C7" "11=#E6D0AB"
+        "12=#B6C4D4" "13=#C9BCD8" "14=#B2CFD2" "15=#E8EAEC"
       ];
     };
   };

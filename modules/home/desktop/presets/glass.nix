@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
 # glass preset — Hyprland + a translucent Quickshell UI, one fixed palette,
 # and a launcher that stays empty until you type.
@@ -39,4 +39,24 @@
   ];
 
   fonts.fontconfig.enable = true;
+
+  # Pin the tools that are still theme-driven.
+  #
+  # neovim, fish, superfile and spotify are CLI modules imported straight from
+  # home.nix, not by any preset — a headless host gets them too — so they keep
+  # following ~/.local/state/quickshell/active-theme. Under glass nothing ever
+  # calls theme-set, so they sit on whatever palette was last chosen and drift
+  # out of step with the desktop; that is why neovim stayed gruvbox long after
+  # the rest of the preset had changed.
+  #
+  # `themes/glass.nix` gives them a palette that matches, and this runs the
+  # hooks once to adopt it. Guarded on the current value, so it does not fight
+  # a deliberate `theme-set <other>` on every activation — switch away and it
+  # stays switched.
+  home.activation.pinGlassTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    STATE="$HOME/.local/state/quickshell/active-theme"
+    if [ "$(cat "$STATE" 2>/dev/null)" != "glass" ]; then
+      "${config.home.profileDirectory}/bin/theme-set" glass || true
+    fi
+  '';
 }

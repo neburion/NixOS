@@ -1,10 +1,13 @@
 { pkgs, lib, themes, ... }:
 
 let
-  # Lua snippet per nvimTheme name. Each must call any required setup() and
-  # then `vim.cmd.colorscheme(...)`. Re-sourceable: works as both first-load
-  # and live-switch.
-  mkSnippet = name: ''
+  # Lua snippet per palette. Each must call any required setup() and then
+  # `vim.cmd.colorscheme(...)`. Re-sourceable: works as both first-load and
+  # live-switch.
+  #
+  # Takes the whole palette rather than just `nvimTheme`, so a snippet can be
+  # written against the palette's own colours instead of restating them.
+  mkSnippet = t: let name = t.nvimTheme; in ''
     -- ${name}
     ${ {
       catppuccin = ''
@@ -30,11 +33,40 @@ let
         vim.o.background = "dark"
         vim.cmd.colorscheme("default")
       '';
+      # No plugin: the built-in scheme with its ground repainted to match the
+      # rest of the glass preset. nvim's default dark leans blue, which is the
+      # one thing this palette is trying not to be.
+      glass = ''
+        vim.o.background = "dark"
+        vim.cmd.colorscheme("default")
+
+        local bg, surface, selection, fg =
+          "${t.bg}", "${t.surface}", "${t.selection}", "${t.fg}"
+
+        local function hl(group, spec) vim.api.nvim_set_hl(0, group, spec) end
+
+        hl("Normal",       { bg = bg,        fg = fg })
+        hl("NormalNC",     { bg = bg,        fg = fg })
+        hl("NormalFloat",  { bg = surface,   fg = fg })
+        hl("FloatBorder",  { bg = surface,   fg = "${t.fishSecondary}" })
+        hl("SignColumn",   { bg = bg })
+        hl("FoldColumn",   { bg = bg })
+        hl("EndOfBuffer",  { bg = bg,        fg = bg })
+        hl("CursorLine",   { bg = surface })
+        hl("CursorLineNr", { bg = surface,   fg = fg })
+        hl("LineNr",       { bg = bg,        fg = "${t.fishSecondary}" })
+        hl("Visual",       { bg = selection })
+        hl("StatusLine",   { bg = surface,   fg = fg })
+        hl("StatusLineNC", { bg = surface,   fg = "${t.fishSecondary}" })
+        hl("WinSeparator", { bg = bg,        fg = selection })
+        hl("Pmenu",        { bg = surface,   fg = fg })
+        hl("PmenuSel",     { bg = selection, fg = fg })
+      '';
     }.${name} }
   '';
 
   # Map palette name → lua snippet, using each palette's `nvimTheme` field.
-  themeSnippets = lib.mapAttrs (_: t: mkSnippet t.nvimTheme) themes;
+  themeSnippets = lib.mapAttrs (_: t: mkSnippet t) themes;
 in
 {
   # Install all colorscheme plugins (nvf's npins-pinned versions). They sit

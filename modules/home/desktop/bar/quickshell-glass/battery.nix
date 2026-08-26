@@ -53,7 +53,7 @@
     Row {
         id: root
         visible: Battery.present
-        spacing: 6
+        spacing: 4
 
         property color accent: Glass.accentFallback
 
