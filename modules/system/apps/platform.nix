@@ -155,6 +155,22 @@ let
       text = ''exec ${runtimes.${app.runtime}.bin} ${app.src}/${what} "$@"'';
     };
 
+  # The same entry point, made usable from a shell on the host. The unit's
+  # environment lives in the unit, so the bare wrapper goes looking for the
+  # database beside the code in /nix/store and finds nothing — which is exactly
+  # what `media-tracker --stats` did until this existed. Needs root in practice:
+  # the state directory is 0750 and owned by the app's own user.
+  cliOf = app:
+    pkgs.writeShellApplication {
+      name = app.name;
+      runtimeInputs = [ runtimes.${app.runtime}.pkg ];
+      text = ''
+        ${lib.concatStringsSep "\n" (lib.mapAttrsToList
+            (k: v: "export ${k}=${lib.escapeShellArg v}") (environmentOf app))}
+        exec ${runtimes.${app.runtime}.bin} ${app.src}/${app.run} "$@"
+      '';
+    };
+
   secretName = app: key: "${app.name}-${key}";
 
   # Shared with every extra unit an app declares (timers), so a warming job
@@ -288,9 +304,8 @@ in
         app.urls)
       (attrValues apps));
 
-    # `<app> --stats`, `<app> --warm-covers` and friends from a shell on the
-    # host, which is how these were debugged before they had a UI.
-    environment.systemPackages =
-      map (app: command app app.run "") (attrValues apps);
+    # `sudo <app> --stats`, `sudo <app> --warm-covers` and friends from a shell
+    # on the host, which is how these were debugged before they had a UI.
+    environment.systemPackages = map cliOf (attrValues apps);
   };
 }
