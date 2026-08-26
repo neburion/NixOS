@@ -7,11 +7,17 @@
 # filters to users that actually exist on this host, and generates one
 # `services.restic.backups.<user>` per matching entry.
 #
+# A job named `root` is the exception, and means machine state rather than one
+# person's files — `/var/lib` on a server, where the data belongs to service
+# users with 0750 directories that no single one of them can read past. It is
+# namespaced by hostname instead of by user, because otherwise two machines
+# backing up /var/lib as root would share one repository called `root`.
+#
 # Data model:
 # - One R2 bucket `backup` shared across all users.
-# - Restic repository per user at `s3://backup/<user>` (subpath) so
-#   snapshots are namespaced per user but bucket administration stays
-#   simple.
+# - Restic repository per user at `s3://backup/<user>` (subpath), or per host
+#   at `s3://backup/<hostname>` for a root job, so snapshots are namespaced by
+#   whoever owns them while bucket administration stays simple.
 # - Single restic passphrase for the whole fleet (in sops); simplifies
 #   recovery because you only remember one thing.
 # - Restic client-side encrypts everything with that passphrase BEFORE
@@ -59,8 +65,10 @@ in
     default     = { };
     description = ''
       Absolute paths to back up per user. Each entry becomes a nightly restic
-      job scoped to that user, uploading to Cloudflare R2 at s3://backup/<user>.
-      Users declared but not present on this host are skipped.
+      job scoped to that user, uploading to Cloudflare R2 at s3://backup/<user>
+      — or s3://backup/<hostname> for a `root` entry, which means machine state
+      rather than one person's files. Users declared but not present on this
+      host are skipped.
     '';
   };
 
@@ -106,7 +114,11 @@ in
 
     services.restic.backups = lib.mapAttrs (user: paths: {
       inherit user paths;
-      repository      = "s3:${r2Endpoint}/${bucket}/${user}";
+      # See the header: a root job is the machine's state, not a person's, so
+      # it is filed under the hostname. Retention is unaffected either way —
+      # `restic forget` groups by host and paths before applying --keep-*.
+      repository      = "s3:${r2Endpoint}/${bucket}/"
+                        + (if user == "root" then config.networking.hostName else user);
       passwordFile    = config.sops.secrets.restic-passphrase.path;
       environmentFile = config.sops.templates."restic-r2-env".path;
       initialize      = true;   # `restic init` if the repo doesn't exist yet

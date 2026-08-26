@@ -22,6 +22,7 @@
     ./hardware-layout
 
     ../../modules/system/nixos.nix
+    ../../modules/system/backup/restic.nix
     ../../modules/system/security/sops.nix
     ../../modules/system/security/sudo.nix
     ../../modules/system/rebuild-hooks/registry.nix
