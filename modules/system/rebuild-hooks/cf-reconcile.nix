@@ -7,7 +7,9 @@
 #
 # Resources it manages:
 #   - Tunnels + DNS records (per-host declaredTunnels)
-#     Adding: edit hosts/<host>/hardware-layout/cloudflare-layout.nix
+#     Adding: edit hosts/<host>/hardware-layout/cloudflare-layout.nix, or add a
+#             hostname to the `urls` of an app.json — apps/platform.nix turns
+#             those into declaredTunnels entries and they arrive here the same way
 #     Removing: NOT YET (manual via API/dashboard for now)
 #   - Email routing rules (fleet-wide cloudflare.email.rules)
 #     Adding: edit modules/system/networking/cloudflare-email.nix
