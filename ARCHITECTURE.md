@@ -270,7 +270,7 @@ The **active wallpaper** follows the same pattern in `Services/WallpaperState.qm
 Declared and set per host under `hosts/<host>/hardware-layout/`:
 
 - `displays.primary` : attrs (width, height)
-- `displays.monitors` : attrs of `{ name; mode; position; scale; }`
+- `displays.monitors` : attrs of `{ name; mode; position; scale; transform? }` — `transform` is optional and emitted by `mkMonitorLine` only when present. **`position` must be packed by *effective* width, i.e. the rotated width for anything declared with `transform` 1/3/5/7.** These lines are re-applied on every Hyprland config reload, so a declaration that disagrees with the resting orientation makes every rebuild visibly reshuffle the layout before `restore-monitor-transforms` corrects it.
 - `gpu.prime.intelBusId` / `gpu.prime.nvidiaBusId` : str (PCI addresses)
 - `gpu.openKernelModule` : bool (Turing+ default true, flip for Pascal)
 - `gpu.externalMonitorOnDgpu` : bool (disables fine-grained runtime PM if true)
