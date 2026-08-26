@@ -1,9 +1,28 @@
-{ hostConfig, pkgs, ... }:
+{ hostConfig, ... }:
 
-# Runtime external-monitor rotation. Persists to
-# ~/.local/state/monitor-external-transform and re-applies:
-#   - on quickshell startup (Component.onCompleted)
-#   - on every Hyprland `configreloaded` event (nix rebuilds drop the transform)
+# External-monitor rotation, as seen by the bar.
+#
+# This singleton deliberately owns NO geometry. It reads the transform that
+# `rotate-monitor` persisted and delegates every change back to that script.
+#
+# It used to run `hyprctl keyword monitor <name>,<mode>,<pos>,<scale>,transform,N`
+# itself, with <pos> baked from hostConfig at build time — and that was a bug
+# with three faces. The declared positions in hardware-layout are computed for
+# landscape, so once a monitor is rotated its effective width shrinks
+# (2560 -> 1440) and `reflow-monitors` repacks the outputs left to right.
+# Re-asserting the declared position afterwards put the monitor back where a
+# landscape layout wanted it, overlapping whatever reflow had already moved up
+# behind it. Hyprland then logged "Monitor <name> overlaps with other
+# monitor(s) in the layout" and windows stretched across the seam.
+#
+# It fired on quickshell start (Component.onCompleted), on every
+# `configreloaded` — which every nix rebuild triggers — and on every toggle,
+# which is exactly when the breakage was reported.
+#
+# There is no need for any of it: wm/hyprland/rotation.nix already restores
+# every persisted transform on login (exec-once) and on `configreloaded` (a
+# systemd socket2 watcher), and reflows afterwards. Two mechanisms racing over
+# the same state, one of them without the reflow, is the whole defect.
 
 let
   ext = hostConfig.displays.monitors.external;
@@ -13,57 +32,41 @@ in
     pragma Singleton
     import Quickshell
     import Quickshell.Io
-    import Quickshell.Hyprland
     import QtQuick
 
     Singleton {
         id: root
 
-        readonly property string monName:  "${ext.name}"
-        readonly property string monMode:  "${ext.mode}"
-        readonly property string monPos:   "${ext.position}"
-        readonly property string monScale: "${ext.scale}"
-        readonly property string statePath: Quickshell.env("HOME") + "/.local/state/monitor-transforms/" + monName
+        readonly property string monName: "${ext.name}"
+        readonly property string statePath:
+            Quickshell.env("HOME") + "/.local/state/monitor-transforms/" + monName
 
+        // 0 = landscape, 3 = portrait. Mirrors rotate-monitor's own encoding.
         property int transform: 0
-        property bool loaded: false
 
-        Process { id: setter; running: false }
-        Process { id: persister; running: false }
-
-        Process {
-            id: loader
-            command: [ "sh", "-c", "cat \"$1\" 2>/dev/null || echo 0", "sh", statePath ]
-            running: false
-            stdout: StdioCollector {
-                onStreamFinished: {
-                    var v = parseInt(text.trim());
-                    root.transform = (v === 3) ? 3 : 0;
-                    root.loaded = true;
-                    root.apply();
-                }
+        // Watched, not read once: `$mod + backslash` and any other caller of
+        // rotate-monitor writes this file too, and the bar should follow.
+        FileView {
+            id: stateFile
+            path: root.statePath
+            watchChanges: true
+            onFileChanged: reload()
+            onLoaded: {
+                const v = parseInt(text().trim());
+                root.transform = (v === 3) ? 3 : 0;
             }
         }
 
-        function apply() {
-            setter.command = [
-                "${pkgs.hyprland}/bin/hyprctl", "keyword", "monitor",
-                monName + "," + monMode + "," + monPos + "," + monScale +
-                    ",transform," + root.transform
-            ];
-            setter.running = true;
+        Process { id: rotator; running: false }
+
+        // rotate-monitor flips the transform, persists it, and reflows the
+        // outputs. The FileView above brings the new value back here.
+        function toggle() {
+            rotator.command = [ "rotate-monitor", root.monName ];
+            rotator.running = true;
         }
 
-        function persist() {
-            persister.command = [
-                "sh", "-c",
-                "mkdir -p \"$(dirname \"$1\")\" && printf %s \"$2\" > \"$1\"",
-                "sh", statePath, String(root.transform)
-            ];
-            persister.running = true;
-        }
-
-        // Migrate legacy single-file state to the per-monitor path (one-shot).
+        // One-shot migration of the pre-per-monitor state file.
         Process {
             id: migrator
             command: [
@@ -77,24 +80,6 @@ in
             ]
             running: true
         }
-
-        function toggle() {
-            root.transform = (root.transform === 0) ? 3 : 0;
-            root.apply();
-            root.persist();
-        }
-
-        Connections {
-            target: Hyprland
-            function onRawEvent(event) {
-                if (!root.loaded) return;
-                if (String(event).indexOf("configreloaded") >= 0) {
-                    root.apply();
-                }
-            }
-        }
-
-        Component.onCompleted: loader.running = true
     }
   '';
 }

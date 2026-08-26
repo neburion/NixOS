@@ -2,15 +2,15 @@
 
 # Widgets/GlassSurface.qml — the one translucent panel primitive.
 #
-# Fill + 1px stroke + an inset top highlight. The highlight is what reads as
-# glass; without it a translucent rectangle just looks like a dimmed one. The
-# blur itself is the compositor's (see wm/hyprland-glass/layer-rules.nix) —
-# this only produces a surface worth blurring.
+# Fill plus a 1px stroke, and nothing else.
 #
-# No `default property alias` wrapping an inner Item: in QML that alias also
-# captures the component's own declared children, so the inner Item would be
-# assigned into itself. The specular strip is simply declared first, which
-# puts it behind anything the caller adds.
+# There was a specular strip along the top edge here: a 1px Rectangle at 20%
+# white, meant to read as light catching the lip of the panel. It didn't. A
+# straight strip inside a rounded rectangle runs flat through both top corners
+# instead of following them, so on every surface — bar, launcher, popups,
+# notifications, OSD, picker — it read as a hairline drawn across the box
+# rather than as an edge. The border alone already describes the edge, and
+# describes it on all four sides.
 
 {
   quickshell.widgets.GlassSurface = ''
@@ -27,14 +27,6 @@
         border.width: 1
         border.color: Glass.stroke
         antialiasing: true
-
-        Rectangle {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            anchors.margins: 1
-            height:  1
-            color:   Glass.highlight
-            opacity: 0.9
-        }
     }
   '';
 }

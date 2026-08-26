@@ -1,11 +1,19 @@
 { ... }:
 
-# Rotates the external monitor between landscape (transform 0) and portrait
-# (transform 3) via the shared MonitorRotation service. The glyph is the
-# rotation state, not a label — the bar has no room for words.
+# Rotates the external monitor between landscape and portrait via the shared
+# MonitorRotation service, which delegates to the `rotate-monitor` script so
+# the reflow happens too.
+#
+# The wallpaper has to be re-sent afterwards. awww holds the image at the
+# geometry it was given, so a screen that has just gone portrait keeps showing
+# the landscape frame stretched to fit until something pushes it again. The
+# delay is for the reflow to settle first — re-sending into the old geometry
+# just reproduces the stretch.
 
 {
   quickshell.modules.BarMonitorToggle = ''
+    import Quickshell
+    import Quickshell.Io
     import QtQuick
     import "../Services"
     import "../Common"
@@ -26,10 +34,20 @@
 
         Behavior on rotation { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
+        Process { id: refresher; running: false }
+
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: MonitorRotation.toggle()
+            onClicked: {
+                MonitorRotation.toggle();
+                refresher.command = [
+                    "sh", "-c",
+                    "sleep 1; glass-wallpaper-restore \"$1\"",
+                    "sh", MonitorRotation.monName
+                ];
+                refresher.running = true;
+            }
         }
     }
   '';

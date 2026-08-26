@@ -20,7 +20,6 @@
         readonly property color panel:       Qt.rgba(0.071, 0.082, 0.110, 0.44)
         readonly property color panelStrong: Qt.rgba(0.071, 0.082, 0.110, 0.64)
         readonly property color stroke:      Qt.rgba(1, 1, 1, 0.11)
-        readonly property color highlight:   Qt.rgba(1, 1, 1, 0.20)
         readonly property color hover:       Qt.rgba(1, 1, 1, 0.10)
 
         // ---- text --------------------------------------------------------

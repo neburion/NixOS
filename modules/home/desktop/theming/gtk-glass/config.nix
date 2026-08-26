@@ -38,5 +38,12 @@ in
 
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
+
+    # Explicitly null, not inherited from gtk.theme. home-manager changed this
+    # default and warns about it; null is the right answer for GTK4 anyway —
+    # libadwaita apps take their palette from the colour-scheme setting in
+    # dconf.nix, and forcing a GTK3-era theme name on them makes things worse,
+    # not better.
+    gtk4.theme = null;
   };
 }

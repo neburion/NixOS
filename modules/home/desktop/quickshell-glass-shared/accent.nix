@@ -138,11 +138,17 @@ in
       name = "glass-wallpaper-restore";
       runtimeInputs = with pkgs; [ awww mpvpaper jq coreutils ];
       text = ''
+        # With a monitor name, replay only that output. Used after a rotation:
+        # awww holds the image at the old geometry, so a portrait screen keeps
+        # showing a landscape frame stretched to fit until it is re-sent.
+        only="''${1:-}"
+
         state="$HOME/.local/state/quickshell/wallpapers.json"
         [ -f "$state" ] || exit 0
 
         jq -r 'to_entries[] | "\(.key)\t\(.value.path)"' "$state" \
         | while IFS=$'\t' read -r mon path; do
+            [ -n "$only" ] && [ "$mon" != "$only" ] && continue
             [ -n "$path" ] && [ -f "$path" ] || continue
             ext="''${path##*.}"
             case "''${ext,,}" in
