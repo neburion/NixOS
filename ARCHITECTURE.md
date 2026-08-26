@@ -19,7 +19,7 @@ Three layers, no leakage. Importing is enabling.
 1. **Manifests contain only imports.** No inline `programs.X.enable`, no `home.packages`, no `xdg.portal`. If it isn't an import, it belongs in a module.
 2. **Behavior modules never expose user-facing options.** Importing IS enabling. Variants become separate files, not `mkOption` toggles.
    - *Documented exceptions (internal registration hooks, not user knobs):*
-     - `modules/home/desktop/quickshell-shared/registry.nix` — `options.quickshell.{services, commons, modules, widgets, moduleInstantiations, shellExtraImports}`. Each quickshell component contributes entries so `shell.nix` can materialize them into `~/.config/quickshell/main/`.
+     - `modules/home/desktop/quickshell-shared/registry.nix` — `options.quickshell.{services, commons, modules, widgets, moduleInstantiations, shellExtraImports}`. Each quickshell component contributes entries so `shell.nix` can materialize them into `~/.config/quickshell/main/`. **The value type is `lines`, which merges by concatenation, not by conflict.** Two modules registering the same key (e.g. two presets each defining `services.WallpaperState`) do not error — their QML is glued end to end into one file with two `pragma Singleton` blocks, and quickshell fails at load with a syntax error pointing at the seam. Only import one preset's components at a time.
      - `modules/home/desktop/theme-switcher/registry.nix` — `options.themeHooks`. Each consumer contributes a `theme-hook-<name>` shell script; the switcher bakes each hook's store path into the generated `theme-set` script so no runtime directory scan is needed.
      - Same latitude granted to Environment options.
 3. **Environment modules MAY declare options.** That's the layer's job — publish per-host facts (displays, disks, wifi, GPU bus IDs) that behavior modules read.
@@ -192,8 +192,9 @@ desktop/theming/gtk/     per-theme GTK packages + config/dconf/glib/css
 desktop/clipboard/       wl-clipboard
 desktop/terminal/        ghostty
 desktop/tray-apps/       libnotify (nm-applet/blueman replaced by native quickshell widgets)
-desktop/presets/         aggregator presets — clean.nix (sepia terminal
-                         rice), simple.nix (plain quickshell),
+desktop/presets/         aggregator presets — glass.nix (translucent,
+                         themeless, per-monitor wallpapers), clean.nix (sepia
+                         terminal rice), simple.nix (plain quickshell),
                          hyprland-minimal.nix (waybar legacy/fallback)
 desktop/bar/quickshell/  Bar, BarClock, BarWorkspaces, BarBattery, BarHardwareGroup,
                          BarTray, BarPowerToggle, BarWifi, BarBluetooth, Capsule widget
@@ -202,6 +203,17 @@ desktop/launcher/quickshell/  AppLauncher, ThemeSwitcher, PowerMenu
 desktop/notifications/quickshell/  NotificationCenter
 desktop/osd/quickshell/  OsdVolume, OsdBrightness (+ BrightnessState service)
 desktop/wallpaper/quickshell/  WallpaperPicker (+ WallpaperState service)
+desktop/quickshell-glass-shared/  glass-only shared layer, imported by every
+                         quickshell-glass component (which pulls in
+                         quickshell-shared/core.nix through it)
+                           palette.nix — Common/Glass.qml, literal tokens, no
+                                         ThemeState binding
+                           surface.nix — Widgets/GlassSurface.qml
+                           wallpaper-state.nix — Services/WallpaperState.qml,
+                                         per-monitor path + accent from one
+                                         watched wallpapers.json
+                           accent.nix  — glass-accent / glass-wallpaper /
+                                         glass-wallpaper-restore
 desktop/quickshell-shared/  shared core (imported by every component's default.nix;
                          NixOS module system deduplicates the import automatically)
                            core.nix — aggregator for shared infrastructure
@@ -292,9 +304,86 @@ Each quickshell component `default.nix` contributes its own variable(s):
 
 **Consequence:** importing `presets/simple.nix` in `users/*/home.nix` automatically wires exec-once (starts the bar), all keybinds (launcher, theme, power, wallpaper) — without touching `keybinds.nix`, `auto-exec.nix`, or `programs.nix`.
 
+**The glass preset is the exception that proves the rule.** It provides `$statusBar`, `$appLauncher`, `$powerMenu` and `$wallpaperManager` exactly as above, but *not* `$themeSwitcher` — it has no themes. A variable that is never defined is not an error in hyprlang; the bind would just exec the literal string `$themeSwitcher`. Since `settings.bind` is a list and home-manager merges lists, a bind cannot be removed by an override, so `wm/hyprland-glass/keybinds.nix` is a fork of the base file with that one line deleted. **If you add a shell variable to `keybinds.nix`, every provider must supply it or fork the file.**
+
 **Swap rule:** to replace quickshell with another shell, remove the quickshell import and add a new module that provides the same variables. `keybinds.nix` and `auto-exec.nix` update with zero changes.
 
 This mirrors how `hardware-layout/` auto-configures monitors: the per-host environment module publishes facts, behavior modules consume them. Shell provider modules publish Hyprland variable facts; keybinds/exec consume them.
+
+## The glass preset — themeless, per-monitor
+
+`presets/glass.nix` is the first preset that opts out of the theme system
+rather than participating in it, and the first where wallpaper is per-output.
+Both are worth knowing before editing it.
+
+**No themes is an import-list decision.** Nothing is disabled at runtime; four
+modules are simply not imported — `launcher/…/theme-switcher.nix`,
+`wm/hyprland/themes.nix`, `theming/gtk/theme-sync.nix`, and the per-theme GTK
+packages. `quickshell-shared/core.nix` is untouched and still generates
+`Common/Theme.qml` and `Services/ThemeState.qml`; the glass modules just never
+import them, reading `Common/Glass.qml` (literal values) instead. That keeps
+`clean` and `simple` working with zero risk. `base.nix` still imports
+`desktop/theme-switcher`, so `theme-set` and the `themeHooks` option still
+exist — under glass it just carries fewer hooks (fish, neovim, spotify,
+superfile; the gtk/hyprland/hyprlock/ghostty hooks are gone with their modules).
+
+**The blur is Hyprland's, not Quickshell's.** A layer surface cannot read the
+pixels behind it. Every glass panel is a transparent `PanelWindow` with a
+translucent child; `wm/hyprland-glass/layer-rules.nix` matches the namespaces
+those surfaces declare (`quickshell:bar`, `:popup`, `:launcher`,
+`:notifications`, `:osd`) and applies `blur = on`. **If a namespace ever
+changes and the rule stops matching, the shell still runs and still looks
+deliberate — just flat.** That is the failure mode to suspect when it looks
+"wrong but fine". `ignore_alpha = 0.08` is what keeps the transparent margins
+of the bar's 50px strip unblurred so only the inset panel is glass.
+
+**The bar never overlaps a window.** The `PanelWindow` is full width with
+`implicitHeight: 50`, which reserves a 50px exclusive zone; Hyprland shrinks
+the tiling area to match (`hyprctl -j monitors` → `reserved: [0, 50, 0, 0]`).
+Consequence worth stating: because windows cannot enter the zone, the glass is
+mostly blurring *wallpaper*. Real content-blur only happens under fullscreen
+windows, floating windows and the launcher scrim.
+
+**Wallpapers are per monitor.** State is one JSON file keyed by output at
+`~/.local/state/quickshell/wallpapers.json`:
+
+```
+{ "DP-1": { "path": "/…/x.jpg", "accent": "#A2C6E2" } }
+```
+
+`glass-wallpaper <monitor> <path>` applies it to that output only
+(`awww img --outputs`, or `mpvpaper <output>` for animated files), derives the
+accent and rewrites the file. `Services/WallpaperState.qml` watches it with a
+single `FileView` — one file rather than one per monitor, because `FileView`
+paths are static per instance and a file-per-monitor scheme would need an
+`Instantiator` over `Quickshell.screens` to build them. `glass-wallpaper-restore`
+replays the whole file on login, which is why `wm/hyprland-glass/auto-exec.nix`
+is a fork: the base restores a single wallpaper to every output.
+
+**The accent is the one thing that moves.** Each screen's bar reads
+`WallpaperState.accentFor(screenName)`. The extractor keeps only the *hue* of
+the most vibrant colour in the image and pins saturation to 52% and lightness
+to 76% — a raw dominant colour is a near-black on most wallpapers, and even a
+vivid one arrives at an arbitrary lightness that either vanishes against the
+glass or shouts over it. Images with no saturated mid-tone (grids, star fields,
+the NixOS logo) fall back to `#EDF0F5`; a greyscale wallpaper getting a white
+accent is the intended answer, not a failure.
+
+**The picker filters by orientation, not by category.** The library is
+`~/Media/Wallpapers/<Orientation>/<Category>/`. Category is a filing system, so
+the scan is recursive and everything lands in one flat carousel; orientation is
+the part the shell can act on. Note it is derived from `ShellScreen`, not from
+`HyprlandMonitor`: **`HyprlandMonitor` has no `transform` property, and its
+`width`/`height` are the physical mode** — a rotated screen still reports
+2560x1440 there. `ShellScreen` is rotation-aware, so the picker matches the
+focused monitor by name against `Quickshell.screens` and asks whether that
+screen is taller than it is wide.
+
+**Qt 6.11 specifics the glass QML relies on.** `font.features` (6.6+) for
+tabular figures, and `font.variableAxes` (6.7+) to drive the Material Symbols
+`FILL` axis — active state is an animation along that axis rather than a colour
+swap or a second glyph. Also: **`font.pixelSize` is an int.** Fractional values
+fail at load with `Invalid property assignment: int expected`.
 
 ## Deferred decisions
 

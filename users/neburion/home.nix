@@ -15,7 +15,7 @@
     ../../modules/home/cli/packager/flatpak.nix
     ../../modules/home/cli/tree.nix
 
-    ../../modules/home/desktop/presets/clean.nix
+    ../../modules/home/desktop/presets/glass.nix
     ../../modules/home/desktop/utils/nautilus.nix
     ../../modules/home/desktop/utils/loupe.nix
     ../../modules/home/desktop/utils/celluloid.nix

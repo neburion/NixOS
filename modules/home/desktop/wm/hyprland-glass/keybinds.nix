@@ -1,0 +1,97 @@
+{ ... }:
+
+# Forked from ../hyprland/keybinds.nix with one line removed: $mod SHIFT +
+# Space no longer runs $themeSwitcher, because the glass preset has no themes
+# to switch. The bind is left unclaimed rather than reassigned.
+#
+# hyprland.settings.bind is a list and home-manager merges lists across
+# modules, so a bind cannot be removed by an override — the file has to be
+# forked. Everything else here is identical to the base.
+
+{
+  wayland.windowManager.hyprland.settings = {
+    "$mod" = "SUPER";
+    bind = [
+      # Apps
+      "$mod,       Return, exec, $terminal"
+      "$mod,       Space,  exec, $appLauncher"
+      "$mod ALT,   Space,  exec, $powerMenu"
+      "$mod,       F,      exec, $fileManager"
+      "$mod,       A,      exec, $audioManager"
+      "$mod SHIFT, Escape, exec, $taskManager"
+      "$mod,       B,      exec, $webBrowser"
+      "$mod,       N,      exec, $notesApp"
+      "$mod,       C,      exec, $messenger"
+      "$mod,       D,      exec, $discord"
+      "$mod,       M,      exec, $musicPlayer"
+      "$mod,       G,      exec, $gameLauncher"
+      "$mod SHIFT, G,      exec, $steamLauncher"
+      "$mod,       P,      exec, keepassxc"
+      "$mod,       W,      exec, $wallpaperManager"
+
+      # Windows (H/J/K/L focus + Shift-move: see movement.nix for cross-monitor)
+      "$mod,       Backspace, killactive"
+      "$mod,       T,         togglefloating"
+
+      # Workspaces
+      "$mod, 1, workspace, 1"
+      "$mod, 2, workspace, 2"
+      "$mod, 3, workspace, 3"
+      "$mod, 4, workspace, 4"
+      "$mod, 5, workspace, 5"
+      "$mod, 6, workspace, 6"
+      "$mod, 7, workspace, 7"
+      "$mod, 8, workspace, 8"
+      "$mod, 9, workspace, 9"
+      "$mod, 0, workspace, 10"
+      "$mod SHIFT, 1, movetoworkspace, 1"
+      "$mod SHIFT, 2, movetoworkspace, 2"
+      "$mod SHIFT, 3, movetoworkspace, 3"
+      "$mod SHIFT, 4, movetoworkspace, 4"
+      "$mod SHIFT, 5, movetoworkspace, 5"
+      "$mod SHIFT, 6, movetoworkspace, 6"
+      "$mod SHIFT, 7, movetoworkspace, 7"
+      "$mod SHIFT, 8, movetoworkspace, 8"
+      "$mod SHIFT, 9, movetoworkspace, 9"
+      "$mod SHIFT, 0, movetoworkspace, 10"
+
+      "$mod, Escape, exec, $locker"
+
+      # Screenshot
+      "$mod,       S, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim -g \"$(slurp)\" \"$f\"; wl-copy < \"$f\"'"
+      "$mod SHIFT, S, exec, sh -c 'f=\"$HOME/Media/Image/Screenshot/$(date +%Y-%m-%d_%H-%M-%S)_screenshot.png\"; mkdir -p \"$(dirname \"$f\")\"; grim \"$f\"; wl-copy < \"$f\"'"
+
+      # Audio
+      "$mod, equal, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+      "$mod, minus, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+    ];
+
+    # Windows (mouse)
+    bindm = [
+      "$mod, mouse:272, movewindow"
+      "$mod, mouse:273, resizewindow"
+    ];
+
+    # Resize active window: SUPER+CTRL+hjkl, 40px steps, hold-to-repeat.
+    binde = [
+      "$mod CTRL, H, resizeactive, -40 0"
+      "$mod CTRL, L, resizeactive,  40 0"
+      "$mod CTRL, K, resizeactive,  0 -40"
+      "$mod CTRL, J, resizeactive,  0  40"
+    ];
+
+    bindel = [
+      # Laptop keys
+      ",XF86AudioRaiseVolume,  exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+      ",XF86AudioLowerVolume,  exec, wpctl set-volume      @DEFAULT_AUDIO_SINK@ 5%-"
+      ",XF86AudioMute,         exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+      ",XF86AudioMicMute,      exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+      ",XF86MonBrightnessUp,   exec, brightness-all 10%+"
+      ",XF86MonBrightnessDown, exec, brightness-all 10%-"
+
+      # External keyboard (no XF86Brightness keys): Super + ] / [ .
+      "$mod, bracketright, exec, brightness-all 10%+"
+      "$mod, bracketleft,  exec, brightness-all 10%-"
+    ];
+  };
+}
