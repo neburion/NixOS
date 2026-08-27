@@ -22,6 +22,6 @@
   gtkTheme       = "Adwaita-dark";
   fishPrimary    = "#C8CBCF";
   fishSecondary  = "#6E737A";
-  superfileTheme = "onedark";
+  superfileTheme = "glass";
   nvimTheme      = "glass";
 }
