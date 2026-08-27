@@ -19,8 +19,12 @@ let
   # PNM family, but with alpha), and replaces the tint with the same rule
   # zathura's reverse-video uses: pixels carrying real chroma are left as the
   # document authored them, grey pixels are redrawn as ink with an alpha taken
-  # from how dark they were. Paper goes fully transparent, antialiasing
-  # survives as partial alpha, and photos come through untouched.
+  # from how dark they were. Paper goes fully transparent, photos come through
+  # untouched, and the ink itself is drawn opaque — its antialiasing blended
+  # here, in sRGB, against the colour the terminal is about to draw. Handing
+  # that antialiasing over as partial alpha instead is what made the first
+  # attempt read thin and grey: the terminal composites it in its own colour
+  # space, and small text is mostly antialiasing.
   #
   # So the page is not painted to resemble the terminal — there is no page
   # ground at all, and what you read on is ghostty's own background, blur and
@@ -31,8 +35,9 @@ let
     patches = (old.patches or [ ]) ++ [ ./transparent-pages.patch ];
   });
 
-  # -b is the ink. -w is left at its default: with the paper transparent there
-  # is no white left to map, and passing either flag is what selects the
+  # -b is the ink; -w is the ground the ink's antialiasing is blended against,
+  # so it must be ghostty's own background colour or every glyph would carry a
+  # halo of the wrong shade. Passing either flag is also what selects the
   # reverse-video path over upstream's tint. `i` still toggles the plain
   # inversion at runtime, for a document that renders wrong.
   hex = lib.removePrefix "#";
@@ -48,7 +53,7 @@ in
 {
   home.packages = [
     (pkgs.writeShellScriptBin "tdf" ''
-      exec ${lib.getExe tdf} -b "${hex t.fg}" "$@"
+      exec ${lib.getExe tdf} -w "${hex t.bg}" -b "${hex t.fg}" "$@"
     '')
   ];
 }

@@ -1,30 +1,26 @@
 diff -ruN a/src/converter.rs b/src/converter.rs
 --- a/src/converter.rs	2026-08-27 06:08:42.007589367 -0400
-+++ b/src/converter.rs	2026-08-27 06:20:43.108664847 -0400
-@@ -126,6 +126,20 @@
- 						})
- 						.for_each(|(_, _, px)| px.0[2] = px.0[2].saturating_sub(u8::MAX / 2));
- 				},
-+			// pages now arrive with an alpha channel; a search hit has to be
-+			// painted opaque or it would be marked on transparent paper and
-+			// so not marked at all
++++ b/src/converter.rs	2026-08-27 06:34:59.107135132 -0400
+@@ -118,6 +118,16 @@
+ 		.map_err(|e| RenderError::Converting(format!("Can't load image: {e}")))?;
+ 
+ 		match dyn_img {
++			// pages now arrive with an alpha channel, so the search-hit tint
++			// has to run over RGBA too; the hit is on opaque ink either way
 +			DynamicImage::ImageRgba8(ref mut img) =>
 +				for quad in &*page_info.result_rects {
 +					img.par_enumerate_pixels_mut()
 +						.filter(|(x, y, _)| {
 +							*x > quad.ul_x && *x < quad.lr_x && *y > quad.ul_y && *y < quad.lr_y
 +						})
-+						.for_each(|(_, _, px)| {
-+							px.0[2] = px.0[2].saturating_sub(u8::MAX / 2);
-+							px.0[3] = px.0[3].max(u8::MAX / 3);
-+						});
++						.for_each(|(_, _, px)| px.0[2] = px.0[2].saturating_sub(u8::MAX / 2));
 +				},
- 			_ => unreachable!()
- 		}
- 
+ 			DynamicImage::ImageRgb8(ref mut img) =>
+ 				for quad in &*page_info.result_rects {
+ 					img.par_enumerate_pixels_mut()
 diff -ruN a/src/renderer.rs b/src/renderer.rs
 --- a/src/renderer.rs	2026-08-27 06:08:42.007680176 -0400
-+++ b/src/renderer.rs	2026-08-27 06:26:19.987025059 -0400
++++ b/src/renderer.rs	2026-08-27 06:34:59.107060284 -0400
 @@ -310,7 +310,7 @@
  						let h = ctx.pixmap.height();
  						let cap = (w * h * u32::from(ctx.pixmap.n())) as usize + 16;
@@ -34,84 +30,85 @@ diff -ruN a/src/renderer.rs b/src/renderer.rs
  							sender.send(Err(RenderError::Doc(e)))?;
  							continue;
  						}
-@@ -446,6 +446,76 @@
+@@ -446,6 +446,77 @@
  	result_rects: Vec<HighlightRect>
  }
  
 +/// Recolour a page the way zathura's `recolor-reverse-video` does, rather than
 +/// by tinting every pixel between two endpoints.
 +///
-+/// Pixels that carry real chroma - photos, coloured figures, syntax
-+/// highlighting - are left exactly as the document authored them. Pixels that
-+/// are grey (which is to say the paper, the text, and the rules) are redrawn
-+/// as `ink` with an alpha taken from how dark they were: black ink becomes
-+/// fully opaque ink, white paper becomes fully transparent, and the
-+/// antialiasing in between survives as partial alpha.
++/// Pixels carrying real chroma — photos, coloured figures, syntax highlighting
++/// — are left exactly as the document authored them. Grey pixels (the paper,
++/// the text, the rules) are judged by how dark they are: paper drops out to
++/// full transparency so the terminal's own background shows through the page,
++/// and everything darker is drawn as ink.
 +///
-+/// The transparent paper is the point: it means the terminal's own background
-+/// - and so its opacity, its blur, and the wallpaper behind it - is what shows
-+/// through the page, instead of a rectangle painted to look similar.
-+///
-+/// mupdf stores samples premultiplied; the values written here are straight,
-+/// which is what the Kitty graphics protocol expects. Fully opaque pixels are
-+/// identical under either reading, so the pixels left untouched don't care.
-+fn reverse_video(pixmap: &mut Pixmap, ink: i32) {
++/// Ink is drawn **opaque**, blended against `paper` here rather than handed to
++/// the terminal as partial alpha. That is the difference between text that
++/// reads and text that doesn't. A glyph at this size is mostly antialiasing,
++/// and antialiasing expressed as alpha gets composited by the terminal in its
++/// own colour space — the result came out thin and grey. Blending it here, in
++/// sRGB, against the colour the terminal is about to draw anyway gives the
++/// same crisp edge zathura produces, and costs only a hairline of terminal
++/// background around each glyph instead of wallpaper.
++fn reverse_video(pixmap: &mut Pixmap, ink: i32, paper: i32) {
 +	// How far apart the channels may be for a pixel to still count as grey.
-+	// Generous enough to catch the off-whites and warm greys that documents
-+	// use for paper, tight enough to leave a washed-out photo alone.
++	// Generous enough to catch the off-whites and warm greys documents use for
++	// paper, tight enough to leave a washed-out photo alone.
 +	const CHROMA_TOLERANCE: u8 = 24;
++	// Below this much ink coverage a pixel is paper, and drops out. Above it,
++	// coverage is stretched across the full ramp so that text which is a dark
++	// grey rather than true black still reaches full ink.
++	const PAPER_FLOOR: u32 = 10;
++	const INK_CEIL: u32 = 150;
 +
 +	let [_, ink_r, ink_g, ink_b] = ink.to_be_bytes();
++	let [_, paper_r, paper_g, paper_b] = paper.to_be_bytes();
 +	let n = pixmap.n() as usize;
 +	if n != 4 {
 +		return;
 +	}
 +
++	let blend = |from: u8, to: u8, t: u32| -> u8 {
++		((u32::from(from) * (255 - t) + u32::from(to) * t) / 255) as u8
++	};
++
 +	for px in pixmap.samples_mut().chunks_exact_mut(n) {
 +		let alpha = px[3];
 +		if alpha == 0 {
-+			// never painted; the page is already showing the terminal here
++			// never painted; the terminal is already showing through here
 +			continue;
 +		}
 +
-+		// undo the premultiplication before judging the colour
++		// undo mupdf's premultiplication before judging the colour
 +		let un = |c: u8| ((u32::from(c) * 255) / u32::from(alpha)).min(255) as u8;
 +		let (r, g, b) = (un(px[0]), un(px[1]), un(px[2]));
 +
-+		let max = r.max(g).max(b);
-+		let min = r.min(g).min(b);
-+		if max - min > CHROMA_TOLERANCE {
++		if r.max(g).max(b) - r.min(g).min(b) > CHROMA_TOLERANCE {
 +			continue;
 +		}
 +
-+		let lightness = ((u32::from(r) + u32::from(g) + u32::from(b)) / 3) as u8;
++		let coverage = u32::from(u8::MAX - ((u32::from(r) + u32::from(g) + u32::from(b)) / 3) as u8);
++		if coverage <= PAPER_FLOOR {
++			px[0] = 0;
++			px[1] = 0;
++			px[2] = 0;
++			px[3] = 0;
++			continue;
++		}
 +
-+		// Straight `255 - lightness` is the honest mapping, but it reads thin:
-+		// at the size a page lands in a terminal most of a glyph is
-+		// antialiasing rather than core, and text that is a dark grey rather
-+		// than true black never reaches full ink at all. Stretching the range
-+		// pushes the core opaque and leaves off-white paper at zero, which
-+		// matters — a few percent of alpha across the whole sheet would put
-+		// the page rectangle back as a veil.
-+		const PAPER_FLOOR: u32 = 16;
-+		const INK_CEIL: u32 = 216;
-+
-+		let coverage = u32::from(u8::MAX - lightness);
-+		px[0] = ink_r;
-+		px[1] = ink_g;
-+		px[2] = ink_b;
-+		px[3] = match coverage {
-+			c if c <= PAPER_FLOOR => 0,
-+			c if c >= INK_CEIL => u8::MAX,
-+			c => (((c - PAPER_FLOOR) * 255) / (INK_CEIL - PAPER_FLOOR)) as u8
-+		};
++		let t = (((coverage - PAPER_FLOOR) * 255) / (INK_CEIL - PAPER_FLOOR)).min(255);
++		px[0] = blend(paper_r, ink_r, t);
++		px[1] = blend(paper_g, ink_g, t);
++		px[2] = blend(paper_b, ink_b, t);
++		px[3] = u8::MAX;
 +	}
 +}
 +
  #[expect(clippy::too_many_arguments)]
  fn render_single_page_to_ctx(
  	page: &Page,
-@@ -484,11 +554,11 @@
+@@ -484,11 +555,11 @@
  	let colorspace = Colorspace::device_rgb();
  	let matrix = Matrix::new_scale(scale_factor, scale_factor);
  
@@ -121,7 +118,7 @@ diff -ruN a/src/renderer.rs b/src/renderer.rs
  		pixmap.tint(white, black)?;
  	} else if black != MUPDF_BLACK || white != MUPDF_WHITE {
 -		pixmap.tint(black, white)?;
-+		reverse_video(&mut pixmap, black);
++		reverse_video(&mut pixmap, black, white);
  	}
  
  	let (x_res, y_res) = pixmap.resolution();
