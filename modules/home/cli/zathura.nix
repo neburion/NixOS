@@ -1,4 +1,4 @@
-{ themes, ... }:
+{ pkgs, lib, themes, ... }:
 
 let
   t = themes.glass;
@@ -12,6 +12,8 @@ let
 
   # ghostty-glass ANSI accents, restated here for the same reason superfile.nix
   # restates them: the shared attrset only carries ground/text colours.
+  desktop = "org.pwmt.zathura-pdf-mupdf.desktop";
+
   red    = "#E8837A";
   yellow = "#D8BE96";
   blue   = "#9FB0C2";
@@ -121,4 +123,34 @@ in
       "[fullscreen] <C-r>" = "recolor";
     };
   };
+
+  # The handler for anything that opens a PDF by mimetype — Nautilus, a
+  # browser download, an attachment in Thunderbird.
+  #
+  # The desktop file is the *plugin's* rather than `org.pwmt.zathura.desktop`,
+  # because that is the one declaring `application/pdf` in its MimeType; the
+  # plain entry declares no types at all. Its `NoDisplay=true` keeps it out of
+  # application menus but does not stop it resolving as a default.
+  #
+  # Written by activation rather than `xdg.mimeApps.defaultApplications`,
+  # which would need `xdg.mimeApps.enable` and so hand the whole of
+  # ~/.config/mimeapps.list to home-manager as a read-only symlink. That file
+  # is not ours alone: Thunderbird registers itself for mailto there, vesktop
+  # for x-scheme-handler/discord, claude-code for claude-cli, all at runtime.
+  # Taking it over means every one of those has to be declared here or be
+  # lost, and any future one silently fails to stick.
+  #
+  # (Which also means the `xdg.mimeApps.defaultApplications` blocks in
+  # ../desktop/utils/loupe.nix and ../desktop/utils/nautilus.nix currently do
+  # nothing at all — the option is set, the module that writes it is not
+  # enabled.)
+  #
+  # Guarded on the current value so it does not rewrite the file on every
+  # activation, and so a deliberate change to another viewer stays changed
+  # until this module is rebuilt.
+  home.activation.zathuraPdfDefault = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ "$(${pkgs.xdg-utils}/bin/xdg-mime query default application/pdf)" != "${desktop}" ]; then
+      ${pkgs.xdg-utils}/bin/xdg-mime default "${desktop}" application/pdf
+    fi
+  '';
 }
