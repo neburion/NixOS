@@ -1,12 +1,12 @@
 diff -ruN a/src/converter.rs b/src/converter.rs
 --- a/src/converter.rs	2026-08-27 06:08:42.007589367 -0400
-+++ b/src/converter.rs	2026-08-27 06:34:59.107135132 -0400
++++ b/src/converter.rs	2026-08-27 07:17:29.943029209 -0400
 @@ -118,6 +118,16 @@
  		.map_err(|e| RenderError::Converting(format!("Can't load image: {e}")))?;
  
  		match dyn_img {
-+			// pages now arrive with an alpha channel, so the search-hit tint
-+			// has to run over RGBA too; the hit is on opaque ink either way
++			// pages now carry an alpha channel, so the search-hit tint has to
++			// run over RGBA too; a hit always lands on opaque ink either way
 +			DynamicImage::ImageRgba8(ref mut img) =>
 +				for quad in &*page_info.result_rects {
 +					img.par_enumerate_pixels_mut()
@@ -20,7 +20,7 @@ diff -ruN a/src/converter.rs b/src/converter.rs
  					img.par_enumerate_pixels_mut()
 diff -ruN a/src/renderer.rs b/src/renderer.rs
 --- a/src/renderer.rs	2026-08-27 06:08:42.007680176 -0400
-+++ b/src/renderer.rs	2026-08-27 06:34:59.107060284 -0400
++++ b/src/renderer.rs	2026-08-27 07:17:29.942941720 -0400
 @@ -310,7 +310,7 @@
  						let h = ctx.pixmap.height();
  						let cap = (w * h * u32::from(ctx.pixmap.n())) as usize + 16;
@@ -30,85 +30,159 @@ diff -ruN a/src/renderer.rs b/src/renderer.rs
  							sender.send(Err(RenderError::Doc(e)))?;
  							continue;
  						}
-@@ -446,6 +446,77 @@
+@@ -446,6 +446,151 @@
  	result_rects: Vec<HighlightRect>
  }
  
-+/// Recolour a page the way zathura's `recolor-reverse-video` does, rather than
-+/// by tinting every pixel between two endpoints.
++/// Recolour a page the way zathura's `recolor-reverse-video` does, but without
++/// the fringe that approach leaves around coloured text.
 +///
-+/// Pixels carrying real chroma — photos, coloured figures, syntax highlighting
-+/// — are left exactly as the document authored them. Grey pixels (the paper,
-+/// the text, the rules) are judged by how dark they are: paper drops out to
-+/// full transparency so the terminal's own background shows through the page,
-+/// and everything darker is drawn as ink.
++/// Grey pixels — the paper, the text, the rules — are judged by how dark they
++/// are. Paper drops out to full transparency, so the terminal's own
++/// background, blur and wallpaper included, is what shows through the page.
++/// Anything darker is drawn as ink, **opaque**, its antialiasing blended here
++/// against `paper` rather than handed to the terminal as partial alpha: a
++/// glyph at this size is mostly antialiasing, and alpha composited by the
++/// terminal in its own colour space came out thin and grey.
 +///
-+/// Ink is drawn **opaque**, blended against `paper` here rather than handed to
-+/// the terminal as partial alpha. That is the difference between text that
-+/// reads and text that doesn't. A glyph at this size is mostly antialiasing,
-+/// and antialiasing expressed as alpha gets composited by the terminal in its
-+/// own colour space — the result came out thin and grey. Blending it here, in
-+/// sRGB, against the colour the terminal is about to draw anyway gives the
-+/// same crisp edge zathura produces, and costs only a hairline of terminal
-+/// background around each glyph instead of wallpaper.
++/// Coloured pixels are the hard case, because "has chroma" describes both a
++/// blue hyperlink and a photograph, and zathura — which tests chroma and
++/// nothing else — leaves both alone. For a photo that is right. For coloured
++/// text it means the near-white pixels along each glyph's edge survive as
++/// bright specks over a page that is now dark, which is the halo.
++///
++/// So chroma is not asked alone. The page is first divided into blocks, and a
++/// block is called paper if most of it is near-white. Text lives on paper:
++/// even a dense line of type leaves most of its block blank. A picture does
++/// not. Coloured pixels inside a paper block are treated as text and get
++/// their lightness flipped with the hue kept, so a dark blue link becomes a
++/// light blue one and its pale edges go dark and vanish into the ground.
++/// Coloured pixels anywhere else are a picture, and are left exactly as the
++/// document authored them.
 +fn reverse_video(pixmap: &mut Pixmap, ink: i32, paper: i32) {
 +	// How far apart the channels may be for a pixel to still count as grey.
-+	// Generous enough to catch the off-whites and warm greys documents use for
-+	// paper, tight enough to leave a washed-out photo alone.
 +	const CHROMA_TOLERANCE: u8 = 24;
-+	// Below this much ink coverage a pixel is paper, and drops out. Above it,
-+	// coverage is stretched across the full ramp so that text which is a dark
-+	// grey rather than true black still reaches full ink.
++	// Below this much ink coverage a pixel is paper and drops out; above it,
++	// coverage is stretched across the ramp so text that is a dark grey rather
++	// than true black still reaches full ink.
 +	const PAPER_FLOOR: u32 = 10;
 +	const INK_CEIL: u32 = 150;
++	// The context test. A block this size is a few glyphs wide; that much of
++	// it being near-white is what separates a line of type from a picture.
++	const BLOCK: usize = 16;
++	const PAPER_LIGHTNESS: u32 = 235;
++	const PAPER_SHARE: u32 = 65;
 +
-+	let [_, ink_r, ink_g, ink_b] = ink.to_be_bytes();
-+	let [_, paper_r, paper_g, paper_b] = paper.to_be_bytes();
 +	let n = pixmap.n() as usize;
 +	if n != 4 {
 +		return;
 +	}
++	let w = pixmap.width() as usize;
++	let h = pixmap.height() as usize;
++	if w == 0 || h == 0 {
++		return;
++	}
 +
-+	let blend = |from: u8, to: u8, t: u32| -> u8 {
-+		((u32::from(from) * (255 - t) + u32::from(to) * t) / 255) as u8
-+	};
++	let [_, ink_r, ink_g, ink_b] = ink.to_be_bytes();
++	let [_, paper_r, paper_g, paper_b] = paper.to_be_bytes();
 +
-+	for px in pixmap.samples_mut().chunks_exact_mut(n) {
-+		let alpha = px[3];
-+		if alpha == 0 {
-+			// never painted; the terminal is already showing through here
-+			continue;
++	let unmultiply = |c: u8, alpha: u8| ((u32::from(c) * 255) / u32::from(alpha)).min(255) as u8;
++
++	let blocks_w = w.div_ceil(BLOCK);
++	let mut paper_px = vec![0u32; blocks_w * h.div_ceil(BLOCK)];
++	let mut total_px = vec![0u32; blocks_w * h.div_ceil(BLOCK)];
++
++	{
++		let samples = pixmap.samples();
++		for y in 0..h {
++			let block_row = (y / BLOCK) * blocks_w;
++			for x in 0..w {
++				let px = &samples[(y * w + x) * n..];
++				let block = block_row + (x / BLOCK);
++				total_px[block] += 1;
++
++				let alpha = px[3];
++				if alpha == 0 {
++					paper_px[block] += 1;
++					continue;
++				}
++				let lightness = (u32::from(unmultiply(px[0], alpha))
++					+ u32::from(unmultiply(px[1], alpha))
++					+ u32::from(unmultiply(px[2], alpha)))
++					/ 3;
++				if lightness >= PAPER_LIGHTNESS {
++					paper_px[block] += 1;
++				}
++			}
 +		}
++	}
 +
-+		// undo mupdf's premultiplication before judging the colour
-+		let un = |c: u8| ((u32::from(c) * 255) / u32::from(alpha)).min(255) as u8;
-+		let (r, g, b) = (un(px[0]), un(px[1]), un(px[2]));
++	let on_paper = paper_px
++		.iter()
++		.zip(&total_px)
++		.map(|(painted, total)| *total > 0 && (painted * 100) / total >= PAPER_SHARE)
++		.collect::<Vec<_>>();
 +
-+		if r.max(g).max(b) - r.min(g).min(b) > CHROMA_TOLERANCE {
-+			continue;
++	let blend =
++		|from: u8, to: u8, t: u32| ((u32::from(from) * (255 - t) + u32::from(to) * t) / 255) as u8;
++
++	let samples = pixmap.samples_mut();
++	for y in 0..h {
++		let block_row = (y / BLOCK) * blocks_w;
++		for x in 0..w {
++			let idx = (y * w + x) * n;
++			let px = &mut samples[idx..idx + n];
++
++			let alpha = px[3];
++			if alpha == 0 {
++				// never painted; the terminal is already showing through here
++				continue;
++			}
++
++			let r = unmultiply(px[0], alpha);
++			let g = unmultiply(px[1], alpha);
++			let b = unmultiply(px[2], alpha);
++			let max = r.max(g).max(b);
++			let min = r.min(g).min(b);
++
++			if max - min > CHROMA_TOLERANCE {
++				if !on_paper[block_row + (x / BLOCK)] {
++					// a picture: exactly as authored
++					continue;
++				}
++				// coloured text: keep the hue, flip the lightness
++				let lightness = (u32::from(max) + u32::from(min)) / 2;
++				if 255 - lightness <= PAPER_FLOOR {
++					px.fill(0);
++					continue;
++				}
++				let shift = 255 - 2 * lightness as i32;
++				let lift = |c: u8| (i32::from(c) + shift).clamp(0, 255) as u8;
++				px[0] = lift(r);
++				px[1] = lift(g);
++				px[2] = lift(b);
++				px[3] = u8::MAX;
++				continue;
++			}
++
++			let coverage = 255 - (u32::from(r) + u32::from(g) + u32::from(b)) / 3;
++			if coverage <= PAPER_FLOOR {
++				px.fill(0);
++				continue;
++			}
++			let t = (((coverage - PAPER_FLOOR) * 255) / (INK_CEIL - PAPER_FLOOR)).min(255);
++			px[0] = blend(paper_r, ink_r, t);
++			px[1] = blend(paper_g, ink_g, t);
++			px[2] = blend(paper_b, ink_b, t);
++			px[3] = u8::MAX;
 +		}
-+
-+		let coverage = u32::from(u8::MAX - ((u32::from(r) + u32::from(g) + u32::from(b)) / 3) as u8);
-+		if coverage <= PAPER_FLOOR {
-+			px[0] = 0;
-+			px[1] = 0;
-+			px[2] = 0;
-+			px[3] = 0;
-+			continue;
-+		}
-+
-+		let t = (((coverage - PAPER_FLOOR) * 255) / (INK_CEIL - PAPER_FLOOR)).min(255);
-+		px[0] = blend(paper_r, ink_r, t);
-+		px[1] = blend(paper_g, ink_g, t);
-+		px[2] = blend(paper_b, ink_b, t);
-+		px[3] = u8::MAX;
 +	}
 +}
 +
  #[expect(clippy::too_many_arguments)]
  fn render_single_page_to_ctx(
  	page: &Page,
-@@ -484,11 +555,11 @@
+@@ -484,11 +629,11 @@
  	let colorspace = Colorspace::device_rgb();
  	let matrix = Matrix::new_scale(scale_factor, scale_factor);
  
