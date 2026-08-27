@@ -1,5 +1,11 @@
 { pkgs, ... }:
 
+let
+  # See ../c-cpp/newc.nix. The shell.nix here used to be a heredoc inside this
+  # script, which had drifted from ~/Projects/Dev/templates/python/shell.nix —
+  # the two differed only in a comment, but they were two copies of one file.
+  templates = ../../templates/python;
+in
 {
   home.packages = [
     (pkgs.writeShellScriptBin "newpy" ''
@@ -10,16 +16,7 @@
 
       mkdir -p "$DIR"/{src,tests}
 
-      cat > "$DIR/shell.nix" << 'NIXEOF'
-{ pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-  packages = [
-    (pkgs.python3.withPackages (ps: with ps; [
-      # add libraries here
-    ]))
-  ];
-}
-NIXEOF
+      install -m 644 ${templates}/shell.nix "$DIR/shell.nix"
 
       touch "$DIR/src/__init__.py"
       cat > "$DIR/src/main.py" << 'PYEOF'
