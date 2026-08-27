@@ -36,29 +36,43 @@ let
       # No plugin: the built-in scheme with its ground repainted to match the
       # rest of the glass preset. nvim's default dark leans blue, which is the
       # one thing this palette is trying not to be.
+      #
+      # The ground groups are cleared to NONE rather than set to `t.bg`.
+      # ghostty-glass runs at background-opacity 0.92 with blur, so any cell
+      # nvim paints itself is opaque and the buffer reads as a solid rectangle
+      # pasted over a translucent terminal — visible as a hard edge against the
+      # window padding. Leaving them unset lets the terminal's own ground show
+      # through, which is the same colour anyway, only translucent.
+      #
+      # Raised surfaces (floats, popup menu, statusline, cursorline, visual)
+      # keep their opaque `surface`/`selection` fill on purpose: they are meant
+      # to sit above the glass, not be part of it.
       glass = ''
         vim.o.background = "dark"
         vim.cmd.colorscheme("default")
 
-        local bg, surface, selection, fg =
-          "${t.bg}", "${t.surface}", "${t.selection}", "${t.fg}"
+        local surface, selection, fg =
+          "${t.surface}", "${t.selection}", "${t.fg}"
+        local NONE = "NONE"
 
         local function hl(group, spec) vim.api.nvim_set_hl(0, group, spec) end
 
-        hl("Normal",       { bg = bg,        fg = fg })
-        hl("NormalNC",     { bg = bg,        fg = fg })
+        hl("Normal",       { bg = NONE,      fg = fg })
+        hl("NormalNC",     { bg = NONE,      fg = fg })
         hl("NormalFloat",  { bg = surface,   fg = fg })
         hl("FloatBorder",  { bg = surface,   fg = "${t.fishSecondary}" })
-        hl("SignColumn",   { bg = bg })
-        hl("FoldColumn",   { bg = bg })
-        hl("EndOfBuffer",  { bg = bg,        fg = bg })
+        hl("SignColumn",   { bg = NONE })
+        hl("FoldColumn",   { bg = NONE })
+        hl("EndOfBuffer",  { bg = NONE,      fg = "${t.bg}" })
+        hl("MsgArea",      { bg = NONE,      fg = fg })
+        hl("NonText",      { bg = NONE })
         hl("CursorLine",   { bg = surface })
         hl("CursorLineNr", { bg = surface,   fg = fg })
-        hl("LineNr",       { bg = bg,        fg = "${t.fishSecondary}" })
+        hl("LineNr",       { bg = NONE,      fg = "${t.fishSecondary}" })
         hl("Visual",       { bg = selection })
         hl("StatusLine",   { bg = surface,   fg = fg })
         hl("StatusLineNC", { bg = surface,   fg = "${t.fishSecondary}" })
-        hl("WinSeparator", { bg = bg,        fg = selection })
+        hl("WinSeparator", { bg = NONE,      fg = selection })
         hl("Pmenu",        { bg = surface,   fg = fg })
         hl("PmenuSel",     { bg = selection, fg = fg })
       '';
