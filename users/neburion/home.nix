@@ -15,6 +15,7 @@
     ../../modules/home/cli/packager/flatpak.nix
     ../../modules/home/cli/tree.nix
     ../../modules/home/cli/xxd.nix
+    ../../modules/home/cli/zathura.nix
 
     ../../modules/home/desktop/presets/glass.nix
     ../../modules/home/desktop/utils/nautilus.nix
