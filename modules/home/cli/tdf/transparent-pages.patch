@@ -1,0 +1,127 @@
+diff -ruN a/src/converter.rs b/src/converter.rs
+--- a/src/converter.rs	2026-08-27 06:08:42.007589367 -0400
++++ b/src/converter.rs	2026-08-27 06:20:43.108664847 -0400
+@@ -126,6 +126,20 @@
+ 						})
+ 						.for_each(|(_, _, px)| px.0[2] = px.0[2].saturating_sub(u8::MAX / 2));
+ 				},
++			// pages now arrive with an alpha channel; a search hit has to be
++			// painted opaque or it would be marked on transparent paper and
++			// so not marked at all
++			DynamicImage::ImageRgba8(ref mut img) =>
++				for quad in &*page_info.result_rects {
++					img.par_enumerate_pixels_mut()
++						.filter(|(x, y, _)| {
++							*x > quad.ul_x && *x < quad.lr_x && *y > quad.ul_y && *y < quad.lr_y
++						})
++						.for_each(|(_, _, px)| {
++							px.0[2] = px.0[2].saturating_sub(u8::MAX / 2);
++							px.0[3] = px.0[3].max(u8::MAX / 3);
++						});
++				},
+ 			_ => unreachable!()
+ 		}
+ 
+diff -ruN a/src/renderer.rs b/src/renderer.rs
+--- a/src/renderer.rs	2026-08-27 06:08:42.007680176 -0400
++++ b/src/renderer.rs	2026-08-27 06:26:19.987025059 -0400
+@@ -310,7 +310,7 @@
+ 						let h = ctx.pixmap.height();
+ 						let cap = (w * h * u32::from(ctx.pixmap.n())) as usize + 16;
+ 						let mut pixels = Vec::with_capacity(cap);
+-						if let Err(e) = ctx.pixmap.write_to(&mut pixels, mupdf::ImageFormat::PNM) {
++						if let Err(e) = ctx.pixmap.write_to(&mut pixels, mupdf::ImageFormat::PAM) {
+ 							sender.send(Err(RenderError::Doc(e)))?;
+ 							continue;
+ 						}
+@@ -446,6 +446,76 @@
+ 	result_rects: Vec<HighlightRect>
+ }
+ 
++/// Recolour a page the way zathura's `recolor-reverse-video` does, rather than
++/// by tinting every pixel between two endpoints.
++///
++/// Pixels that carry real chroma - photos, coloured figures, syntax
++/// highlighting - are left exactly as the document authored them. Pixels that
++/// are grey (which is to say the paper, the text, and the rules) are redrawn
++/// as `ink` with an alpha taken from how dark they were: black ink becomes
++/// fully opaque ink, white paper becomes fully transparent, and the
++/// antialiasing in between survives as partial alpha.
++///
++/// The transparent paper is the point: it means the terminal's own background
++/// - and so its opacity, its blur, and the wallpaper behind it - is what shows
++/// through the page, instead of a rectangle painted to look similar.
++///
++/// mupdf stores samples premultiplied; the values written here are straight,
++/// which is what the Kitty graphics protocol expects. Fully opaque pixels are
++/// identical under either reading, so the pixels left untouched don't care.
++fn reverse_video(pixmap: &mut Pixmap, ink: i32) {
++	// How far apart the channels may be for a pixel to still count as grey.
++	// Generous enough to catch the off-whites and warm greys that documents
++	// use for paper, tight enough to leave a washed-out photo alone.
++	const CHROMA_TOLERANCE: u8 = 24;
++
++	let [_, ink_r, ink_g, ink_b] = ink.to_be_bytes();
++	let n = pixmap.n() as usize;
++	if n != 4 {
++		return;
++	}
++
++	for px in pixmap.samples_mut().chunks_exact_mut(n) {
++		let alpha = px[3];
++		if alpha == 0 {
++			// never painted; the page is already showing the terminal here
++			continue;
++		}
++
++		// undo the premultiplication before judging the colour
++		let un = |c: u8| ((u32::from(c) * 255) / u32::from(alpha)).min(255) as u8;
++		let (r, g, b) = (un(px[0]), un(px[1]), un(px[2]));
++
++		let max = r.max(g).max(b);
++		let min = r.min(g).min(b);
++		if max - min > CHROMA_TOLERANCE {
++			continue;
++		}
++
++		let lightness = ((u32::from(r) + u32::from(g) + u32::from(b)) / 3) as u8;
++
++		// Straight `255 - lightness` is the honest mapping, but it reads thin:
++		// at the size a page lands in a terminal most of a glyph is
++		// antialiasing rather than core, and text that is a dark grey rather
++		// than true black never reaches full ink at all. Stretching the range
++		// pushes the core opaque and leaves off-white paper at zero, which
++		// matters — a few percent of alpha across the whole sheet would put
++		// the page rectangle back as a veil.
++		const PAPER_FLOOR: u32 = 16;
++		const INK_CEIL: u32 = 216;
++
++		let coverage = u32::from(u8::MAX - lightness);
++		px[0] = ink_r;
++		px[1] = ink_g;
++		px[2] = ink_b;
++		px[3] = match coverage {
++			c if c <= PAPER_FLOOR => 0,
++			c if c >= INK_CEIL => u8::MAX,
++			c => (((c - PAPER_FLOOR) * 255) / (INK_CEIL - PAPER_FLOOR)) as u8
++		};
++	}
++}
++
+ #[expect(clippy::too_many_arguments)]
+ fn render_single_page_to_ctx(
+ 	page: &Page,
+@@ -484,11 +554,11 @@
+ 	let colorspace = Colorspace::device_rgb();
+ 	let matrix = Matrix::new_scale(scale_factor, scale_factor);
+ 
+-	let mut pixmap = page.to_pixmap(&matrix, &colorspace, false, false)?;
++	let mut pixmap = page.to_pixmap(&matrix, &colorspace, true, false)?;
+ 	if invert {
+ 		pixmap.tint(white, black)?;
+ 	} else if black != MUPDF_BLACK || white != MUPDF_WHITE {
+-		pixmap.tint(black, white)?;
++		reverse_video(&mut pixmap, black);
+ 	}
+ 
+ 	let (x_res, y_res) = pixmap.resolution();

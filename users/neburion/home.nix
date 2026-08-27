@@ -16,7 +16,7 @@
     ../../modules/home/cli/tree.nix
     ../../modules/home/cli/xxd.nix
     ../../modules/home/cli/zathura.nix
-    ../../modules/home/cli/tdf.nix
+    ../../modules/home/cli/tdf
 
     ../../modules/home/desktop/presets/glass.nix
     ../../modules/home/desktop/utils/nautilus.nix
