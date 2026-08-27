@@ -14,6 +14,7 @@
     ../../modules/home/cli/ai/claude-code.nix
     ../../modules/home/cli/packager/flatpak.nix
     ../../modules/home/cli/tree.nix
+    ../../modules/home/cli/xxd.nix
 
     ../../modules/home/desktop/presets/glass.nix
     ../../modules/home/desktop/utils/nautilus.nix
