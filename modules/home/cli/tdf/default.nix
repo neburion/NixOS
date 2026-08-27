@@ -32,7 +32,19 @@ let
   # f=32, so nothing below the renderer needed touching, and Cargo.lock is
   # untouched, so cargoHash stays valid.
   tdf = pkgs.tdf.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./transparent-pages.patch ];
+    patches = (old.patches or [ ]) ++ [
+      ./transparent-pages.patch
+      # Upstream reads one page at a time — its own source carries a TODO for
+      # "a way to fill the width of the screen with one page and scroll down to
+      # view it". This stacks every page into a single strip instead: pages are
+      # rendered at one width, and each frame sends the terminal the slice of
+      # each page that the viewport covers, so a page can be drawn half on
+      # screen and two pages can share the view across their boundary. It uses
+      # the same display primitive the panning path already used, which is the
+      # reason this was worth doing here rather than in a viewer that scrolls
+      # natively but draws wrong under ghostty.
+      ./continuous-scroll.patch
+    ];
   });
 
   # -b is the ink; -w is the ground the ink's antialiasing is blended against,
