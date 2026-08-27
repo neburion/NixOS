@@ -49,7 +49,6 @@ let
     "Projects"
     "Projects/Dev"
     "Projects/Art"
-    "Projects/Tower"
     "Gaming"
   ];
 in
