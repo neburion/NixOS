@@ -120,6 +120,37 @@
           border-radius: 10px;
         }
 
+        /* Scrolled content dissolves at the panel's bottom edge instead of
+           being guillotined by it. Stock Spotify cuts the bottom row in half
+           exactly the same way — verified by disabling this stylesheet at
+           runtime — but with panel and content sharing one flat colour and no
+           stroke, there was no visible edge for the cut to happen against.
+           Drawing the box is what made it read as broken.
+
+           The overlay is anchored to the panel, not to the scrolled content,
+           so it is painted once and does not repaint as the list moves; that
+           is the reason for a positioned pseudo-element rather than a
+           `mask-image` on the scroller, which would promote it to its own
+           compositing layer for the same look.
+
+           44px is a little under one row: enough that a half-cut row reads as
+           fading out, not so much that the last readable row is dimmed. At the
+           end of a list Spotify already leaves bottom spacing, so nothing
+           permanently sits under the fade. */
+        .Root__main-view::after,
+        .Root__nav-bar::after,
+        .Root__right-sidebar::after {
+          content: "";
+          position: absolute;
+          left: 1px; right: 1px; bottom: 1px;   /* inside the 1px outline */
+          height: 44px;
+          pointer-events: none;
+          z-index: 5;
+          background: linear-gradient(to bottom, transparent, var(--spice-main));
+          border-bottom-left-radius: 9px;
+          border-bottom-right-radius: 9px;
+        }
+
         /* Additive hover, so it tints whatever it lands on rather than
            punching a second opaque grey through the pane. */
         .main-trackList-trackListRow:hover,
