@@ -48,10 +48,28 @@
         .Root__top-container,
         .Root__nav-bar,
         .Root__main-view,
-        .Root__now-playing-bar,
         .Root__right-sidebar,
         .main-topBar-background {
           background-color: var(--spice-main);
+        }
+
+        /* The now-playing bar is pointedly NOT in that list, and must not be
+           added back to it.
+
+           It carries `margin: -8px` with matching padding, so its box bleeds
+           8px past its grid area on every side, and `z-index: 6` puts it above
+           both panels (nav bar is 4, main view is auto). Painted opaque, it
+           covers the bottom 1px band of both — which is exactly where their
+           outline sits. The result is a box whose top edge draws and whose
+           bottom edge does not: the rounded corners survive because the curve
+           bends up out of the covered band, so you get two corners with no
+           stroke between them.
+
+           Transparent instead of opaque. It sits directly on
+           .Root__top-container, which the rule above already paints
+           --spice-main, so it looks identical and stops eating the edge. */
+        .Root__now-playing-bar {
+          background-color: transparent;
         }
 
         /* The album-colour wash. Two elements paint it: the header gradient,
