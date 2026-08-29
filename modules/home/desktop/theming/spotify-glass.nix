@@ -102,6 +102,24 @@
           outline-offset: -1px;
         }
 
+        /* ...and the panels' opaque fillers have to be rounded with them.
+           `.Root__main-view` clips its own content (`overflow: hidden`), so it
+           closes correctly on its own. The other two do not: the library list
+           and the now-playing panel each fill their panel edge to edge with an
+           opaque background at radius 0 and 8, so they painted square corners
+           straight through the rounded outline — the sidebar looked chopped off
+           at the bottom while the main view looked clean.
+
+           Rounding the filler is the fix, not `overflow: hidden` on the panel:
+           `.Root__nav-bar` also holds `LayoutResizer__resize-bar`, an 8px strip
+           positioned just outside its right edge, and clipping the panel would
+           swallow the handle you drag to resize the sidebar. */
+        .main-yourLibraryX-library,
+        .main-yourLibraryX-libraryContainer,
+        .Root__right-sidebar > * {
+          border-radius: 10px;
+        }
+
         /* Additive hover, so it tints whatever it lands on rather than
            punching a second opaque grey through the pane. */
         .main-trackList-trackListRow:hover,
