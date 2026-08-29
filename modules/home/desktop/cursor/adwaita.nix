@@ -7,7 +7,7 @@
 
 let
   name = "Adwaita";
-  size = 15;
+  size = 24;
 in
 {
   home.pointerCursor = {

@@ -30,7 +30,7 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-glass.nix
     ../theming/gtk-glass
-    ../cursor/macos.nix
+    ../cursor/whitesur.nix
     ../theming/spotify-glass.nix
   ];
 

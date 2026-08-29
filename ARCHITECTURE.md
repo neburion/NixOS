@@ -195,7 +195,7 @@ desktop/theming/spotify* spicetify colours — spotify.nix (one color.ini sectio
                          spicetify bakes the scheme into the store path at build
                          time; apps/spotify.nix only installs the player.
 desktop/cursor/          one file per pointer theme — adwaita.nix,
-                         macos.nix, volantes-dark.nix. Each sets
+                         whitesur.nix, phinger-dark.nix. Each sets
                          home.pointerCursor (GTK + ~/.icons) and publishes
                          $cursorTheme/$cursorSize for wm/hyprland/env.nix.
                          Swapping the pointer is one import line in the preset.
