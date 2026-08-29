@@ -12,5 +12,6 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty.nix
     ../theming/gtk
+    ../cursor/adwaita.nix
   ];
 }

@@ -15,6 +15,7 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-clean.nix
     ../theming/gtk
+    ../cursor/adwaita.nix
     ../theming/spotify.nix
   ];
 

@@ -25,9 +25,10 @@
     ];
 
     # Cursor
-    "$cursorSize"  = "15";
+    # Which pointer, and how big, comes from the preset's ../../cursor/* module —
+    # it publishes $cursorTheme and $cursorSize, which env.nix exports. What is
+    # left here is compositor behaviour, which does not vary with the theme.
     "$cursorTime"  = "2";
-    "$cursorTheme" = "Adwaita";
     cursor = {
       inactive_timeout    = "$cursorTime";
       no_hardware_cursors = true;
