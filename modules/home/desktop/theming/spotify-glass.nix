@@ -120,35 +120,41 @@
           border-radius: 10px;
         }
 
-        /* Scrolled content dissolves at the panel's bottom edge instead of
-           being guillotined by it. Stock Spotify cuts the bottom row in half
-           exactly the same way — verified by disabling this stylesheet at
-           runtime — but with panel and content sharing one flat colour and no
-           stroke, there was no visible edge for the cut to happen against.
-           Drawing the box is what made it read as broken.
+        /* Rows come to rest flush with the panel's bottom edge instead of
+           being cut in half by it.
 
-           The overlay is anchored to the panel, not to the scrolled content,
-           so it is painted once and does not repaint as the list moves; that
-           is the reason for a positioned pseudo-element rather than a
-           `mask-image` on the scroller, which would promote it to its own
-           compositing layer for the same look.
+           `proximity`, never `mandatory`. With `scroll-snap-align: end` the
+           only legal rest positions are the ones where a row's bottom meets
+           the viewport's, and scrollTop 0 is not one of them — under
+           `mandatory` Chromium drags you off the top of the list to the
+           nearest legal stop, measured here at 1286px, which lands you past
+           the header and two dozen tracks every time a playlist opens.
+           `proximity` snaps when a snap point is close and otherwise leaves
+           the scroller alone, so the top of the list stays reachable.
 
-           44px is a little under one row: enough that a half-cut row reads as
-           fading out, not so much that the last readable row is dimmed. At the
-           end of a list Spotify already leaves bottom spacing, so nothing
-           permanently sits under the fade. */
-        .Root__main-view::after,
-        .Root__nav-bar::after,
-        .Root__right-sidebar::after {
-          content: "";
-          position: absolute;
-          left: 1px; right: 1px; bottom: 1px;   /* inside the 1px outline */
-          height: 44px;
-          pointer-events: none;
-          z-index: 5;
-          background: linear-gradient(to bottom, transparent, var(--spice-main));
-          border-bottom-left-radius: 9px;
-          border-bottom-right-radius: 9px;
+           `proximity` alone is not enough either: its pull range scales with
+           the viewport, so on a tall window scroll position 0 sits close
+           enough to the first row-aligned stop to be dragged there — measured
+           at 295px, which scrolls the header half out of view the moment a
+           playlist opens. The zero-height `::before` fixes that by making 0 a
+           snap point in its own right, at distance zero, so nothing outranks
+           it. It has to be an empty box rather than the content wrapper
+           itself: a snap area taller than the snapport makes every position
+           where it covers the snapport valid, which would switch the row
+           snapping off across the whole middle of the list.
+
+           What remains, stated plainly: the end of a list is a legal rest
+           position and is not row-aligned, so a partial row can still show
+           when scrolled all the way down. Everywhere else lands flush.
+
+           The viewport is OverlayScrollbars', not a Spotify element, so the
+           handle is its data attribute. That applies snap-type to every
+           scroller in the app, which costs nothing where nothing declares a
+           snap target — only the track list does. */
+        [data-overlayscrollbars-viewport] { scroll-snap-type: y proximity; }
+        .main-trackList-trackListRow      { scroll-snap-align: end; }
+        .main-view-container__scroll-node-child::before {
+          content: ""; display: block; height: 0; scroll-snap-align: start;
         }
 
         /* Additive hover, so it tints whatever it lands on rather than
