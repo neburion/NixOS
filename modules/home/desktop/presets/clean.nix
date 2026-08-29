@@ -15,6 +15,7 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-clean.nix
     ../theming/gtk
+    ../theming/spotify.nix
   ];
 
   home.packages = with pkgs; [

@@ -30,6 +30,7 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-glass.nix
     ../theming/gtk-glass
+    ../theming/spotify-glass.nix
   ];
 
   home.packages = with pkgs; [
@@ -42,12 +43,18 @@
 
   # Pin the tools that are still theme-driven.
   #
-  # neovim, fish, superfile and spotify are CLI modules imported straight from
-  # home.nix, not by any preset — a headless host gets them too — so they keep
-  # following ~/.local/state/quickshell/active-theme. Under glass nothing ever
-  # calls theme-set, so they sit on whatever palette was last chosen and drift
-  # out of step with the desktop; that is why neovim stayed gruvbox long after
-  # the rest of the preset had changed.
+  # neovim, fish and superfile are CLI modules imported straight from home.nix,
+  # not by any preset — a headless host gets them too — so they keep following
+  # ~/.local/state/quickshell/active-theme. Under glass nothing ever calls
+  # theme-set, so they sit on whatever palette was last chosen and drift out of
+  # step with the desktop; that is why neovim stayed gruvbox long after the rest
+  # of the preset had changed.
+  #
+  # Spotify used to be named here too, and it never belonged: its themeHook
+  # shelled out to a `spicetify` binary that is not installed, so every switch
+  # was a no-op and it sat on the `dark` palette regardless. Its colours are
+  # ../theming/spotify-glass.nix now, imported above like any other surface the
+  # preset owns.
   #
   # `themes/glass.nix` gives them a palette that matches, and this runs the
   # hooks once to adopt it. Guarded on the current value, so it does not fight

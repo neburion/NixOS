@@ -64,6 +64,13 @@
         enabled     = true;
         size        = 6;
         passes      = 2;
+        # Blur behind windows whose translucency was forced by an `opacity`
+        # rule rather than painted by the app. Without it Hyprland decides a
+        # window with an opaque surface has nothing to blur behind, and the
+        # Spotify rule in window-opacity.nix would show the desktop sharp
+        # through a dimmed pane. Ghostty is unaffected: its surface alpha is
+        # real, so it was already being blurred.
+        ignore_opacity = true;
         vibrancy    = 0.20;
         noise       = 0.008;
         brightness  = 1.0;

@@ -3,8 +3,10 @@
 # The glass preset itself does not read this — its shell colours are literals
 # in quickshell-glass-shared/palette.nix, because "no themes" means the desktop
 # does not switch. This entry exists for the tools that are still theme-driven
-# by design and live outside any preset: neovim, fish, superfile, spotify. They
-# follow ~/.local/state/quickshell/active-theme, and with nothing ever calling
+# by design and live outside any preset: neovim, fish, superfile. (Spotify was
+# named here until its colours moved into the preset that owns them — see
+# ../desktop/theming/spotify-glass.nix.) They follow
+# ~/.local/state/quickshell/active-theme, and with nothing ever calling
 # theme-set under glass they would otherwise sit on whatever palette was last
 # picked — which is how nvim stayed gruvbox.
 #

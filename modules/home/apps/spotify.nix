@@ -1,55 +1,23 @@
-{ pkgs, lib, themes, ... }:
-let
-  strip = lib.removePrefix "#";
+{ ... }:
 
-  # Build a spicetify color.ini with one section per palette — all derived from
-  # the existing bg/surface/selection/fg/fishPrimary/fishSecondary palette fields.
-  colorIniContent = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: t: ''
-    [${name}]
-    text               = ${strip t.fg}
-    subtext            = ${strip (t.fishSecondary or t.fg)}
-    sidebar-text       = ${strip t.fg}
-    main               = ${strip t.bg}
-    sidebar            = ${strip t.bg}
-    player             = ${strip t.bg}
-    system             = ${strip t.bg}
-    nav                = ${strip t.selection}
-    highlight          = ${strip t.surface}
-    highlight-elevated = ${strip t.selection}
-    header             = ${strip t.bg}
-    button             = ${strip (t.fishPrimary or t.fg)}
-    button-active      = ${strip (t.fishPrimary or t.fg)}
-    button-disabled    = ${strip t.selection}
-    tab-active         = ${strip t.selection}
-    notification       = ${strip (t.fishPrimary or t.fg)}
-    notification-error = f38ba8
-    misc               = ${strip (t.fishPrimary or t.fg)}
-  '') themes);
+# Spotify, unstyled.
+#
+# The colours are not here — they belong to whichever desktop is installed:
+#
+#   ../desktop/theming/spotify.nix        palette-driven (clean, simple)
+#   ../desktop/theming/spotify-glass.nix  the fixed glass scheme
+#
+# Both are imported by their preset, the same way ../desktop/terminal/ghostty*
+# is. A host that imports this file and no preset gets the stock Spotify look,
+# which is the correct answer for a machine with no desktop to match.
+#
+# Why the styling cannot live here: spicetify bakes color.ini into the spiced
+# Spotify derivation at build time, and the result is a read-only store path.
+# There is no runtime switch — `spicetify` isn't even on PATH, and could not
+# write into /nix/store if it were — so the themeHook this file used to
+# register was a no-op from the day it was written. Choosing the scheme is a
+# build-time decision, which makes it the preset's decision.
 
-  # Theme src: spicetify builder does `cp -r src Themes/$name`, so the files
-  # must live at the root of the derivation, not in a named subdirectory.
-  themeDir = pkgs.runCommand "spicetify-nix-palettes" {} ''
-    mkdir -p "$out"
-    cp ${pkgs.writeText "color.ini" colorIniContent} "$out/color.ini"
-    touch "$out/user.css"
-  '';
-in
 {
-  programs.spicetify = {
-    enable = true;
-    theme = {
-      name = "NixPalettes";
-      src = themeDir;
-      requiredExtensions = [];
-    };
-    colorScheme = "dark";
-  };
-
-  themeHooks.spotify = pkgs.writeShellScript "theme-hook-spotify" ''
-    theme="$1"
-    if command -v spicetify >/dev/null 2>&1; then
-      spicetify config colorscheme "$theme" >/dev/null 2>&1 || true
-      spicetify apply >/dev/null 2>&1 || true
-    fi
-  '';
+  programs.spicetify.enable = true;
 }

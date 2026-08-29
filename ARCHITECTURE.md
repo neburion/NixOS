@@ -189,6 +189,11 @@ desktop/wm/hyprland/     env, input, keybinds, looks, monitors, programs, sessio
                          themes, screenshot-tools, hyprlock, auto-exec, enable,
                          window-rules
 desktop/theming/gtk/     per-theme GTK packages + config/dconf/glib/css
+desktop/theming/spotify* spicetify colours — spotify.nix (one color.ini section
+                         per palette), spotify-glass.nix (fixed glass scheme +
+                         user.css). Imported by the preset, not by apps/, because
+                         spicetify bakes the scheme into the store path at build
+                         time; apps/spotify.nix only installs the player.
 desktop/clipboard/       wl-clipboard
 desktop/terminal/        ghostty
 desktop/tray-apps/       libnotify (nm-applet/blueman replaced by native quickshell widgets)
@@ -324,14 +329,22 @@ packages. `quickshell-shared/core.nix` is untouched and still generates
 import them, reading `Common/Glass.qml` (literal values) instead. That keeps
 `clean` and `simple` working with zero risk. `base.nix` still imports
 `desktop/theme-switcher`, so `theme-set` and the `themeHooks` option still
-exist — under glass it just carries fewer hooks (fish, neovim, spotify,
-superfile; the gtk/hyprland/hyprlock/ghostty hooks are gone with their modules).
+exist — under glass it just carries fewer hooks (fish, neovim, superfile; the
+gtk/hyprland/hyprlock/ghostty hooks are gone with their modules). Spotify was
+counted here until its `themeHook` was found to be dead — it called a
+`spicetify` binary that is not installed — and its colours moved to
+`theming/spotify-glass.nix`.
 
 **The blur is Hyprland's, not Quickshell's.** A layer surface cannot read the
 pixels behind it. Every glass panel is a transparent `PanelWindow` with a
 translucent child; `wm/hyprland-glass/layer-rules.nix` matches the namespaces
 those surfaces declare (`quickshell:bar`, `:popup`, `:launcher`,
-`:notifications`, `:osd`) and applies `blur = on`. **If a namespace ever
+`:notifications`, `:osd`) and applies `blur = on`. `wm/hyprland-glass/window-opacity.nix`
+is the window-surface counterpart: Spotify is CEF on XWayland, so it has no
+alpha channel to paint into and gets its translucency from an `opacity` rule
+plus `decoration:blur:ignore_opacity`. That is also why its theme carries no
+`backdrop-filter` — the compositor already runs the blur, and doing it inside
+the renderer instead is what makes glassy spicetify themes stutter. **If a namespace ever
 changes and the rule stops matching, the shell still runs and still looks
 deliberate — just flat.** That is the failure mode to suspect when it looks
 "wrong but fine". `ignore_alpha = 0.08` is what keeps the transparent margins

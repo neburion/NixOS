@@ -8,6 +8,8 @@
 #   - keybinds, looks, auto-exec and hyprlock are forked (see each file).
 #   - layer-rules.nix is new: it is what makes the shell translucent rather
 #     than merely transparent.
+#   - window-opacity.nix is new: the same job for windows that cannot paint
+#     their own transparency (Spotify).
 
 {
   imports = [
@@ -27,5 +29,6 @@
     ../hyprland/session.nix
     ../hyprland/window-rules.nix
     ./looks.nix
+    ./window-opacity.nix
   ];
 }

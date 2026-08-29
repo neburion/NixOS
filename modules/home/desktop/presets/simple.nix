@@ -16,5 +16,6 @@
     ../clipboard/wl-clipboard.nix
     ../terminal/ghostty.nix
     ../theming/gtk
+    ../theming/spotify.nix
   ];
 }
