@@ -63,15 +63,26 @@
            track change. Flat instead, matching every other surface.
 
            `playlist-playlist-` is the playlist route's copy of the action bar;
-           `main-` is the one album, artist and show routes use. Both spellings
-           exist in this Spotify build and neither is a superset of the other,
-           so both are listed rather than reached for with a [class*=] match. */
+           `main-` is the one album, artist, show and Liked Songs use. Both
+           spellings exist in this Spotify build and neither is a superset of
+           the other, so both are listed rather than reached for with a
+           [class*=] match.
+
+           `!important` is load-bearing, not a shortcut. Some routes paint the
+           extracted colour as a gradient, which a plain `background-image:
+           none` beats on cascade order; others write it straight onto the
+           element as `style="background-color: rgb(80,56,160)"` from JS, and an
+           inline declaration outranks any author rule regardless of
+           specificity. `!important` is the one thing that outranks it — author
+           important beats author inline. Without it Liked Songs keeps a purple
+           strip while an ordinary playlist looks correct, which is exactly how
+           this was first shipped. */
         :root { --background-noise: none; }
         .main-entityHeader-backgroundColor,
         .main-actionBarBackground-background,
         .playlist-playlist-actionBarBackground-background {
-          background: var(--spice-main);
-          background-image: none;
+          background-color: var(--spice-main) !important;
+          background-image: none !important;
         }
 
         /* Depth from hairlines, the same rgba(255,255,255,0.11) stroke the
