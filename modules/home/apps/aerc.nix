@@ -86,6 +86,24 @@ in
       trash = "Trash";
     };
 
+    # Reply-as for the azuresalt.app catch-all. aerc's `aliases` takes
+    # fnmatch wildcards in the address portion specifically so a catch-all
+    # domain needs no per-address setup: replying to mail that arrived at
+    # hi@azuresalt.app sets From to hi@azuresalt.app, and the display name
+    # comes from the alias rather than the matched address.
+    #
+    # Deliberately commented out, because enabling it today would break
+    # those replies rather than fix them. Outgoing mail still goes through
+    # Posteo, and Posteo enforces that From matches the authenticated
+    # account — an azuresalt.app sender is rejected, not rewritten. Right
+    # now such a reply goes out as paperkite@posteo.com: the wrong address,
+    # but it does send.
+    #
+    # Uncomment the day outgoing points at an SMTP host that accepts an
+    # arbitrary sender on the domain. Nothing else in this file changes.
+    #
+    # aliases = [ ''"neburion" <*@azuresalt.app>'' ];
+
     aerc.enable = true;
   };
 
@@ -130,6 +148,13 @@ in
 
       compose = {
         editor = "nvim";
+
+        # Put the headers in the editor buffer instead of behind aerc's
+        # prompts, so composing from an arbitrary local part is just typing
+        # over the From line. This is the "write from anything@" half; the
+        # `aliases` wildcard above is the "reply from whatever it arrived
+        # at" half.
+        edit-headers = true;
       };
 
       # `html` and `colorize` ship inside the aerc package under
