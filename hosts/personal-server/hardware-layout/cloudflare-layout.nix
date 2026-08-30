@@ -35,7 +35,10 @@
   # module turns those into declaredTunnels entries, so eldenring, media and
   # reading are all still here, just not written down twice.
   #
-  # A tunnel that belongs to no app — something pointing at a service this
-  # config runs directly — would be declared here.
+  # paisa.azuresalt.app is here too, by the same reasoning applied one level
+  # down: it is not a platform app, so it declares its own tunnel from
+  # modules/system/apps/paisa.nix, next to the port it routes to. Writing the
+  # hostname here as well would mean the port lives in two files and drifts in
+  # one of them.
   config.cloudflare.declaredTunnels = { };
 }

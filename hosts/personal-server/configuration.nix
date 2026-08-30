@@ -16,6 +16,11 @@
 # app.json out of each one; which repos this host runs is declared in
 # hardware-layout/apps-layout.nix. Currently the media tracker (:8778) and the
 # Elden Ring ledger (:8777), both tailnet-only with public Cloudflare tunnels.
+#
+# apps/paisa.nix is the exception, imported directly: expense tracking over an
+# hledger journal, :8779. It is a nixpkgs binary rather than a repo of ours, so
+# there is no app.json to read and nothing for the platform to deploy — only a
+# unit and a state directory. It follows the platform's shape by hand.
 
 {
   imports = [
@@ -38,6 +43,7 @@
     ../../modules/system/console-autologin.nix
     ../../modules/system/power-profiles.nix
     ../../modules/system/apps/platform.nix
+    ../../modules/system/apps/paisa.nix
 
     ../../users/server-admin
 
