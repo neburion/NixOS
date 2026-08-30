@@ -150,9 +150,25 @@ let
 
       yq -i ".user_accounts = [{\"username\": \"${username}\", \"password\": \"sha256:$twice\"}]" "$cfg"
 
-      # Rebuild paisa.db from the journal. Logs one failed Cost Inflation Index
-      # fetch — see the header — and exits 0 regardless.
-      paisa update --config "$cfg"
+      # Rebuild paisa.db from the journal.
+      #
+      # Wrapped in `timeout` because of the Cost Inflation Index fetch in the
+      # header. IPAddressDeny *drops* rather than rejects, so once DNS has
+      # resolved — DNS is loopback, so it succeeds — the connection hangs for
+      # the full 30s HTTP timeout instead of failing fast the way it does with
+      # no route at all. That is 30s of downtime on every deploy.
+      #
+      # The ordering is what makes this safe to cut short: `Syncing
+      # transactions from journal` completes in under a second, and the CII
+      # fetch is the last thing update does. Killing the tail costs nothing
+      # that is not already failing.
+      #
+      # `|| true` swallows a real update failure too, and that is deliberate: a
+      # journal with a typo in it should leave the UI up so the typo can be
+      # fixed from the editor, not refuse to start the only thing that can edit
+      # it. A broken paisa.yaml still fails the unit, because serve parses it
+      # too and there is no ExecStart left to reach.
+      timeout 10s paisa update --config "$cfg" || true
     '';
   };
 in

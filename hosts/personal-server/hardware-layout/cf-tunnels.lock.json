@@ -7,6 +7,10 @@
     "credentialsSecret": "cloudflared-media-azuresalt-app",
     "uuid": "8f1b8c23-a1c2-444e-a2bb-83b7cdbe4eb5"
   },
+  "paisa.azuresalt.app": {
+    "credentialsSecret": "cloudflared-paisa-azuresalt-app",
+    "uuid": "efd52df0-62f8-42c5-89fb-c74ffb4cd78a"
+  },
   "reading.azuresalt.app": {
     "credentialsSecret": "cloudflared-reading-azuresalt-app",
     "uuid": "e44b3fcb-f132-4d06-a154-f3ba334bd396"
