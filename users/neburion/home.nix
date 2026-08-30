@@ -39,5 +39,6 @@
     ../../modules/home/apps/signal.nix
     ../../modules/home/apps/localsend.nix
     ../../modules/home/apps/thunderbird.nix
+    ../../modules/home/apps/aerc.nix
   ];
 }
