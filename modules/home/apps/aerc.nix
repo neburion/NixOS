@@ -104,6 +104,26 @@ in
     #
     # aliases = [ ''"neburion" <*@azuresalt.app>'' ];
 
+    # The above is not quite enough on its own, because of how aerc picks the
+    # From address on reply (commands/msg/reply.go, chooseFromAddr): it builds
+    # a set from the message's From, To and Cc, and if the account's own
+    # `from` is anywhere in that set it wins outright — aliases are only
+    # consulted otherwise. Cloudflare forwards without touching To, so mail to
+    # hi@azuresalt.app normally arrives with To: hi@azuresalt.app and the
+    # wildcard matches. But anything that also lands the Posteo address in
+    # To/Cc silently reverts the reply to paperkite@posteo.com.
+    #
+    # Cloudflare stamps the address the mail was actually routed for into
+    # X-Original-To, and aerc reads exactly one such header, named by
+    # `original-to-header`, folding it into the same set. That makes the match
+    # depend on Cloudflare's own record of the routing rather than on To
+    # surviving intact.
+    #
+    # Live already, and inert: chooseFromAddr returns early when there are no
+    # aliases, so this does nothing until the line above is uncommented.
+    # home-manager has no option for it, hence extraAccounts.
+    aerc.extraAccounts."original-to-header" = "X-Original-To";
+
     aerc.enable = true;
   };
 
