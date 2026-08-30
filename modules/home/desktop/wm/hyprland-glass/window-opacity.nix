@@ -10,7 +10,11 @@
 # Ghostty is not here — it has a real alpha channel and sets its own
 # `background-opacity`, so ../../terminal/ghostty-glass.nix owns that value.
 # Spotify cannot: it is CEF on XWayland, whose window has no alpha channel at
-# all, so anything it paints transparent comes out black. Forcing the opacity
+# all, so anything it paints transparent comes out black. Vesktop is native
+# Wayland and *does* have an alpha channel, but reaching it means turning on
+# Vencord's `transparent` setting, which only applies on a restart; forcing the
+# opacity here works on a window that is already open, which is why Discord is
+# in this list rather than painting its own. Forcing the opacity
 # at the compositor is the only transparency available to it — and it is the
 # cheap one, since the blur is a pass Hyprland already runs for every other
 # window. The alternative, a `backdrop-filter` inside the renderer, is what
@@ -30,6 +34,12 @@
       name        = glass-spotify
       opacity     = 0.92 0.92
       match:class = ^([Ss]potify)$
+    }
+
+    windowrule {
+      name        = glass-vesktop
+      opacity     = 0.92 0.92
+      match:class = ^(vesktop)$
     }
   '';
 }

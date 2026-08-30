@@ -32,6 +32,7 @@
     ../theming/gtk-glass
     ../cursor/breezex-black.nix
     ../theming/spotify-glass.nix
+    ../theming/vesktop-glass.nix
   ];
 
   home.packages = with pkgs; [
