@@ -1,7 +1,7 @@
 { lib, ... }:
 
 # Fleet-wide Cloudflare Email Routing declarations. Behavior:
-# cf-reconcile (see modules/system/rebuild-hooks/cf-reconcile.nix) reads
+# cf-reconcile (see modules/system/services/cloudflare/reconcile.nix) reads
 # these options and reconciles them against the Cloudflare API on every
 # rebuild.
 #

@@ -1,8 +1,13 @@
 { ... }:
 
-# Portable bash entry points for the fleet rebuild workflow. One script per
-# file; each file is a self-contained home-manager module adding its own
-# package. Shared shell fragments live in ./lib.nix.
+# The whole fleet workflow, as one import.
+#
+# A preset, not a module: ../fleet/ is a folder and each script there stands
+# alone, so a host that only ever needs `trebuild` can take that one file.
+# This is for when you want the lot, which on a workstation is always.
+#
+# One script per file; each is a self-contained home-manager module adding its
+# own package. Shared shell fragments live in ../fleet/lib.nix.
 #
 # ┌─────────────┬──────────────────────────────────────┬───────────────────────────┐
 # │ Command     │ Flake source                         │ Semantics                 │
@@ -41,15 +46,15 @@
 #
 # Pre-rebuild hooks (config.rebuild.preHooks — cf-reconcile, future r2
 # reconcilers, etc.) run before every rebuild/trebuild. Non-zero exit
-# aborts before any host is touched. See modules/system/rebuild-hooks/
-# registry.nix.
+# aborts before any host is touched. See modules/tools/fleet/
+# hooks.nix.
 
 {
   imports = [
-    ./nixflash.nix
-    ./rebuild-all.nix
-    ./rebuild.nix
-    ./trebuild.nix
-    ./update.nix
+    ../fleet/nixflash.nix
+    ../fleet/rebuild-all.nix
+    ../fleet/rebuild.nix
+    ../fleet/trebuild.nix
+    ../fleet/update.nix
   ];
 }

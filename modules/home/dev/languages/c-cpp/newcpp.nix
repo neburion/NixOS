@@ -2,7 +2,7 @@
 
 let
   # See newc.nix — same store-backed templates, C++ variant.
-  templates = ../templates/cpp;
+  templates = ../../templates/cpp;
 in
 {
   home.packages = [

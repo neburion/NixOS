@@ -13,23 +13,19 @@
     ../../modules/home/cli/btop.nix
     ../../modules/home/cli/claude-code.nix
     ../../modules/home/cli/compression.nix
-    ../../modules/home/cli/direnv.nix
     ../../modules/home/cli/fastfetch.nix
     ../../modules/home/cli/fish.nix
     ../../modules/home/cli/flatpak.nix
     ../../modules/home/cli/fonts.nix
-    ../../modules/home/cli/git.nix
     ../../modules/home/cli/neovim
     ../../modules/home/cli/superfile.nix
-    ../../modules/home/cli/tokei.nix
     ../../modules/home/cli/tree.nix
     ../../modules/home/cli/xxd.nix
     ../../modules/home/cli/zathura.nix
 
-    ../../modules/tools
+    ../../modules/tools/presets/fleet.nix
 
-    # ── toolchains ──────────────────────────────────────────────────────────
-    ../../modules/home/toolchains
+    ../../modules/home/dev
 
     # ── desktop ─────────────────────────────────────────────────────────────
     ../../modules/home/desktop/glass
@@ -40,15 +36,11 @@
     ../../modules/home/apps/bb-launcher
     ../../modules/home/apps/blender.nix
     ../../modules/home/apps/celluloid.nix
-    ../../modules/home/apps/godot.nix
     ../../modules/home/apps/heroic.nix
-    ../../modules/home/apps/intellij.nix
     ../../modules/home/apps/keepassxc.nix
     ../../modules/home/apps/libnotify.nix
     ../../modules/home/apps/libre-office.nix
-    ../../modules/home/apps/localsend.nix
     ../../modules/home/apps/loupe.nix
-    ../../modules/home/apps/marktext.nix
     ../../modules/home/apps/nautilus.nix
     ../../modules/home/apps/obsidian.nix
     ../../modules/home/apps/osu.nix

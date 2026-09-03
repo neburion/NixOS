@@ -12,11 +12,11 @@
     ../../modules/home/cli/compression.nix
     ../../modules/home/cli/fastfetch.nix
     ../../modules/home/cli/fish.nix
-    ../../modules/home/cli/git.nix
+    ../../modules/home/dev/git.nix
     ../../modules/home/cli/neovim
     ../../modules/home/cli/superfile.nix
     ../../modules/home/cli/tree.nix
 
-    ../../modules/tools
+    ../../modules/tools/presets/fleet.nix
   ];
 }

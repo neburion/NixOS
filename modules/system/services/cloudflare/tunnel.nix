@@ -10,7 +10,7 @@
 #     service = "http://localhost:80";
 #   };
 #
-# The `cf-reconcile` script (see modules/system/rebuild-hooks/cf-reconcile.nix)
+# The `cf-reconcile` script (see modules/system/services/cloudflare/reconcile.nix)
 # runs before every rebuild, calls the Cloudflare API to create any missing
 # tunnels + DNS records, writes credentials into secrets/<host>.yaml (encrypted),
 # and updates the plaintext lock file at hosts/<host>/generated/cf-tunnels.lock.json
@@ -27,7 +27,7 @@
 
 let
   hostName = config.networking.hostName;
-  lockFile = ../../../hosts + "/${hostName}/generated/cf-tunnels.lock.json";
+  lockFile = ../../../../hosts + "/${hostName}/generated/cf-tunnels.lock.json";
   mapping  = if builtins.pathExists lockFile
              then builtins.fromJSON (builtins.readFile lockFile)
              else { };

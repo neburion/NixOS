@@ -90,4 +90,13 @@ in
   # publishing were removed with this change; nothing on the LAN resolves or
   # reaches the printer anymore.
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 80 ];
+
+  # The tunnel is declared here, not by the host, because it exists only
+  # because this UI does — turn the web server off and a tunnel to port 80 is
+  # pointing at nothing. paisa and the app platform already declared their own
+  # this way; the host was the odd one out, and it was the only line in its
+  # policy/cloudflare.nix.
+  cloudflare.declaredTunnels."printer.azuresalt.app" = {
+    service = "http://localhost:80";
+  };
 }

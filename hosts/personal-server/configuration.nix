@@ -40,8 +40,9 @@
     ../../modules/system/hardware/always-on.nix
     ../../modules/system/hardware/power-profiles.nix
 
-    ../../modules/system/network/cloudflare-tunnel.nix
+    ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/network/networkmanager.nix
+    ../../modules/system/network/wifi/bell096.nix
     ../../modules/system/network/ssh.nix
     ../../modules/system/network/tailnet-hosts.nix
     ../../modules/system/network/tailscale.nix
@@ -50,8 +51,8 @@
     ../../modules/system/services/platform.nix
     ../../modules/system/services/restic.nix
 
-    ../../modules/tools/hooks.nix
-    ../../modules/tools/reconcilers/cf.nix
+    ../../modules/tools/fleet/hooks.nix
+    ../../modules/system/services/cloudflare/reconcile.nix
 
     ../../users/server-admin
   ];
