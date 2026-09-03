@@ -28,24 +28,30 @@
     ./policy
     ./generated/hardware.nix
 
-    ../../modules/system/nixos.nix
-    ../../modules/system/backup/restic.nix
-    ../../modules/system/security/sops.nix
-    ../../modules/system/security/sudo.nix
-    ../../modules/system/rebuild-hooks/registry.nix
-    ../../modules/system/rebuild-hooks/cf-reconcile.nix
-    ../../modules/system/locale.nix
+    ../../modules/system/core/nix.nix
+    ../../modules/system/core/locale.nix
+    ../../modules/system/core/sops.nix
+    ../../modules/system/core/sudo.nix
+    ../../modules/system/core/console.nix
+    ../../modules/system/core/fish.nix
+
     ../../modules/system/boot/systemd-boot.nix
-    ../../modules/system/networking/networkmanager.nix
-    ../../modules/system/networking/ssh.nix
-    ../../modules/system/networking/tailscale.nix
-    ../../modules/system/networking/tailnet-hosts.nix
-    ../../modules/system/networking/cloudflare-tunnel.nix
-    ../../modules/system/always-on.nix
-    ../../modules/system/console-autologin.nix
-    ../../modules/system/power-profiles.nix
-    ../../modules/system/apps/platform.nix
-    ../../modules/system/apps/paisa.nix
+
+    ../../modules/system/hardware/always-on.nix
+    ../../modules/system/hardware/power-profiles.nix
+
+    ../../modules/system/network/cloudflare-tunnel.nix
+    ../../modules/system/network/networkmanager.nix
+    ../../modules/system/network/ssh.nix
+    ../../modules/system/network/tailnet-hosts.nix
+    ../../modules/system/network/tailscale.nix
+
+    ../../modules/system/services/paisa.nix
+    ../../modules/system/services/platform.nix
+    ../../modules/system/services/restic.nix
+
+    ../../modules/tools/hooks.nix
+    ../../modules/tools/reconcilers/cf.nix
 
     ../../users/server-admin
   ];

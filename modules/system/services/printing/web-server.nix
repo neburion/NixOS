@@ -49,7 +49,7 @@ in
   # unit is never restarted and the retired password keeps working, while the
   # deploy prints "modifying secret" and "Done.".
   sops.secrets.print-server-password = {
-    sopsFile = ../../../secrets/home-server.yaml;
+    sopsFile = ../../../../secrets/home-server.yaml;
     mode     = "0400";
     owner    = "print-server";
     restartUnits = [ "print-server.service" ];
