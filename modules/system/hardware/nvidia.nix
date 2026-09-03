@@ -2,7 +2,7 @@
 
 # Behavior module. Physical facts (bus IDs, external-display-on-dGPU flag,
 # open-vs-legacy kernel module) come from the host's environment layer at
-# hosts/<host>/hardware-layout/gpu-layout.nix. Import this module only on
+# hosts/<host>/hardware/gpu.nix. Import this module only on
 # hosts with an NVIDIA card.
 
 {

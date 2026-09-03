@@ -38,9 +38,10 @@ NixOS/
 ├── secrets/               sops yaml — one per host, plus common.yaml
 ├── hosts/<host>/
 │   ├── configuration.nix  manifest — imports only
-│   ├── hardware.nix       nixos-generate-config output. Committed. Never hand-edited.
-│   ├── hardware/          physical facts
-│   └── policy/            choices
+│   ├── hardware/          physical facts — what the machine is
+│   ├── policy/            choices — what you decided it does
+│   └── generated/         written by tools, never by hand:
+│                          hardware.nix, cf-tunnels.lock.json
 ├── users/<user>/
 │   ├── default.nix        manifest — imports only
 │   ├── account.nix        users.users.<user>
@@ -68,6 +69,7 @@ NixOS/
 |---|---|
 | `hosts/<h>/hardware/` | Would this change if you swapped the machine but kept its job? |
 | `hosts/<h>/policy/` | Would this change if you kept the machine but changed its job? |
+| `hosts/<h>/generated/` | Did a tool write it? Then nothing here is ever hand-edited. |
 | `modules/system/core/` | Would a box with no disk, no network and no display still want it? |
 | `modules/system/boot/` | Does it decide what happens before the kernel? *(exactly one per host)* |
 | `modules/system/hardware/` | Does this file exist because of a physical device? |

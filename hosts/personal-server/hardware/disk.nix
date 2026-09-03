@@ -4,8 +4,8 @@
 #
 # Consumed by iso/scripts/nixinstall.sh, which runs disko against this file
 # directly (`--arg disk "/dev/sdX"`) — that's why it isn't imported by
-# hardware-layout/default.nix. Post-install the machine's filesystems come
-# from the generated hardware-configuration.nix instead.
+# hardware/default.nix. Post-install the machine's filesystems come
+# from the generated generated/hardware.nix instead.
 #
 # 8G swap rather than home-server's 4G: this box runs my own services and
 # occasionally builds its own closures, and an old laptop's RAM is the first

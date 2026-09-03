@@ -150,9 +150,9 @@ read -rp "Proceed? [y/N] " CONFIRM
 # EXISTING HOST INSTALL
 # ─────────────────────────────────────────────────────────────────────────────
 if ! $NEW_HOST; then
-  DISKO_NIX="$STAGE/repo/hosts/$HOST/hardware-layout/disk-layout.nix"
+  DISKO_NIX="$STAGE/repo/hosts/$HOST/hardware/disk.nix"
   [[ ! -f "$DISKO_NIX" ]] && {
-    printf '%bhosts/%s/hardware-layout/disk-layout.nix not found.\n' "$RED" "$HOST"
+    printf '%bhosts/%s/hardware/disk.nix not found.\n' "$RED" "$HOST"
     printf 'Add a disk layout before installing this host.%b\n' "$NC"
     exit 1
   }
@@ -172,13 +172,19 @@ if ! $NEW_HOST; then
   mkdir -p "$TARGET"
   cp -rT "$STAGE/repo" "$TARGET"
 
-  printf '\n%bGenerating hardware-configuration.nix...%b\n' "$GRN" "$NC"
-  # Written to hosts/$HOST/ which is gitignored — the flake imports
-  # it via `builtins.pathExists ./hardware-configuration.nix` in the
-  # host's configuration.nix, so a github flake fetch (which lacks
-  # this file) won't clobber it.
+  printf '\n%bGenerating generated/hardware.nix...%b\n' "$GRN" "$NC"
+  # This file is COMMITTED, not gitignored, and configuration.nix imports it
+  # unconditionally. (An older comment here claimed the opposite — that it was
+  # gitignored and guarded by builtins.pathExists. Neither was ever true.)
+  #
+  # It matters because `rebuild` deploys from github: a host whose generated
+  # config was never copied back into the repo and committed gets deployed a
+  # config describing someone else's disks. The install itself is fine — this
+  # writes into the repo copy and installs via path: — it is the first rebuild
+  # afterwards that bites. Commit it as a post-install step.
+  mkdir -p "$TARGET/hosts/$HOST/generated"
   nixos-generate-config --root /mnt --show-hardware-config \
-    > "$TARGET/hosts/$HOST/hardware-configuration.nix"
+    > "$TARGET/hosts/$HOST/generated/hardware.nix"
 
   if $INSTALL_SOPS; then
     printf '\n%bInstalling sops age key to /mnt/var/lib/sops-nix/key.txt...%b\n' "$GRN" "$NC"
@@ -191,7 +197,9 @@ if ! $NEW_HOST; then
 
   printf '\n%bInstalling NixOS...%b\n' "$GRN" "$NC"
   # `path:` scheme bypasses git-tracked-only filtering so the freshly
-  # generated (gitignored) hardware-configuration.nix is included.
+  # generated generated/hardware.nix is included — it is committed, but on a
+  # fresh install it does not exist in the staged clone until the line above
+  # writes it.
   nixos-install --flake "path:$TARGET#$HOST" --no-root-passwd
 
   printf '\n%bDone. Reboot when ready.%b\n' "$GRN" "$NC"
@@ -246,7 +254,7 @@ rm -f "$DISKO_TEMP"
 
 # Scaffold the standalone host config
 printf '\n%bScaffolding minimal config at %s...%b\n' "$GRN" "$TARGET" "$NC"
-mkdir -p "$TARGET/hardware-layout"
+mkdir -p "$TARGET/hardware" "$TARGET/generated"
 
 # flake.nix — standalone, no home-manager or modules needed
 cat > "$TARGET/flake.nix" <<NEOF
@@ -269,7 +277,7 @@ NEOF
 {
   printf '{ pkgs, ... }:\n\n'
   printf '{\n'
-  printf '  imports = [ ./hardware-configuration.nix ];\n\n'
+  printf '  imports = [ ./generated/hardware.nix ];\n\n'
   printf '  networking.hostName = "%s";\n\n' "$HOST"
   printf '  boot.loader = {\n'
   printf '    systemd-boot.enable      = true;\n'
@@ -317,11 +325,11 @@ NEOF
   printf '    };\n'
   printf '  };\n'
   printf '}\n'
-} > "$TARGET/hardware-layout/disk-layout.nix"
+} > "$TARGET/hardware/disk.nix"
 
-printf '\n%bGenerating hardware-configuration.nix...%b\n' "$GRN" "$NC"
+printf '\n%bGenerating generated/hardware.nix...%b\n' "$GRN" "$NC"
 nixos-generate-config --root /mnt --show-hardware-config \
-  > "$TARGET/hardware-configuration.nix"
+  > "$TARGET/generated/hardware.nix"
 
 printf '\n%bInstalling NixOS...%b\n' "$GRN" "$NC"
 nixos-install --flake "$TARGET#$HOST" --no-root-passwd

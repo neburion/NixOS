@@ -7,7 +7,7 @@
 #
 # It used to run `hyprctl keyword monitor <name>,<mode>,<pos>,<scale>,transform,N`
 # itself, with <pos> baked from hostConfig at build time — and that was a bug
-# with three faces. The declared positions in hardware-layout are computed for
+# with three faces. The declared positions in hosts/<h>/hardware/displays.nix are computed for
 # landscape, so once a monitor is rotated its effective width shrinks
 # (2560 -> 1440) and `reflow-monitors` repacks the outputs left to right.
 # Re-asserting the declared position afterwards put the monitor back where a

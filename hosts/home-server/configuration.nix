@@ -2,7 +2,9 @@
 
 {
   imports = [
-    ./hardware-layout
+    ./hardware
+    ./policy
+    ./generated/hardware.nix
 
     ../../modules/system/nixos.nix
     ../../modules/system/security/sops.nix
@@ -24,7 +26,5 @@
     ../../modules/system/printing
 
     ../../users/server-admin
-
-    ./hardware-configuration.nix
   ];
 }

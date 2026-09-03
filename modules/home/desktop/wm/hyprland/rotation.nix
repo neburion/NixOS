@@ -82,7 +82,7 @@ let
   };
 
   # A nix rebuild reloads hyprland.conf, which re-applies the declared monitor
-  # lines and drops any runtime rotation. hardware-layout declares the resting
+  # lines and drops any runtime rotation. hosts/<h>/hardware/displays.nix declares the resting
   # orientation so the common case needs no correction at all; this covers the
   # case where the live state differs from it.
   watcher-script = pkgs.writeShellScript "monitor-transforms-watch" ''

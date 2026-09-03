@@ -2,7 +2,9 @@
 
 {
   imports = [
-    ./hardware-layout
+    ./hardware
+    ./policy
+    ./generated/hardware.nix
 
     ../../modules/system/nixos.nix
     ../../modules/system/security/sops.nix
@@ -34,7 +36,5 @@
     ../../modules/system/desktop
 
     ../../users/neburion
-
-    ./hardware-configuration.nix
   ];
 }

@@ -13,18 +13,21 @@
 # The `cf-reconcile` script (see modules/system/rebuild-hooks/cf-reconcile.nix)
 # runs before every rebuild, calls the Cloudflare API to create any missing
 # tunnels + DNS records, writes credentials into secrets/<host>.yaml (encrypted),
-# and updates the plaintext lock file at hosts/<host>/hardware-layout/cf-tunnels.lock.json
+# and updates the plaintext lock file at hosts/<host>/generated/cf-tunnels.lock.json
 # with the hostname → UUID mapping. This module then reads the lock file and
 # generates the concrete `services.cloudflared.tunnels.<uuid>` entries.
 #
 # Two files, distinct concerns:
 #   secrets/<host>.yaml            — sops-encrypted; per-tunnel credentials JSON
-#   hosts/<host>/hardware-layout/  — committed plaintext; hostname → UUID mapping
+#   hosts/<host>/generated/        — committed plaintext; hostname → UUID mapping
 #     cf-tunnels.lock.json           (UUIDs are not sensitive on their own)
+#
+# It lives under generated/ because cf-reconcile writes it and nobody edits it
+# by hand — the same reason hardware.nix is there.
 
 let
   hostName = config.networking.hostName;
-  lockFile = ../../../hosts + "/${hostName}/hardware-layout/cf-tunnels.lock.json";
+  lockFile = ../../../hosts + "/${hostName}/generated/cf-tunnels.lock.json";
   mapping  = if builtins.pathExists lockFile
              then builtins.fromJSON (builtins.readFile lockFile)
              else { };

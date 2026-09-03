@@ -3,7 +3,7 @@
 # The app platform — run a project that lives in its own repo, on this host,
 # behind a URL, without that project containing a line of Nix.
 #
-# A host declares which repos it runs (see hosts/*/hardware-layout/apps-layout.nix):
+# A host declares which repos it runs (see hosts/*/policy/apps.nix):
 #
 #     apps.instances.media-tracker = inputs.media-tracker;
 #

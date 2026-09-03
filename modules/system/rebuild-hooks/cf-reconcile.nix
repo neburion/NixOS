@@ -7,7 +7,7 @@
 #
 # Resources it manages:
 #   - Tunnels + DNS records (per-host declaredTunnels)
-#     Adding: edit hosts/<host>/hardware-layout/cloudflare-layout.nix, or add a
+#     Adding: edit hosts/<host>/policy/cloudflare.nix, or add a
 #             hostname to the `urls` of an app.json — apps/platform.nix turns
 #             those into declaredTunnels entries and they arrive here the same way
 #     Removing: NOT YET (manual via API/dashboard for now)
@@ -86,7 +86,7 @@ let
         declared_json="$(nix eval --json --impure --expr \
           "let cfg = (builtins.getFlake \"path:$REPO\").nixosConfigurations.\"$host\".config.cloudflare.declaredTunnels or {}; in cfg")"
 
-        lock_file="$REPO/hosts/$host/hardware-layout/cf-tunnels.lock.json"
+        lock_file="$REPO/hosts/$host/generated/cf-tunnels.lock.json"
         current_lock="$(cat "$lock_file" 2>/dev/null || echo '{}')"
 
         for hostname in $(echo "$declared_json" | jq -r 'keys[]'); do
@@ -302,7 +302,7 @@ let
       if [[ "$any_changed" == "true" ]]; then
         echo ""
         echo "▸ cf-reconcile made changes — commit updated secrets/*.yaml and"
-        echo "  hosts/*/hardware-layout/cf-tunnels.lock.json files."
+        echo "  hosts/*/generated/cf-tunnels.lock.json files."
       fi
     '';
   };

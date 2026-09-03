@@ -14,7 +14,7 @@
 # The services themselves are no longer modules here. They live in their own
 # repos and are deployed by modules/system/apps/platform.nix, which reads an
 # app.json out of each one; which repos this host runs is declared in
-# hardware-layout/apps-layout.nix. Currently the media tracker (:8778) and the
+# policy/apps.nix. Currently the media tracker (:8778) and the
 # Elden Ring ledger (:8777), both tailnet-only with public Cloudflare tunnels.
 #
 # apps/paisa.nix is the exception, imported directly: expense tracking over an
@@ -24,7 +24,9 @@
 
 {
   imports = [
-    ./hardware-layout
+    ./hardware
+    ./policy
+    ./generated/hardware.nix
 
     ../../modules/system/nixos.nix
     ../../modules/system/backup/restic.nix
@@ -46,7 +48,5 @@
     ../../modules/system/apps/paisa.nix
 
     ../../users/server-admin
-
-    ./hardware-configuration.nix
   ];
 }

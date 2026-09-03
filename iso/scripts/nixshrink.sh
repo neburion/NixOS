@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # In-place shrink of an existing NixOS install to make room for a Windows
 # dual-boot partition. Preserves all data on the root filesystem AND the
-# swap partition's UUID (so hardware-configuration.nix doesn't need changes).
+# swap partition's UUID (so generated/hardware.nix needs no changes).
 #
 # Starting layout: EFI | ext4 root | swap        (swap at end of disk)
 # Final layout:    EFI | ext4 root | swap | NTFS-Windows
@@ -99,7 +99,7 @@ if [ -n "$SWAP_UUID" ]; then
   partprobe "$DISK" || true
   sleep 1
   mkswap -U "$SWAP_UUID" "$SWAP_PART" >/dev/null
-  echo "  -> p3: new position, UUID preserved (hardware-configuration.nix unchanged)"
+  echo "  -> p3: new position, UUID preserved (generated/hardware.nix unchanged)"
 else
   echo -e "  ${YLW}-> no existing swap UUID found; skipping swap relocation${NC}"
 fi
