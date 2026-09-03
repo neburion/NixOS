@@ -180,7 +180,7 @@ in
   users.groups.paisa = { };
 
   sops.secrets.paisa-password = {
-    sopsFile = ../../../secrets + "/${config.networking.hostName}.yaml";
+    sopsFile = ../../../../secrets + "/${config.networking.hostName}.yaml";
     mode = "0400";
     restartUnits = [ "paisa.service" ];
   };

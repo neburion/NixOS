@@ -58,7 +58,7 @@
           sops-nix.nixosModules.sops
           { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
-              canon-cups-ufr2 = final.callPackage ./modules/system/services/printing/canon-cups-ufr2/package.nix {};
+              canon-cups-ufr2 = final.callPackage ./modules/system/services/printing/canon/package.nix {};
               unstable = import inputs.nixpkgs-unstable {
                 inherit system;
                 config.allowUnfree = true;

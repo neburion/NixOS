@@ -22,7 +22,7 @@
 
 {
   sops.secrets.tailscale-auth-key = {
-    sopsFile = ../../../secrets/common.yaml;
+    sopsFile = ../../../../secrets/common.yaml;
     mode     = "0400";
   };
 

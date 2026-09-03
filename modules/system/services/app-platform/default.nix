@@ -276,7 +276,7 @@ in
     sops.secrets = builtins.listToAttrs (concatMap
       (app: map
         (key: nameValuePair (secretName app key) {
-          sopsFile = ../../../secrets/${config.networking.hostName}.yaml;
+          sopsFile = ../../../../secrets/${config.networking.hostName}.yaml;
           mode = "0400";
           restartUnits = [ "${app.name}.service" ];
         })

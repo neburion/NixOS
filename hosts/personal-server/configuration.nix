@@ -28,31 +28,19 @@
     ./policy
     ./generated/hardware.nix
 
-    ../../modules/system/core/nix.nix
-    ../../modules/system/core/locale.nix
-    ../../modules/system/core/sops.nix
-    ../../modules/system/core/sudo.nix
-    ../../modules/system/core/console.nix
-    ../../modules/home/cli/shell/fish/system.nix
+    ../../modules/system/presets/base.nix
+    ../../modules/system/presets/tailnet.nix
+    ../../modules/system/presets/headless.nix
 
     ../../modules/system/boot/systemd-boot.nix
-
-    ../../modules/system/hardware/always-on.nix
-    ../../modules/system/hardware/power-profiles.nix
-
-    ../../modules/system/services/cloudflare/tunnel.nix
-    ../../modules/system/network/networkmanager.nix
     ../../modules/system/network/wifi/bell096.nix
-    ../../modules/system/network/ssh.nix
-    ../../modules/system/network/tailnet-hosts.nix
-    ../../modules/system/network/tailscale.nix
-
-    ../../modules/system/services/paisa.nix
-    ../../modules/system/services/platform.nix
-    ../../modules/system/services/restic.nix
-
-    ../../modules/tools/fleet/hooks.nix
+    ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/reconcile.nix
+    ../../modules/system/services/backup/restic.nix
+    ../../modules/system/services/paisa
+    ../../modules/system/services/app-platform
+
+    ../../modules/home/cli/shell/fish/system.nix
 
     ../../users/server-admin
   ];

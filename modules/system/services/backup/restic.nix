@@ -85,17 +85,17 @@ in
     # Secrets: passphrase + R2 S3 credentials. All fleet-wide in common.yaml.
     sops.secrets = {
       restic-passphrase = {
-        sopsFile = ../../../secrets/common.yaml;
+        sopsFile = ../../../../secrets/common.yaml;
         group    = "restic-backup";
         mode     = "0440";
       };
       r2-backup-access-key-id = {
-        sopsFile = ../../../secrets/common.yaml;
+        sopsFile = ../../../../secrets/common.yaml;
         group    = "restic-backup";
         mode     = "0440";
       };
       r2-backup-secret-access-key = {
-        sopsFile = ../../../secrets/common.yaml;
+        sopsFile = ../../../../secrets/common.yaml;
         group    = "restic-backup";
         mode     = "0440";
       };
