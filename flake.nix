@@ -58,7 +58,12 @@
           sops-nix.nixosModules.sops
           { networking.hostName = host; }
           { nixpkgs.overlays = [(final: prev: {
-              canon-cups-ufr2 = final.callPackage ./modules/system/services/printing/canon/package.nix {};
+              # canon-cups-ufr2 used to be overridden here with a local copy of
+              # the package, added while the nixpkgs PR was still pending. That
+              # copy differed from upstream in four lines — a version pin to
+              # 6.00 — and Canon has since deleted the 6.00 tarball, so the
+              # fork could no longer build at all. nixpkgs carries 6.20 with a
+              # live URL, so the fork is gone and pkgs.canon-cups-ufr2 is used.
               unstable = import inputs.nixpkgs-unstable {
                 inherit system;
                 config.allowUnfree = true;

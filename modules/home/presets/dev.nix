@@ -9,6 +9,7 @@
 {
   imports = [
     ../dev/languages/c-cpp
+    ../dev/languages/java
     ../dev/languages/nix
     ../dev/languages/python
     ../dev/editors/neovim
