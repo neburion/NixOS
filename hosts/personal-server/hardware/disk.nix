@@ -2,7 +2,7 @@
 
 # Small-disk layout for old laptops. Boots UEFI + systemd-boot.
 #
-# Consumed by iso/scripts/nixinstall.sh, which runs disko against this file
+# Consumed by modules/tools/installer/nixinstall.sh, which runs disko against this file
 # directly (`--arg disk "/dev/sdX"`) — that's why it isn't imported by
 # hardware/default.nix. Post-install the machine's filesystems come
 # from the generated generated/hardware.nix instead.

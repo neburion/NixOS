@@ -29,7 +29,7 @@ in
       # NixOS
       cdnixos = "cd $HOME/NixOS";
       # rebuild / trebuild / update: shell-agnostic scripts, see
-      # modules/home/cli/nixos-scripts/
+      # modules/tools/
 
       # Superfile
       spf  = "superfile";

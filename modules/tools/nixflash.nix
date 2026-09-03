@@ -2,9 +2,11 @@
 
 # `nixflash <device>` — build the installer ISO and dd it to a USB stick.
 #
-# Lived in iso/nixflash.nix until now, which meant the tool for *making* the
-# live USB only existed once you had already booted that live USB. It's
-# workstation tooling: any fleet host should be able to write a rescue stick.
+# Once lived in iso/nixflash.nix, which meant the tool for *making* the live
+# USB only existed once you had already booted that live USB. It is workstation
+# tooling: any fleet host should be able to write a rescue stick. It now sits
+# with the rest of the fleet scripts in modules/tools/, while the scripts that
+# genuinely only run *on* the stick are in modules/tools/installer/.
 
 let
   inherit (import ./lib.nix { inherit osConfig; }) cloudFlake;

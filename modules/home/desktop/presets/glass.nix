@@ -26,8 +26,6 @@
     ../notifications/quickshell-glass
     ../osd/quickshell-glass
     ../wallpaper/quickshell-glass
-    ../tray-apps
-    ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-glass.nix
     ../theming/gtk-glass
     ../cursor/breezex-black.nix

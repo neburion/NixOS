@@ -11,8 +11,6 @@
     ../notifications/quickshell-clean
     ../osd/quickshell-clean
     ../wallpaper/quickshell-clean
-    ../tray-apps
-    ../clipboard/wl-clipboard.nix
     ../terminal/ghostty-clean.nix
     ../theming/gtk
     ../cursor/adwaita.nix

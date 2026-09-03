@@ -111,7 +111,7 @@
       #   nixflash /dev/sdX
       installer = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [ ./iso/configuration.nix ];
+        modules = [ ./hosts/installer/configuration.nix ];
       };
     };
   };
