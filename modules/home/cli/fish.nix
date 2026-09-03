@@ -1,16 +1,5 @@
-{ pkgs, lib, themes, ... }:
+{ ... }:
 
-let
-  strip = lib.removePrefix "#";
-  fishColorMap = lib.mapAttrs (_: t: {
-    primary   = strip (t.fishPrimary   or "#ffffff");
-    secondary = strip (t.fishSecondary or "#aaaaaa");
-  }) themes;
-
-  caseLines = lib.concatStringsSep "\n      " (lib.mapAttrsToList (n: c:
-    ''${n}) primary="${c.primary}"; secondary="${c.secondary}" ;;''
-  ) fishColorMap);
-in
 {
   programs.fish = {
     enable = true;
@@ -35,8 +24,11 @@ in
       spf  = "superfile";
       sspf = "sudo superfile";
 
-      # Quickshell
-      qs = "quickshell --path $HOME/NixOS/modules/home/desktop/quickshell-shared";
+      # Quickshell. Points at the generated shell, not at the repo: the .nix
+      # files are what *writes* the QML, they are not QML themselves, so the
+      # old path here could never have loaded. Each preset now materialises its
+      # own shell into the same place, so this stays correct across a swap.
+      qs = "quickshell --path $HOME/.config/quickshell";
 
       # Dev
       cddev = "cd ~/Projects/Dev";
@@ -44,11 +36,16 @@ in
       rmrepo = "git remote remove origin && gh repo delete neburion/(basename $PWD)";
     };
 
-    # Defaults match the `dark` theme (themes/dark.nix). Switching themes via
-    # theme-set overwrites these as universal variables.
+    # Its own colours, literal, matching desktop/glass/palette.nix. This module
+    # used to take the repo-wide `themes` attrset and register a theme-set hook
+    # that rewrote these on every switch — a shell that works over ssh with no
+    # display, following a desktop's palette. A headless server got it too.
+    #
+    # `set -U` is a universal variable, so these apply once and then persist in
+    # fish's own state; changing them here does not move an existing shell.
     interactiveShellInit = ''
-      set -q fish_theme_primary;   or set -U fish_theme_primary   aaaaaa
-      set -q fish_theme_secondary; or set -U fish_theme_secondary 666666
+      set -q fish_theme_primary;   or set -U fish_theme_primary   C8CBCF
+      set -q fish_theme_secondary; or set -U fish_theme_secondary 6E737A
     '';
 
     functions = {
@@ -82,16 +79,4 @@ in
     };
   };
 
-  themeHooks.fish = pkgs.writeShellScript "theme-hook-fish" ''
-    theme="$1"
-    primary="aaaaaa"
-    secondary="666666"
-    case "$theme" in
-      ${caseLines}
-      *) ;;
-    esac
-    ${pkgs.fish}/bin/fish -c \
-      "set -U fish_theme_primary $primary; set -U fish_theme_secondary $secondary" \
-      2>/dev/null || true
-  '';
 }

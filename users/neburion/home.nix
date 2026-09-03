@@ -32,7 +32,7 @@
     ../../modules/home/toolchains
 
     # ── desktop ─────────────────────────────────────────────────────────────
-    ../../modules/home/desktop/presets/glass.nix
+    ../../modules/home/desktop/glass
 
     # ── graphical programs ──────────────────────────────────────────────────
     ../../modules/home/apps/aerc.nix

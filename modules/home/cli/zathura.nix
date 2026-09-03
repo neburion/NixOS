@@ -1,11 +1,28 @@
-{ pkgs, lib, themes, ... }:
+{ pkgs, lib, ... }:
 
 let
-  t = themes.glass;
+  # Its own colours, literal. This module used to read the repo-wide `themes`
+  # attrset injected by flake.nix and pick `themes.glass` out of it — a
+  # terminal program reaching into a desktop's palette from four trees away,
+  # which is what DESIGN.md L8 is about. It also meant a headless server
+  # imported a desktop's colour scheme to render a PDF.
+  #
+  # These match desktop/glass/palette.nix. They are a copy, and if that palette
+  # moves this does not follow — which is the honest trade for not having a
+  # repo-wide theme, and is exactly the coupling that let nvim sit on gruvbox
+  # for months while the desktop had changed.
+  t = {
+    bg            = "#101113";
+    surface       = "#191B1E";
+    selection     = "#26282C";
+    fg            = "#E8EAEC";
+    fishPrimary   = "#C8CBCF";
+    fishSecondary = "#6E737A";
+  };
 
-  # themes/glass.nix carries the grounds as hex; zathura needs alpha on the
-  # ones that should let the compositor through, so those are restated as
-  # rgba() literals of the same values:
+  # The grounds above are hex; zathura needs alpha on the ones that should let
+  # the compositor through, so those are restated as rgba() literals of the
+  # same values:
   #   bg #101113 -> 16,17,19   surface #191B1E -> 25,27,30
   ground  = a: "rgba(16,17,19,${a})";
   raised  = a: "rgba(25,27,30,${a})";

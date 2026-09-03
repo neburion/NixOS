@@ -49,8 +49,6 @@
 
   outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:
   let
-    themes = import ./modules/home/themes;
-
     mkSystem = { host, system ? "x86_64-linux", withHomeManager ? true }:
       nixpkgs.lib.nixosSystem {
         inherit system;
@@ -83,10 +81,13 @@
                   backlight = config.backlight or {};
                 };
               };
+              # No `themes` arg. A repo-wide palette injected into every
+              # home-manager module is how a headless server ended up wired to
+              # a desktop's colour scheme; each desktop owns its palettes now,
+              # and CLI programs carry their own. See DESIGN.md L8.
               sharedModules = [
                 nvf.homeManagerModules.default
                 spicetify-nix.homeManagerModules.default
-                { _module.args.themes = themes; }
               ];
             };
           })

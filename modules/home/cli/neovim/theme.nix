@@ -1,148 +1,74 @@
-{ pkgs, lib, themes, ... }:
+{ ... }:
 
 let
-  # Lua snippet per palette. Each must call any required setup() and then
-  # `vim.cmd.colorscheme(...)`. Re-sourceable: works as both first-load and
-  # live-switch.
+  # Its own colours, literal, matching desktop/glass/palette.nix.
   #
-  # Takes the whole palette rather than just `nvimTheme`, so a snippet can be
-  # written against the palette's own colours instead of restating them.
-  mkSnippet = t: let name = t.nvimTheme; in ''
-    -- ${name}
-    ${ {
-      catppuccin = ''
-        require('catppuccin').setup { flavour = "mocha", term_colors = true }
-        vim.cmd.colorscheme("catppuccin")
-      '';
-      gruvbox = ''
-        require('gruvbox').setup { terminal_colors = true, contrast = "" }
-        vim.o.background = "dark"
-        vim.cmd.colorscheme("gruvbox")
-      '';
-      nord = ''
-        require('nord').setup { transparent = false, search = "vscode" }
-        vim.cmd.colorscheme("nord")
-      '';
-      everforest = ''
-        vim.g.everforest_background = "medium"
-        vim.g.everforest_transparent_background = 0
-        vim.o.background = "dark"
-        vim.cmd.colorscheme("everforest")
-      '';
-      default = ''
-        vim.o.background = "dark"
-        vim.cmd.colorscheme("default")
-      '';
-      # No plugin: the built-in scheme with its ground repainted to match the
-      # rest of the glass preset. nvim's default dark leans blue, which is the
-      # one thing this palette is trying not to be.
-      #
-      # The ground groups are cleared to NONE rather than set to `t.bg`.
-      # ghostty-glass runs at background-opacity 0.92 with blur, so any cell
-      # nvim paints itself is opaque and the buffer reads as a solid rectangle
-      # pasted over a translucent terminal — visible as a hard edge against the
-      # window padding. Leaving them unset lets the terminal's own ground show
-      # through, which is the same colour anyway, only translucent.
-      #
-      # Raised surfaces (floats, popup menu, statusline, cursorline, visual)
-      # keep their opaque `surface`/`selection` fill on purpose: they are meant
-      # to sit above the glass, not be part of it.
-      glass = ''
-        vim.o.background = "dark"
-        vim.cmd.colorscheme("default")
-
-        local surface, selection, fg =
-          "${t.surface}", "${t.selection}", "${t.fg}"
-        local NONE = "NONE"
-
-        local function hl(group, spec) vim.api.nvim_set_hl(0, group, spec) end
-
-        hl("Normal",       { bg = NONE,      fg = fg })
-        hl("NormalNC",     { bg = NONE,      fg = fg })
-        hl("NormalFloat",  { bg = surface,   fg = fg })
-        hl("FloatBorder",  { bg = surface,   fg = "${t.fishSecondary}" })
-        hl("SignColumn",   { bg = NONE })
-        hl("FoldColumn",   { bg = NONE })
-        hl("EndOfBuffer",  { bg = NONE,      fg = "${t.bg}" })
-        hl("MsgArea",      { bg = NONE,      fg = fg })
-        hl("NonText",      { bg = NONE })
-        hl("CursorLine",   { bg = surface })
-        hl("CursorLineNr", { bg = surface,   fg = fg })
-        hl("LineNr",       { bg = NONE,      fg = "${t.fishSecondary}" })
-        hl("Visual",       { bg = selection })
-        hl("StatusLine",   { bg = surface,   fg = fg })
-        hl("StatusLineNC", { bg = surface,   fg = "${t.fishSecondary}" })
-        hl("WinSeparator", { bg = NONE,      fg = selection })
-        hl("Pmenu",        { bg = surface,   fg = fg })
-        hl("PmenuSel",     { bg = selection, fg = fg })
-      '';
-    }.${name} }
-  '';
-
-  # Map palette name → lua snippet, using each palette's `nvimTheme` field.
-  themeSnippets = lib.mapAttrs (_: t: mkSnippet t) themes;
-in
-{
-  # Install all colorscheme plugins (nvf's npins-pinned versions). They sit
-  # in the runtime path; the active.lua snippet picks which to load.
-  programs.nvf.settings.vim = {
-    theme.enable = false;
-
-    startPlugins = [ "catppuccin" "gruvbox" "nord" "everforest" ];
-
-    luaConfigPost = ''
-      -- Theme switcher integration
-      do
-        local active = vim.fn.expand("~/.config/nvf/themes/active.lua")
-
-        local function load_theme()
-          if vim.fn.filereadable(active) == 1 then
-            pcall(vim.cmd, "luafile " .. vim.fn.fnameescape(active))
-          end
-        end
-
-        vim.api.nvim_create_user_command("ThemeReload", load_theme, {})
-
-        -- Register a per-PID server socket so the switcher can reach this
-        -- instance. Stored in a well-known dir for easy globbing.
-        local runtime = vim.env.XDG_RUNTIME_DIR or "/tmp"
-        local sock_dir = runtime .. "/nvim-theme"
-        vim.fn.mkdir(sock_dir, "p")
-        local sock = string.format("%s/%d.sock", sock_dir, vim.fn.getpid())
-        pcall(vim.fn.serverstart, sock)
-        vim.api.nvim_create_autocmd("VimLeavePre", {
-          callback = function() pcall(os.remove, sock) end,
-        })
-
-        load_theme()
-      end
-    '';
+  # This module used to take the repo-wide `themes` attrset, write one lua
+  # snippet per palette, install four colorscheme plugins, and register a
+  # theme-set hook that re-sourced the active snippet over a per-PID IPC
+  # socket — all so an editor that runs fine over ssh would follow the
+  # desktop's palette.
+  #
+  # That machinery is also what hid the bug it existed to solve. glass never
+  # calls theme-set, so nvim kept whatever was last selected and sat on gruvbox
+  # for months after the desktop had changed. One palette, written down here,
+  # cannot drift from itself.
+  t = {
+    bg            = "#101113";
+    surface       = "#191B1E";
+    selection     = "#26282C";
+    fg            = "#E8EAEC";
+    fishSecondary = "#6E737A";
   };
 
-  # Per-theme lua snippets, plus initial symlink to dark on first activation.
-  xdg.configFile = lib.mapAttrs' (name: snippet:
-    lib.nameValuePair "nvf/themes/${name}.lua" { text = snippet; }
-  ) themeSnippets;
+  # No plugin: the built-in scheme with its ground repainted. nvim's default
+  # dark leans blue, which is the one thing this palette is trying not to be.
+  #
+  # The ground groups are cleared to NONE rather than set to `t.bg`. The
+  # terminal runs at background-opacity 0.92 with blur, so any cell nvim paints
+  # itself is opaque and the buffer reads as a solid rectangle pasted over a
+  # translucent window — visible as a hard edge against the padding. Leaving
+  # them unset lets the terminal's own ground show through, which is the same
+  # colour anyway, only translucent.
+  #
+  # Raised surfaces (floats, popup menu, statusline, cursorline, visual) keep
+  # their opaque surface/selection fill on purpose: they are meant to sit above
+  # the glass, not be part of it.
+  theme = ''
+    vim.o.background = "dark"
+    vim.cmd.colorscheme("default")
 
-  home.activation.initNvimTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    ACTIVE="$HOME/.config/nvf/themes/active.lua"
-    if [ ! -e "$ACTIVE" ]; then
-      mkdir -p "$(dirname "$ACTIVE")"
-      ln -sf "$HOME/.config/nvf/themes/dark.lua" "$ACTIVE"
-    fi
-  '';
+    local surface, selection, fg =
+      "${t.surface}", "${t.selection}", "${t.fg}"
+    local NONE = "NONE"
 
-  themeHooks.neovim = pkgs.writeShellScript "theme-hook-neovim" ''
-    theme="$1"
-    NVIM_THEMES="$HOME/.config/nvf/themes"
-    if [ -f "$NVIM_THEMES/$theme.lua" ]; then
-      ln -sf "$NVIM_THEMES/$theme.lua" "$NVIM_THEMES/active.lua"
-      runtime="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
-      for sock in "$runtime"/nvim-theme/*.sock; do
-        [ -S "$sock" ] || continue
-        ${pkgs.neovim-unwrapped}/bin/nvim --server "$sock" \
-          --remote-expr 'execute("ThemeReload")' >/dev/null 2>&1 || true
-      done
-    fi
+    local function hl(group, spec) vim.api.nvim_set_hl(0, group, spec) end
+
+    hl("Normal",       { bg = NONE,      fg = fg })
+    hl("NormalNC",     { bg = NONE,      fg = fg })
+    hl("NormalFloat",  { bg = surface,   fg = fg })
+    hl("FloatBorder",  { bg = surface,   fg = "${t.fishSecondary}" })
+    hl("SignColumn",   { bg = NONE })
+    hl("FoldColumn",   { bg = NONE })
+    hl("EndOfBuffer",  { bg = NONE,      fg = "${t.bg}" })
+    hl("MsgArea",      { bg = NONE,      fg = fg })
+    hl("NonText",      { bg = NONE })
+    hl("CursorLine",   { bg = surface })
+    hl("CursorLineNr", { bg = surface,   fg = fg })
+    hl("LineNr",       { bg = NONE,      fg = "${t.fishSecondary}" })
+    hl("Visual",       { bg = selection })
+    hl("StatusLine",   { bg = surface,   fg = fg })
+    hl("StatusLineNC", { bg = surface,   fg = "${t.fishSecondary}" })
+    hl("WinSeparator", { bg = NONE,      fg = selection })
+    hl("Pmenu",        { bg = surface,   fg = fg })
+    hl("PmenuSel",     { bg = selection, fg = fg })
   '';
+in
+{
+  # No startPlugins: catppuccin, gruvbox, nord and everforest were installed
+  # only so a switcher could pick between them at runtime. Nothing switches now.
+  programs.nvf.settings.vim = {
+    theme.enable = false;
+    luaConfigPost = theme;
+  };
 }
