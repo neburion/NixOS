@@ -4,5 +4,10 @@
 # is a home preset; this is only the stack underneath it.
 
 {
-  imports = [ ../session ];
+  imports = [
+    ../session/dconf.nix
+    ../session/sddm.nix
+    ../session/wayland-env.nix
+    ../session/xdg-portal.nix
+  ];
 }

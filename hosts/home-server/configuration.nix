@@ -14,7 +14,8 @@
 
     ../../modules/system/boot/systemd-boot.nix
     ../../modules/system/network/wifi/bell096.nix
-    ../../modules/system/services/printing
+    ../../modules/system/services/printing/canon
+    ../../modules/system/services/printing/web-ui.nix
     ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/email.nix
     ../../modules/system/services/cloudflare/r2.nix
