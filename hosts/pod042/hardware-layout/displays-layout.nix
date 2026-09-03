@@ -28,14 +28,23 @@
     # restore-monitor-transforms replays that over these declarations on the
     # next reload. This is the resting orientation, not a lock.
     #
+    # Keeping these in step with the state dir is not optional. On 2026-09-02
+    # HDMI-A-1 was rotated to landscape at runtime, which persisted to the
+    # state dir but not here, and every rebuild then played the disagreement
+    # out in full: the reload rotated it back to portrait and pulled eDP-1
+    # left to 2520, the watcher rotated it to landscape again and pushed
+    # eDP-1 back to 3640. Two modesets on two outputs, and anything fullscreen
+    # got resized underneath it twice. If you rotate an output and mean it,
+    # update the transform AND repack every position to its right.
+    #
     #   DP-1      transform 3 -> 1080 wide ->    0 ..1080
-    #   HDMI-A-1  transform 3 -> 1440 wide -> 1080 ..2520
-    #   eDP-1     transform 0 -> 1920 wide -> 2520 ..4440
+    #   HDMI-A-1  transform 0 -> 2560 wide -> 1080 ..3640
+    #   eDP-1     transform 0 -> 1920 wide -> 3640 ..5560
     monitors = {
       builtin = {
         name     = "eDP-1";
         mode     = "1920x1080@144";
-        position = "2520x0";
+        position = "3640x0";
         scale    = "1";
       };
       external = {
@@ -43,7 +52,7 @@
         mode      = "2560x1440@144";
         position  = "1080x0";
         scale     = "1";
-        transform = 3;
+        transform = 0;
       };
       secondary = {
         name      = "DP-1";
