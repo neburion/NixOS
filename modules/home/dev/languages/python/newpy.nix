@@ -4,7 +4,7 @@ let
   # See ../c-cpp/newc.nix. The shell.nix here used to be a heredoc inside this
   # script, which had drifted from ~/Projects/Dev/templates/python/shell.nix —
   # the two differed only in a comment, but they were two copies of one file.
-  templates = ../../templates/python;
+  templates = ./templates;
 in
 {
   home.packages = [

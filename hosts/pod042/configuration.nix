@@ -11,7 +11,6 @@
     ../../modules/system/core/locale.nix
     ../../modules/system/core/sops.nix
     ../../modules/system/core/sudo.nix
-    ../../modules/system/core/fish.nix
 
     ../../modules/system/boot/limine.nix
 
@@ -19,7 +18,6 @@
     ../../modules/system/hardware/bluetooth.nix
     ../../modules/system/hardware/brightness.nix
     ../../modules/system/hardware/lid.nix
-    ../../modules/system/hardware/logitech.nix
     ../../modules/system/hardware/nvidia.nix
     ../../modules/system/hardware/power-profiles.nix
     ../../modules/system/hardware/touchpad.nix
@@ -36,6 +34,14 @@
     ../../modules/system/network/tailscale.nix
 
     ../../modules/system/session
+
+    # System halves of modules that live with their owner under modules/home.
+    ../../modules/home/cli/shell/fish/system.nix
+    ../../modules/home/cli/flatpak/system.nix
+    ../../modules/home/gaming/launchers/steam/system.nix
+    ../../modules/home/peripherals/logitech/system.nix
+    ../../modules/home/desktop/glass/wm/system.nix
+    ../../modules/home/desktop/glass/components/wayvnc/system.nix
 
     ../../modules/system/services/restic.nix
 

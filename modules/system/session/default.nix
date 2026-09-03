@@ -1,25 +1,23 @@
 { ... }:
 
-# Everything a graphical login needs before a desktop preset can run.
+# What a graphical login needs before any desktop is chosen: a greeter, the
+# portal plumbing, the Wayland environment, and dconf for the GTK stack.
 #
-# Nothing here decides how anything looks — that is the preset's job, and it
-# lives entirely under modules/home/desktop/. This is the display stack: a
-# greeter, a compositor the greeter can start, portals, fonts, and the two
-# package managers whose payload is GUI applications.
+# Nothing here decides how anything looks, and nothing here is a program.
+# What left, and where it went:
 #
-# Replaces the old modules/system/desktop/ tree, which mirrored
-# modules/home/desktop/ in name only. They were never the same concern — one is
-# a display stack, the other is a rice — and the shared name is why both grew a
-# desktop/ meaning different things.
+#   hyprland.nix  → each preset's wm/system.nix   the compositor is the rice's
+#   fonts.nix     → each preset's fonts/          faces belong to what renders
+#   steam.nix     → gaming/launchers/steam/       a store, not a prerequisite
+#   flatpak.nix   → cli/flatpak/system.nix        a package manager
+#
+# All four were filed here because they needed a NixOS option, not because a
+# graphical login needs them.
 
 {
   imports = [
     ./dconf.nix
-    ./flatpak.nix
-    ./fonts.nix
-    ./hyprland.nix
     ./sddm.nix
-    ./steam.nix
     ./wayland-env.nix
     ./xdg-portal.nix
   ];

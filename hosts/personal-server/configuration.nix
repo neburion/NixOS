@@ -33,7 +33,7 @@
     ../../modules/system/core/sops.nix
     ../../modules/system/core/sudo.nix
     ../../modules/system/core/console.nix
-    ../../modules/system/core/fish.nix
+    ../../modules/home/cli/shell/fish/system.nix
 
     ../../modules/system/boot/systemd-boot.nix
 

@@ -1,12 +1,12 @@
 { pkgs, ... }:
 
 let
-  # Project skeletons live in modules/home/dev/templates. Referencing the path
+  # Project skeletons live in this language's templates/. Referencing the path
   # copies it into the store, which makes the scaffolding self-contained —
   # these files used to be read from ~/Projects/Dev/templates at runtime, so
   # `newc` produced a project missing its build files on any host (or any fresh
   # checkout) where that directory did not happen to exist.
-  templates = ../../templates/c;
+  templates = ./templates/c;
 in
 {
   home.packages = [
