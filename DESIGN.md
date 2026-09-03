@@ -137,8 +137,20 @@ Hosts import system modules. Users import home modules. No user directory reache
 `modules/system/`. No module reaches into `hosts/`.
 
 **L6 — A name is a file or a directory, never both.**
-No `foo.nix` beside `foo/`. And no directory holds a single file — that is a label
-pretending to be structure. Promote it or collapse it.
+No `foo.nix` beside `foo/`. And no directory holds a single file *purely to name a
+genre* — that is a label pretending to be structure. `cli/ai/`, `cli/shell/`,
+`dev/ides/` and the seven others like them were exactly that, and are gone.
+
+The rule is about labels, not about counting files. Three directories hold one file
+for a reason and stay:
+
+| Directory | Why it is not a label |
+|---|---|
+| `hosts/installer/` | A host is a host. It has no `hardware/` because it is not a machine. |
+| `modules/tools/reconcilers/` | L3 requires a claimant to sit outside its owner's directory. |
+| `toolchains/templates/<lang>/` | Data, uniform with its siblings; `python` needs one file, `c` needs three. |
+
+If you want to add a fourth, it belongs in this table with a reason, or it is a label.
 
 **L7 — Fact, choice and generated state are three things.**
 What the machine *is*, what you decided it *does*, what a tool wrote. Never one directory.
