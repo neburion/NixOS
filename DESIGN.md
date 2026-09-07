@@ -87,7 +87,7 @@ NixOS/
     │   │   └── networkmanager  ssh  avahi  syncthing
     │   ├── session/    sddm  portals  wayland-env  dconf
     │   ├── services/
-    │   │   ├── printing/   canon/ = module   web-ui.nix
+    │   │   ├── printing/   canon/ = module   web-ui.nix   server.py   pwa/
     │   │   ├── cloudflare/ tunnel  email  r2  reconcile
     │   │   ├── backup/     restic
     │   │   └── app-platform/ = module

@@ -15,7 +15,13 @@ let
       pkgs.sane-backends
       pkgs.img2pdf
     ];
-    text = "exec python3 ${./server.py}";
+    # server.py is a lone file in the store, so the manifest, worker and icons
+    # that make this installable on a phone cannot sit beside it. They get
+    # their own store path and the app is told where to look.
+    text = ''
+      export PRINT_PWA=${./pwa}
+      exec python3 ${./server.py}
+    '';
   };
 in
 {
@@ -93,8 +99,8 @@ in
 
   # The tunnel is declared here, not by the host, because it exists only
   # because this UI does — turn the web server off and a tunnel to port 80 is
-  # pointing at nothing. paisa and the app platform already declared their own
-  # this way; the host was the odd one out, and it was the only line in its
+  # pointing at nothing. The app platform already declares its own this way;
+  # the host was the odd one out, and it was the only line in its
   # policy/cloudflare.nix.
   cloudflare.declaredTunnels."printer.azuresalt.app" = {
     service = "http://localhost:80";

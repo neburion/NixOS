@@ -82,7 +82,9 @@ def _login_page(error: str = '') -> Response:
     err_html = f'<div class="err">{html.escape(error)}</div>' if error else ''
     body = f'''<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a1a1a">
 <title>Printer</title>
+{PWA_HEAD}
 <style>
   body {{ background:#1a1a1a; color:#e5e5e5; font-family:system-ui,sans-serif;
          display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }}
@@ -103,6 +105,7 @@ def _login_page(error: str = '') -> Response:
   <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
   <button type="submit">Unlock</button>
 </form>
+{PWA_SCRIPT}
 </body></html>'''
     return Response(body, status=200, mimetype='text/html')
 
@@ -135,14 +138,98 @@ def login():
 
     return _login_page()
 
+# ────────────────────────────────────────────────────────────────
+# Installed-app assets
+# ────────────────────────────────────────────────────────────────
+# What turns "add to home screen" on a phone into a real launcher entry —
+# its own window, its own task-switcher card, no address bar — instead of a
+# bookmark that opens a tab.
+#
+# All of it is served ahead of the auth gate, and that is not a nicety. A
+# <link rel=manifest> is fetched *without* the session cookie unless the tag
+# opts in, so behind _require_auth the browser follows the redirect to
+# /login, gets HTML where it wanted JSON, concludes the site has no manifest,
+# and silently downgrades to a bookmark. That is the exact failure this
+# exists to avoid. Nothing here is data: a name, a theme colour, and three
+# drawings of a printer.
+#
+# server.py is a lone file in the Nix store, so the icons cannot simply sit
+# beside it — web-ui.nix exports $PRINT_PWA pointing at its own store path.
+PWA_DIR = os.environ.get(
+    'PRINT_PWA', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pwa'))
+
+# A fixed table rather than a pattern: these are the only files readable
+# without logging in, and a table cannot be talked into serving a seventh.
+PWA_PUBLIC = {
+    'manifest.webmanifest':   'application/manifest+json',
+    'sw.js':                  'text/javascript; charset=utf-8',
+    'icon-192.png':           'image/png',
+    'icon-512.png':           'image/png',
+    'icon-maskable-512.png':  'image/png',
+    'apple-touch-icon.png':   'image/png',
+}
+
+def _pwa_asset(name: str) -> Response:
+    ctype = PWA_PUBLIC.get(name)
+    if ctype is None:
+        return Response('not found', status=404)
+    try:
+        with open(os.path.join(PWA_DIR, name), 'rb') as f:
+            body = f.read()
+    except OSError:
+        return Response('not found', status=404)
+    r = Response(body, content_type=ctype)
+    # The drawings are immutable per store path; the worker and the manifest
+    # are not, and a stale service worker outlives every other kind of stale.
+    r.headers['Cache-Control'] = (
+        'public, max-age=31536000, immutable' if name.endswith('.png') else 'no-store')
+    return r
+
+# The worker has to be served from the root to claim the root as its scope,
+# which is why it is not under /pwa/ with the rest.
+@app.get('/sw.js')
+def pwa_worker():
+    return _pwa_asset('sw.js')
+
+@app.get('/manifest.webmanifest')
+def pwa_manifest():
+    return _pwa_asset('manifest.webmanifest')
+
+@app.get('/pwa/<name>')
+def pwa_icon(name):
+    return _pwa_asset(name) if name.endswith('.png') else Response('not found', status=404)
+
+# Everything the browser needs before it will believe this is an app. iOS
+# reads the apple- tags instead of most of the manifest, hence the overlap.
+# `black` and not `black-translucent`: no stylesheet here pads for
+# safe-area-inset-top, so a translucent bar would put the nav under the notch.
+PWA_HEAD = """<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/pwa/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Printer">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">"""
+
+# Registered because Chromium will not offer to install a site without a
+# worker holding a fetch handler. Deferred to `load` and silent on failure —
+# an install prompt is not worth an error on a page that otherwise works.
+PWA_SCRIPT = """<script>
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('/sw.js')
+    .catch(() => {}));
+}
+</script>"""
+
+
 @app.before_request
 def _require_auth():
     # Fail closed on misconfiguration.
     if not PRINT_PASSWORD:
         return Response('Server misconfigured: PRINT_SERVER_PASSWORD unset', status=503)
 
-    # /login is the only route that bypasses the auth check.
-    if request.endpoint == 'login':
+    # /login and the install kit are the only routes that bypass the check.
+    if request.endpoint in ('login', 'pwa_worker', 'pwa_manifest', 'pwa_icon'):
         return None
 
     if session.get('auth'):
@@ -484,7 +571,10 @@ def layout(active, heading, body_html, title):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="{'light' if theme == 'light' else 'dark'}">
+<meta name="theme-color" content="{'#fafafa' if theme == 'light' else '#1a1a1a'}">
 <title>{title}</title>
+{PWA_HEAD}
 <style>{CSS}</style>
 </head>
 <body>
@@ -503,6 +593,7 @@ def layout(active, heading, body_html, title):
   {body_html}
   {render_messages()}
 </main>
+{PWA_SCRIPT}
 </body>
 </html>'''
 

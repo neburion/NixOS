@@ -24,11 +24,11 @@
     "elden-ring-tracker": {
       "flake": false,
       "locked": {
-        "lastModified": 1787696038,
-        "narHash": "sha256-OwF+safkm+0iL79pUOflN0ubTqcMbZDmhk9+iAMOs4s=",
+        "lastModified": 1788779409,
+        "narHash": "sha256-FS36VuFIv1XzwXZ54qwfGOlcKVdSSsLtu+0/3w3DFag=",
         "owner": "neburion",
         "repo": "elden-ring-tracker",
-        "rev": "6b0e51c095b50f7211856368850366d840b6340b",
+        "rev": "a54b9be2b3e5124e560c1f7fa9a752576f4205c7",
         "type": "github"
       },
       "original": {
@@ -98,11 +98,11 @@
     "media-tracker": {
       "flake": false,
       "locked": {
-        "lastModified": 1788667980,
-        "narHash": "sha256-BPxCHRHAZUqGD2oJvIGvfZRFyHXTQ/Dysb/h1JCa6VY=",
+        "lastModified": 1788779403,
+        "narHash": "sha256-L9gDL5QOEwpRbZrSnBihpwdsjs6bFdOBlaAnBN1XwrI=",
         "owner": "neburion",
         "repo": "media-tracker",
-        "rev": "d5cd6d83908749cd33aec26ae58750d2f3d9990b",
+        "rev": "a0aa3e18ebad7b3615f41ca27f183d99cf97d5d5",
         "type": "github"
       },
       "original": {
