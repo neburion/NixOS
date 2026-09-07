@@ -90,7 +90,6 @@ NixOS/
     │   │   ├── printing/   canon/ = module   web-ui.nix
     │   │   ├── cloudflare/ tunnel  email  r2  reconcile
     │   │   ├── backup/     restic
-    │   │   ├── paisa/      = module
     │   │   └── app-platform/ = module
     │   └── presets/    base  laptop  headless  graphical
     │                   tailnet  cloudflare

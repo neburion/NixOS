@@ -55,7 +55,7 @@ the scripts' lib, so their flags cannot drift apart.
 |---|---|---|---|
 | `pod042` | Main laptop | `limine` | `neburion` |
 | `home-server` | Headless family server: print/scan web UI | `systemd-boot` | `server-admin` |
-| `personal-server` | Headless personal server: trackers, paisa | `systemd-boot` | `server-admin` |
+| `personal-server` | Headless personal server: trackers | `systemd-boot` | `server-admin` |
 | `installer` | Live USB ISO | isoImage output | — |
 
 Every host is on the fleet tailnet, so bare hostnames resolve via MagicDNS from anywhere
@@ -102,11 +102,6 @@ else — no Nix in the project.
 
 Apps are pinned in `flake.lock`, so `nixos-rebuild --rollback` takes the app version back
 with the system generation. Updating one is `nix flake update <name>`.
-
-`paisa` is the exception, imported directly: it is a nixpkgs binary rather than a repo of
-ours, so there is no `app.json` to read — only a unit and a state directory. It follows the
-platform's shape by hand. It also carries `IPAddressDeny`, and note the **30-second Cost
-Inflation Index stall** on first start if it can reach the internet.
 
 The Elden Ring tracker and media tracker carry HTTP Basic Auth from sops and refuse to bind
 a non-loopback address without it, so a missing Cloudflare Access policy weakens the gate
