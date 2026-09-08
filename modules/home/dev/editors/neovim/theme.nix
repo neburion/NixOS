@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  # Tokyodark, with the ground knocked back out from under it.
+  # Vague, with the ground knocked back out from under it.
   #
   # This module used to take the repo-wide `themes` attrset, write one lua
   # snippet per palette, install four colorscheme plugins, and register a
@@ -18,19 +18,18 @@ let
   # lets the terminal's own ground show through.
   #
   # Raised surfaces — floats, popup menu, statusline, cursorline, visual —
-  # are deliberately left alone, so tokyodark keeps painting them opaque.
+  # are deliberately left alone, so vague keeps painting them opaque.
   # They are meant to sit above the glass, not be part of it.
   #
-  # tokyodark ships its own `transparent_background`, which is not used: it
-  # clears more than the ground and takes the raised surfaces with it.
+  # vague ships its own `transparent`, which is not used: it clears more than
+  # the ground and takes the raised surfaces with it.
   theme = ''
-    require("tokyodark").setup({
-      transparent_background = false,
-      gamma = 1.00,
+    require("vague").setup({
+      transparent = false,
     })
 
     vim.o.background = "dark"
-    vim.cmd.colorscheme("tokyodark")
+    vim.cmd.colorscheme("vague")
 
     -- Groups that make up the buffer's ground. Anything not listed keeps the
     -- colorscheme's own background on purpose.
@@ -65,7 +64,7 @@ let
 in
 {
   programs.nvf.settings.vim = {
-    startPlugins = [ pkgs.vimPlugins.tokyodark-nvim ];
+    startPlugins = [ pkgs.vimPlugins.vague-nvim ];
     theme.enable = false;
     luaConfigPost = theme;
   };
