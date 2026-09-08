@@ -12,8 +12,9 @@
       height = 1080;
     };
 
-    # Positions are packed left to right by EFFECTIVE width — the rotated
-    # width for a monitor declared with transform 3, not its mode width.
+    # Positions are packed left to right by EFFECTIVE width — mode width
+    # divided by scale, and the rotated axis for a monitor declared with
+    # transform 3. Not the mode width.
     # Declaring the transform matters beyond correctness: every Hyprland
     # config reload re-applies these lines, and a reload used to reset both
     # panels to landscape at landscape-spaced positions, leaving the layout
@@ -37,9 +38,17 @@
     # got resized underneath it twice. If you rotate an output and mean it,
     # update the transform AND repack every position to its right.
     #
-    #   DP-1      transform 3 -> 1080 wide ->    0 ..1080
-    #   HDMI-A-1  transform 0 -> 2560 wide -> 1080 ..3640
-    #   eDP-1     transform 0 -> 1920 wide -> 3640 ..5560
+    #   DP-1      transform 3, scale 1   -> 1080 wide ->    0 ..1080
+    #   HDMI-A-1  transform 0, scale 1.5  -> 2560 wide -> 1080 ..3640
+    #   eDP-1     transform 0, scale 1    -> 1920 wide -> 3640 ..5560
+    #
+    # HDMI-A-1 is an MSI G321CU: a 32" panel whose native mode is 3840x2160.
+    # It was driven at 2560x1440 for a long time, which the monitor's own
+    # scaler then stretched 1.5x back to native — non-integer interpolation
+    # of already-antialiased glyphs, which is what made text look soft
+    # everywhere. Driving it natively at scale 1.5 puts 2.25x the pixels into
+    # every glyph while leaving the logical width at 2560, so nothing to the
+    # right of it moves and the packing above is unchanged.
     monitors = {
       builtin = {
         name     = "eDP-1";
@@ -49,9 +58,9 @@
       };
       external = {
         name      = "HDMI-A-1";
-        mode      = "2560x1440@144";
+        mode      = "3840x2160@144";
         position  = "1080x0";
-        scale     = "1";
+        scale     = "1.5";
         transform = 0;
       };
       secondary = {
