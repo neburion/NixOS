@@ -5,34 +5,37 @@
     NIXOS_OZONE_WL     = "1";  # electron apps use Wayland
     MOZ_ENABLE_WAYLAND = "1";
 
-    # Render on the dGPU, because that is where the 4K panel is plugged in.
+    # NOT set here: AQ_DRM_DEVICES. See below before adding it back.
     #
-    # This laptop's outputs are split across both GPUs: HDMI-A-1 hangs off the
-    # NVIDIA card at 01:00.0, while DP-1 and the built-in eDP-1 are on the
-    # Intel iGPU at 00:02.0. Left alone, aquamarine picks the Intel card as
-    # primary and every finished frame for the 4K monitor is copied over PCIe
-    # to the NVIDIA card just to be scanned out — and marked multigpu, so the
-    # buffer cannot even be tiled:
+    # This laptop's outputs are split across both GPUs — HDMI-A-1, the 4K
+    # panel, hangs off the NVIDIA card at 01:00.0, while DP-1 and the built-in
+    # eDP-1 are on the Intel iGPU at 00:02.0. aquamarine picks Intel as primary,
+    # so every 4K frame is composited on the iGPU and then copied over PCIe to
+    # the NVIDIA card purely to be scanned out, in a linear (untileable) buffer:
     #
     #   drm: gpu /dev/dri/card1 becomes primary drm
     #   GBM: Buffer is marked as multigpu, forcing linear
     #
-    # Measured on an idle desktop, that copy ran at 2.1-4.4 GB/s inbound to
-    # the dGPU. A 3840x2160 frame is 33 MB, so the path was delivering
-    # something like 66-130 fps against a 144 Hz panel. Naming the NVIDIA card
-    # first makes it primary: the 4K output now renders and scans out on the
-    # same chip and the copy disappears. DP-1 becomes the copied output
-    # instead, at 8 MB a frame and 60 Hz.
+    # Measured idle, no game and no video: 2.1-4.4 GB/s inbound to the dGPU,
+    # against 33 MB per 3840x2160 frame — roughly 66-130 fps of copy bandwidth
+    # feeding a 144 Hz panel. Worth fixing. It is the reason the desktop got
+    # less smooth when the mode went native.
     #
-    # by-path rather than card0/card1 on purpose — DRM card numbering is not
-    # stable across boots, and on this machine the NVIDIA card currently takes
-    # card0, which is the reverse of the usual ordering. Getting this backwards
-    # silently restores the slow path rather than failing.
+    # The obvious fix is AQ_DRM_DEVICES naming the NVIDIA card first. The trap,
+    # which cost generation 431 and two failed logins on 2026-09-08, is that
+    # the variable is COLON-separated and PCI addresses contain colons, so the
+    # stable /dev/dri/by-path/ names cannot be used:
     #
-    # This keeps the dGPU powered for the whole session, which costs battery
-    # when running on the built-in panel alone. Deliberate: smoothness while
-    # docked was worth more.
-    AQ_DRM_DEVICES =
-      "/dev/dri/by-path/pci-0000:01:00.0-card:/dev/dri/by-path/pci-0000:00:02.0-card";
+    #   AQ_DRM_DEVICES=/dev/dri/by-path/pci-0000:01:00.0-card:/dev/dri/...
+    #   ERR drm: Failed to canonicalize path /dev/dri/by-path/pci-0000
+    #   ERR drm: Failed to canonicalize path 01
+    #   ERR drm: Found no gpus to use, cannot continue
+    #   CRIT Cannot open backend: no allocator available
+    #
+    # Hyprland then aborts in CCompositor::initServer and SDDM takes you back
+    # to the greeter. Bare cardN names parse fine, but DRM card numbering is
+    # not stable across boots and getting it backwards silently restores the
+    # slow path. aquamarine canonicalizes each entry, so the way in is a udev
+    # rule creating colon-free stable symlinks matched on PCI address.
   };
 }
