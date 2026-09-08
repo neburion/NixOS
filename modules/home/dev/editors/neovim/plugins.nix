@@ -22,20 +22,17 @@
     # join across cell boundaries. Geist Mono would very nearly manage it
     # unaided anyway -- the glyph covers all but one pixel row of a 38px cell.
     #
-    # scope is what actually answers "where does this end": it takes the block
-    # under the cursor from the same treesitter parse that colours the syntax,
-    # and underlines its first and last line. treesitter.context above pins the
-    # opening line to the top of the window; this marks the closing one.
+    # scope is off deliberately. It highlights the block under the cursor in a
+    # separate colour and underlines its first and last line, which is a real
+    # answer to "where does this end" but reads as noise while editing. Every
+    # guide is therefore the same weight and the same colour, and nothing moves
+    # as the cursor travels. treesitter.context above still pins the enclosing
+    # block's opening line to the top of the window.
     visuals.indent-blankline = {
       enable = true;
       setupOpts = {
         indent.char = "▏";
-        scope = {
-          enabled    = true;
-          char       = "▏";
-          show_start = true;
-          show_end   = true;
-        };
+        scope.enabled = false;
       };
     };
   };
