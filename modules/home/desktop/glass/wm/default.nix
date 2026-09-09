@@ -4,7 +4,7 @@
 #   - ../hyprland/themes.nix is NOT imported. That module generates a
 #     per-palette hypr/themes/<name>.conf, symlinks theme.conf, sources it and
 #     registers a themeHook. With one fixed palette there is nothing to switch,
-#     so the shadow colour is a literal in looks.nix instead.
+#     so the palette colours are literals where they are needed (hyprlock.nix).
 #   - keybinds, looks, auto-exec and hyprlock are forked (see each file).
 #   - layer-rules.nix is new: it is what makes the shell translucent rather
 #     than merely transparent.
@@ -19,8 +19,8 @@
   #
   # themes.nix is the one base file NOT copied across: it generates a
   # per-palette hypr/themes/<name>.conf and registers a theme hook, and with one
-  # fixed palette there is nothing to switch. The shadow colour is a literal in
-  # looks.nix instead.
+  # fixed palette there is nothing to switch. The palette colours are literals
+  # in hyprlock.nix instead.
   imports = [
     ./auto-exec.nix
     ./enable.nix

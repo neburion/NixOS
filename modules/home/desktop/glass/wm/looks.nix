@@ -2,8 +2,8 @@
 
 # glass looks. Forked from ../hyprland/looks.nix:
 #   - gaps 6/12 and rounding 10, to sit with a 12px-cornered floating bar
-#   - the shadow colour is a literal; the base reads it from hypr/theme.conf,
-#     which only exists when ../hyprland/themes.nix is imported, and it isn't
+#   - no window shadow at all, so nothing here reads hypr/theme.conf — that
+#     file only exists when ../hyprland/themes.nix is imported, and it isn't
 #   - window blur is stronger (2 passes), since translucent chrome over
 #     lightly-blurred windows reads as muddy rather than as glass
 
@@ -53,13 +53,16 @@
       rounding_power   = 2.0;
       active_opacity   = 1.0;
       inactive_opacity = 1.0;
-      shadow = {
-        enabled      = true;
-        range        = 4;
-        render_power = 3;
-        # Literal, not sourced from hypr/theme.conf — glass has one palette.
-        color        = "rgba(05070Bee)";
-      };
+      # Off. `range 4` with `render_power 3` drove almost the whole falloff
+      # into the one device pixel touching the window, so it drew a near-black
+      # 1px outline rather than depth — measured at luminance 17 against a 26
+      # backdrop, and gone the instant shadows are disabled. Steam wore it
+      # worst: it paints its own bright inner hairline, so the rim sat between
+      # the wallpaper and a luminance-66 line and read as a deliberate border.
+      # Widening `range` would have softened it, but glass already separates
+      # windows with gaps and blur; a drop shadow is a third answer to a
+      # question that was already answered twice.
+      shadow.enabled = false;
       # Window blur. The bar's blur is separate — see layer-rules.nix.
       blur = {
         enabled     = true;
