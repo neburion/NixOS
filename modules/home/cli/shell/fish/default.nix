@@ -32,8 +32,8 @@
 
       # Dev
       cddev = "cd ~/Projects/Dev";
-      mkrepo = "gh repo create (basename $PWD) --public --source=. --remote=origin --push";
-      rmrepo = "git remote remove origin && gh repo delete neburion/(basename $PWD)";
+      # mkrepo / rmrepo are functions, not aliases: they take a host argument.
+      # See the functions block below.
     };
 
     # Its own colours, literal, matching desktop/glass/palette.nix. This module
@@ -51,6 +51,77 @@
     functions = {
       fish_greeting = {
         body = "";
+      };
+
+      # Create the current directory as a repo on a forge, then push it.
+      #
+      #   mkrepo        GitHub    (default: unchanged from the old alias)
+      #   mkrepo cb     Codeberg
+      #
+      # gh does GitHub only. Codeberg is Forgejo, whose CLI (tea) can read a
+      # token from nothing but a plaintext ~/.config/tea/config.yml -- it has
+      # no --token or --url flag. So Codeberg goes over its REST API directly,
+      # reading the token from sops at call time, the same way aerc.nix reads
+      # its Posteo password. Nothing unencrypted is written to disk.
+      #
+      # The secret is declared in modules/home/dev/tools/system.nix.
+      mkrepo = {
+        argumentNames = [ "host" ];
+        body = ''
+          set -l name (basename $PWD)
+          switch "$host"
+            case cb codeberg
+              set -l tok (cat /run/secrets/codeberg-token)
+              or begin
+                echo "mkrepo: cannot read /run/secrets/codeberg-token" >&2
+                return 1
+              end
+              set -l resp (curl -fsS -X POST https://codeberg.org/api/v1/user/repos \
+                -H "Authorization: token $tok" \
+                -H "Content-Type: application/json" \
+                -d '{"name":"'$name'","private":false}')
+              or return 1
+              # Take the remote from the response rather than assembling it
+              # from a hardcoded owner: the Codeberg account is carian_fish,
+              # not neburion, and a literal here would rot again on a rename.
+              git remote add origin (echo $resp | jq -r .ssh_url)
+              git push -u origin (git branch --show-current)
+            case "" gh github
+              gh repo create $name --public --source=. --remote=origin --push
+            case "*"
+              echo "mkrepo: unknown host '$host' (use gh or cb)" >&2
+              return 1
+          end
+        '';
+      };
+
+      # Inverse of mkrepo. Same host argument, same default.
+      rmrepo = {
+        argumentNames = [ "host" ];
+        body = ''
+          set -l name (basename $PWD)
+          switch "$host"
+            case cb codeberg
+              set -l tok (cat /run/secrets/codeberg-token)
+              or begin
+                echo "rmrepo: cannot read /run/secrets/codeberg-token" >&2
+                return 1
+              end
+              # Owner comes from the token, not a literal. See mkrepo.
+              set -l owner (curl -fsS https://codeberg.org/api/v1/user \
+                -H "Authorization: token $tok" | jq -r .login)
+              or return 1
+              git remote remove origin
+              and curl -fsS -X DELETE https://codeberg.org/api/v1/repos/$owner/$name \
+                -H "Authorization: token $tok"
+            case "" gh github
+              git remote remove origin
+              and gh repo delete neburion/$name
+            case "*"
+              echo "rmrepo: unknown host '$host' (use gh or cb)" >&2
+              return 1
+          end
+        '';
       };
 
       fish_prompt = {

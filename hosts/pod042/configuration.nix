@@ -23,6 +23,7 @@
     # System halves of modules that live with their owner under modules/home.
     ../../modules/home/cli/shell/fish/system.nix
     ../../modules/home/cli/flatpak/system.nix
+    ../../modules/home/dev/tools/system.nix
     ../../modules/home/gaming/launchers/steam/system.nix
     ../../modules/home/peripherals/logitech/system.nix
     ../../modules/home/desktop/glass/wm/system.nix
