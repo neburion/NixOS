@@ -28,6 +28,7 @@
     ../../modules/home/peripherals/logitech/system.nix
     ../../modules/home/desktop/glass/wm/system.nix
     ../../modules/home/desktop/glass/components/wayvnc/system.nix
+    ../../modules/home/security/keepassxc/system.nix
 
     ../../users/neburion
   ];

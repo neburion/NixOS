@@ -35,7 +35,7 @@
     # ── one of a kind ───────────────────────────────────────────────────────
     ../../modules/home/browser/zen-browser.nix
     ../../modules/home/music/spotify.nix
-    ../../modules/home/security/keepassxc.nix
+    ../../modules/home/security/keepassxc
 
     # ── desktop ─────────────────────────────────────────────────────────────
     ../../modules/home/presets/glass.nix

@@ -109,7 +109,7 @@ NixOS/
     │   ├── art/         aseprite  blender
     │   ├── browser/     zen-browser
     │   ├── music/       spotify
-    │   ├── security/    keepassxc
+    │   ├── security/    keepassxc/ = module
     │   ├── gaming/
     │   │   ├── launchers/  heroic  prism-launcher  sober
     │   │   │               bb-launcher/ = module   steam/ = module
