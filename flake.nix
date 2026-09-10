@@ -13,6 +13,15 @@
       url = "github:youwen5/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Helium is not in nixpkgs — the init PR (#498572) has been open since
+    # 0.15.6 — and upstream publishes binaries only, so a community flake
+    # repackages the release tarball. nixpkgs-darwin follows too, purely so
+    # the lock does not pull a second full nixpkgs for a platform we lack.
+    helium = {
+      url = "github:schembriaiden/helium-browser-nix-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-darwin.follows = "nixpkgs";
+    };
     nvf = {
       url = "github:notashelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -47,7 +56,7 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, zen-browser, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:
+  outputs = { nixpkgs, home-manager, zen-browser, helium, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:
   let
     mkSystem = { host, system ? "x86_64-linux", withHomeManager ? true }:
       nixpkgs.lib.nixosSystem {
@@ -78,7 +87,7 @@
               useUserPackages     = true;
               backupFileExtension = "backup";
               extraSpecialArgs = {
-                inherit zen-browser;
+                inherit zen-browser helium;
                 # Headless hosts don't declare displays/backlight; fall back
                 # to {} so they don't need stub option declarations.
                 hostConfig = {

@@ -34,6 +34,7 @@
 
     # ── one of a kind ───────────────────────────────────────────────────────
     ../../modules/home/browser/zen-browser.nix
+    ../../modules/home/browser/helium.nix
     ../../modules/home/music/spotify.nix
     ../../modules/home/security/keepassxc
 
