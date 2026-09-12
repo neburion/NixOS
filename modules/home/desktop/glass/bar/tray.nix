@@ -72,9 +72,15 @@
             GlassSurface {
                 id: shell
                 strong: true
+                // +36 = the 18px inset (8px column margin + 10px row
+                // leftMargin) counted on both sides, so the icons keep a
+                // right gutter equal to their left one instead of ending up
+                // flush against the edge.
                 implicitWidth: Math.max(
-                    iconsRow.implicitWidth + 20,
-                    root.activeMenuItem !== null ? 240 : 56
+                    36 + (SystemTray.items.values.length === 0
+                        ? emptyLabel.implicitWidth
+                        : iconsRow.implicitWidth),
+                    root.activeMenuItem !== null ? 240 : 58
                 )
                 implicitHeight: contentCol.implicitHeight + 16
 
@@ -153,6 +159,7 @@
                         }
 
                         Text {
+                            id: emptyLabel
                             anchors {
                                 left: parent.left
                                 leftMargin: 10
