@@ -1,11 +1,12 @@
 { ... }:
 
-# Documents and mail. Two editors, a suite, and both mail clients — aerc is the
-# TUI, thunderbird the GUI, and they read the same accounts.
+# Documents and mail. Two editors, a suite, and both mail clients — Geary is
+# the one mail gets read in, Thunderbird the one with every knob, and they read
+# the same accounts.
 
 {
   imports = [
-    ../office/aerc.nix
+    ../office/geary
     ../office/libre-office.nix
     ../office/obsidian.nix
     ../office/thunderbird.nix

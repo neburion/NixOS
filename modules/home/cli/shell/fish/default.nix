@@ -64,8 +64,8 @@
       # gh does GitHub only. Codeberg is Forgejo, whose CLI (tea) can read a
       # token from nothing but a plaintext ~/.config/tea/config.yml -- it has
       # no --token or --url flag. So Codeberg goes over its REST API directly,
-      # reading the token from sops at call time, the same way aerc.nix reads
-      # its Posteo password. Nothing unencrypted is written to disk.
+      # reading the token from sops at call time rather than dropping it in a
+      # config file. Nothing unencrypted is written to disk.
       #
       # The secret is declared in modules/home/dev/tools/system.nix.
       mkrepo = {

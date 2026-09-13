@@ -104,7 +104,9 @@ NixOS/
     │   │   ├── editors/    neovim/ = module   intellij
     │   │   ├── engines/    godot
     │   │   └── tools/      git  direnv  tokei  claude-code
-    │   ├── office/      libre-office  obsidian  thunderbird  aerc
+    │   ├── office/      libre-office  obsidian  thunderbird
+    │   │               geary/ = module
+    │   ├── study/       anki/ = module
     │   ├── comms/       signal  vesktop
     │   ├── art/         aseprite  blender
     │   ├── browser/     zen-browser
