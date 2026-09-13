@@ -24,6 +24,15 @@
             bodySupported: true
             bodyMarkupSupported: true
             imageSupported: true
+
+            // Not optional, and the failure it prevents is silent: Quickshell
+            // destroys a notification as soon as this signal returns unless it
+            // is marked tracked, and trackedNotifications — the model every
+            // card below is drawn from — only ever holds tracked ones. Without
+            // this handler the server still owns org.freedesktop.Notifications
+            // and notify-send still exits 0, so everything looks wired up while
+            // nothing is ever drawn. That was the state until 2026-09-13.
+            onNotification: notif => { notif.tracked = true; }
         }
 
         Variants {
