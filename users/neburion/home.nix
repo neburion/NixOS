@@ -37,6 +37,7 @@
     ../../modules/home/browser/helium.nix
     ../../modules/home/music/spotify.nix
     ../../modules/home/security/keepassxc
+    ../../modules/home/study/anki
 
     # ── desktop ─────────────────────────────────────────────────────────────
     ../../modules/home/presets/glass.nix
