@@ -32,7 +32,7 @@
 
       # Dev
       cddev = "cd ~/Projects/Dev";
-      # mkrepo / rmrepo are functions, not aliases: they take a host argument.
+      # mkrepo / rmrepo are functions, not aliases: they take a forge argument.
       # See the functions block below.
     };
 
@@ -53,9 +53,12 @@
         body = "";
       };
 
-      # Create the current directory as a repo on a forge, then push it.
+      # Create the current directory as a repo on a forge, then push it. The
+      # forge is required. A bare `mkrepo` meaning GitHub was a leftover from
+      # when this was a gh-only alias; with two forges, which one you are
+      # publishing to is not something to get by not thinking about it.
       #
-      #   mkrepo        GitHub    (default: unchanged from the old alias)
+      #   mkrepo gh     GitHub
       #   mkrepo cb     Codeberg
       #
       # gh does GitHub only. Codeberg is Forgejo, whose CLI (tea) can read a
@@ -86,8 +89,11 @@
               # not neburion, and a literal here would rot again on a rename.
               git remote add origin (echo $resp | jq -r .ssh_url)
               git push -u origin (git branch --show-current)
-            case "" gh github
+            case gh github
               gh repo create $name --public --source=. --remote=origin --push
+            case ""
+              echo "mkrepo: name a forge (gh or cb)" >&2
+              return 1
             case "*"
               echo "mkrepo: unknown host '$host' (use gh or cb)" >&2
               return 1
@@ -95,7 +101,8 @@
         '';
       };
 
-      # Inverse of mkrepo. Same host argument, same default.
+      # Inverse of mkrepo. Same forge argument, but this one keeps the old
+      # default: a bare `rmrepo` is GitHub.
       rmrepo = {
         argumentNames = [ "host" ];
         body = ''
@@ -115,8 +122,17 @@
               and curl -fsS -X DELETE https://codeberg.org/api/v1/repos/$owner/$name \
                 -H "Authorization: token $tok"
             case "" gh github
+              # Owner comes from whoever gh is authenticated as, not a literal.
+              # See the Codeberg branch above: `neburion` was hardcoded here, so
+              # this deleted the wrong account's repo under any other login, and
+              # would rot on a rename.
+              set -l owner (gh api user --jq .login)
+              if test -z "$owner"
+                echo "rmrepo: cannot determine the GitHub owner (try gh auth status)" >&2
+                return 1
+              end
               git remote remove origin
-              and gh repo delete neburion/$name
+              and gh repo delete $owner/$name
             case "*"
               echo "rmrepo: unknown host '$host' (use gh or cb)" >&2
               return 1
