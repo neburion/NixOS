@@ -39,28 +39,40 @@
     # update the transform AND repack every position to its right.
     #
     #   DP-1      transform 3, scale 1   -> 1080 wide ->    0 ..1080
-    #   HDMI-A-1  transform 0, scale 1.5  -> 2560 wide -> 1080 ..3640
-    #   eDP-1     transform 0, scale 1    -> 1920 wide -> 3640 ..5560
+    #   HDMI-A-1  transform 0, scale 1   -> 3840 wide -> 1080 ..4920
+    #   eDP-1     transform 0, scale 1   -> 1920 wide -> 4920 ..6840
     #
     # HDMI-A-1 is an MSI G321CU: a 32" panel whose native mode is 3840x2160.
     # It was driven at 2560x1440 for a long time, which the monitor's own
     # scaler then stretched 1.5x back to native — non-integer interpolation
     # of already-antialiased glyphs, which is what made text look soft
-    # everywhere. Driving it natively at scale 1.5 puts 2.25x the pixels into
-    # every glyph while leaving the logical width at 2560, so nothing to the
-    # right of it moves and the packing above is unchanged.
+    # everywhere. Driving it natively fixed that.
+    #
+    # It then ran at scale 1.5 for a while — native pixels, 2560 logical
+    # width — which is where the fuzz came back by another route. Fractional
+    # scale is the one thing XWayland cannot follow: Hyprland hands an X11
+    # surface a buffer a pixel or two short of the window it is meant to
+    # fill, and the remainder shows as a dark seam down the edges. Steam wore
+    # it permanently. Every output on this host is scale 1 now, so there is
+    # no fractional geometry left for XWayland to round off, and
+    # `xwayland:force_zero_scaling` in desktop/glass/wm/looks.nix has nothing
+    # to correct.
+    #
+    # The cost is honest and was accepted: 3840 logical pixels across 32"
+    # is ~138 DPI, so everything on this panel is a third smaller than it
+    # was. Raising the scale again brings the seam back with it.
     monitors = {
       builtin = {
         name     = "eDP-1";
         mode     = "1920x1080@144";
-        position = "3640x0";
+        position = "4920x0";
         scale    = "1";
       };
       external = {
         name      = "HDMI-A-1";
         mode      = "3840x2160@144";
         position  = "1080x0";
-        scale     = "1.5";
+        scale     = "1";
         transform = 0;
       };
       secondary = {

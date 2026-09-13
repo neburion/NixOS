@@ -17,7 +17,8 @@
 # the panel is simply on, which is the old behaviour. Moving the monitor lines
 # wholesale into a sourced file has a worse failure mode — Hyprland with no
 # monitor lines falls back to each output's preferred mode, which on this
-# machine means HDMI-A-1 jumps from 2560x1440@144 to its native 3840x2160@60.
+# machine means HDMI-A-1 drops from 3840x2160@144 to the preferred mode its
+# EDID names, 3840x2160@60.
 
 let
   b = hostConfig.displays.monitors.builtin;
