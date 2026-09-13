@@ -101,12 +101,29 @@
         '';
       };
 
-      # Inverse of mkrepo. Same forge argument, but this one keeps the old
-      # default: a bare `rmrepo` is GitHub.
+      # Inverse of mkrepo. Unlike mkrepo, a bare `rmrepo` is not a guess: the
+      # repo it is standing in already has an `origin`, so the forge comes from
+      # that URL rather than from a default. An explicit gh/cb still wins.
       rmrepo = {
         argumentNames = [ "host" ];
         body = ''
           set -l name (basename $PWD)
+          if test -z "$host"
+            set -l url (git remote get-url origin 2>/dev/null)
+            if test -z "$url"
+              echo "rmrepo: no origin remote; name a forge (gh or cb)" >&2
+              return 1
+            end
+            switch "$url"
+              case "*codeberg.org*"
+                set host cb
+              case "*github.com*"
+                set host gh
+              case "*"
+                echo "rmrepo: cannot tell the forge from '$url' (use gh or cb)" >&2
+                return 1
+            end
+          end
           switch "$host"
             case cb codeberg
               set -l tok (cat /run/secrets/codeberg-token)
@@ -121,7 +138,7 @@
               git remote remove origin
               and curl -fsS -X DELETE https://codeberg.org/api/v1/repos/$owner/$name \
                 -H "Authorization: token $tok"
-            case "" gh github
+            case gh github
               # Owner comes from whoever gh is authenticated as, not a literal.
               # See the Codeberg branch above: `neburion` was hardcoded here, so
               # this deleted the wrong account's repo under any other login, and
