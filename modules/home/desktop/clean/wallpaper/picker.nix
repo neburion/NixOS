@@ -77,7 +77,7 @@
         function applyWallpaper(path) {
             WallpaperState.setWallpaper(path);
             var cmd = root.isVideo(path)
-                ? "pkill mpvpaper 2>/dev/null; mpvpaper '*' \"$1\" --mpv-options 'loop-file=inf' &"
+                ? "pkill mpvpaper 2>/dev/null; mpvpaper '*' \"$1\" --mpv-options 'loop-file=inf panscan=1.0' &"
                 : "pkill mpvpaper 2>/dev/null; awww img \"$1\" --transition-type fade";
             applier.command = ["sh", "-c", cmd, "sh", path];
             applier.running = true;

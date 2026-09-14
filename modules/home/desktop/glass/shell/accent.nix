@@ -115,7 +115,7 @@ in
         ext="''${path##*.}"
         case "''${ext,,}" in
           mp4|mkv|webm|avi|mov|gif)
-            mpvpaper "$mon" "$path" --mpv-options 'loop-file=inf' >/dev/null 2>&1 &
+            mpvpaper "$mon" "$path" --mpv-options 'loop-file=inf panscan=1.0' >/dev/null 2>&1 &
             ;;
           *)
             awww img "$path" --outputs "$mon" --transition-type fade >/dev/null 2>&1 || true
@@ -153,7 +153,7 @@ in
             ext="''${path##*.}"
             case "''${ext,,}" in
               mp4|mkv|webm|avi|mov|gif)
-                mpvpaper "$mon" "$path" --mpv-options 'loop-file=inf' >/dev/null 2>&1 &
+                mpvpaper "$mon" "$path" --mpv-options 'loop-file=inf panscan=1.0' >/dev/null 2>&1 &
                 ;;
               *)
                 awww img "$path" --outputs "$mon" --transition-type none >/dev/null 2>&1 || true
