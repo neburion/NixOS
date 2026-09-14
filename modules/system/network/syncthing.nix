@@ -9,7 +9,7 @@
     openDefaultPorts = true;
     settings = {
       devices.gPhone = {
-        id   = "5PLKE3M-NSHU2A4-D3QBZQA-4X3GZFV-CEXR6FM-EGVJOUW-7K3QWCS-42GQXAH";
+        id   = "723KVGX-JPRTWOT-KL43KCK-GGP3TLY-JBC4XBF-VDP5C2V-IGN5IWG-XGCOIQC";
         name = "gPhone";
       };
       devices.iPhone = {
