@@ -10,21 +10,7 @@
 # geometry of its own:
 #
 #   ~/.local/state/monitor-transforms/<name>   a Hyprland transform, 0 or 3
-#   ~/.local/state/monitor-modes/<name>        a mode and an optional scale,
-#                                              e.g. "3840x2160@144.00 2"
-#
-# Apparent size is a SCALE, not a smaller mode. A fixed-pixel panel interpolates
-# anything that is not a whole-number mapping onto its own grid, so sending it
-# 2560x1440 makes its scaler stretch by 1.5 and every second pixel lands split
-# across two physical ones. Driving it natively at scale 2 instead asks the
-# compositor for a 1920x1080 logical desktop rendered into 3840x2160 real
-# pixels: same apparent size, full glyph detail, no scaler in the path at all.
-#
-# Hence the rule enforced in target_scale: the scale must be a whole number that
-# divides the mode into whole logical pixels. Fractional scales are refused even
-# when the arithmetic comes out even (1920/1.5 = 1280), because XWayland cannot
-# follow a fractional scale — that is the dark seam Steam wore for a fortnight,
-# documented in hosts/<h>/hardware/displays.nix.
+#   ~/.local/state/monitor-modes/<name>        a mode, e.g. 2560x1440@144.00
 #
 # An absent transform file means "whatever is live". An absent MODE file means
 # the mode declared in hosts/<h>/hardware/displays.nix, handed in as a JSON map
@@ -52,10 +38,6 @@ OVERRIDE = os.path.join(CONFIG_HOME, "hypr", "monitors.conf")
 
 
 def ceilings():
-    """{ "<name>": { "mode": "3840x2160@144", "scale": "1" } }, from displays.nix.
-
-    The mode is that output's maximum and the scale its resting one; together
-    they are what an output with no state file is driven at."""
     path = os.environ.get("MONITOR_CEILINGS")
     if not path:
         return {}
@@ -67,11 +49,6 @@ def ceilings():
 
 
 CEILINGS = ceilings()
-
-
-def declared(name, field):
-    entry = CEILINGS.get(name)
-    return entry.get(field) if isinstance(entry, dict) else None
 
 # Gap between modesets. Long enough for the DRM page-flip to retire,
 # short enough that a rotation still feels immediate.
@@ -137,53 +114,21 @@ def resolve(m, want):
     return None
 
 
-def persisted(m):
-    """The state file split into (mode, scale); either may be absent.
-
-    One file, two whitespace-separated fields, because they are one decision:
-    "show this output at this apparent size" is a mode AND a scale, and applying
-    half of it would drive the panel at a size nobody asked for."""
+def persisted_mode(m):
     try:
         with open(os.path.join(MODES, m["name"])) as fh:
-            fields = fh.read().split()
+            return fh.read().strip()
     except OSError:
-        return (None, None)
-    return (fields[0] if fields else None,
-            fields[1] if len(fields) > 1 else None)
+        return None
 
 
 def target_mode(m):
     """Runtime choice, else the declared ceiling, else whatever is live."""
-    for want in (persisted(m)[0], declared(m["name"], "mode")):
+    for want in (persisted_mode(m), CEILINGS.get(m["name"])):
         got = resolve(m, want)
         if got:
             return got
     return live_mode(m)
-
-
-def target_scale(m, mode):
-    """Whole-number scales only, and only ones that divide this mode evenly.
-
-    Everything else is refused in favour of 1. A fractional scale is refused
-    because XWayland cannot follow one; a scale that leaves a fractional logical
-    size is refused because Hyprland then rounds the logical geometry and hands
-    surfaces buffers a pixel short, which is the same defect by another name.
-    Refusing to 1 is always safe: it is the panel's own grid."""
-    w, h, _ = mode
-    for want in (persisted(m)[1], declared(m["name"], "scale")):
-        if want is None:
-            continue
-        try:
-            value = float(want)
-        except ValueError:
-            continue
-        if value < 1 or value != int(value):
-            continue
-        n = int(value)
-        if w % n or h % n:
-            continue
-        return n
-    return 1
 
 
 def eff_width(mode, transform, scale):
@@ -199,10 +144,8 @@ def plan(mons):
     for m in mons:
         t = target_transform(m)
         mode = target_mode(m)
-        scale = target_scale(m, mode)
-        w = eff_width(mode, t, scale)
-        final[m["name"]] = {"x": x, "w": w, "transform": t,
-                            "mode": mode, "scale": scale}
+        w = eff_width(mode, t, m["scale"])
+        final[m["name"]] = {"x": x, "w": w, "transform": t, "mode": mode}
         x += w
     return final
 
@@ -228,8 +171,7 @@ def order(mons, final):
     remaining = [m["name"] for m in mons
                  if m["x"] != final[m["name"]]["x"]
                  or m["transform"] != final[m["name"]]["transform"]
-                 or mode_key(live_mode(m)) != mode_key(final[m["name"]]["mode"])
-                 or float(m["scale"]) != float(final[m["name"]]["scale"])]
+                 or mode_key(live_mode(m)) != mode_key(final[m["name"]]["mode"])]
     steps = []
 
     while remaining:
@@ -252,10 +194,10 @@ def order(mons, final):
     return steps
 
 
-def spec(m, x, f):
-    w, h, refresh = f["mode"]
+def spec(m, x, transform, mode):
+    w, h, refresh = mode
     return (f"{m['name']},{w}x{h}@{refresh},"
-            f"{x}x{m['y']},{f['scale']},transform,{f['transform']}")
+            f"{x}x{m['y']},{m['scale']},transform,{transform}")
 
 
 def write_override(mons, final):
@@ -276,7 +218,7 @@ def write_override(mons, final):
     ]
     for name in sorted(final, key=lambda n: final[n]["x"]):
         f = final[name]
-        lines.append("monitor=" + spec(by_name[name], f["x"], f))
+        lines.append("monitor=" + spec(by_name[name], f["x"], f["transform"], f["mode"]))
 
     os.makedirs(os.path.dirname(OVERRIDE), exist_ok=True)
     tmp = OVERRIDE + ".tmp"
@@ -292,7 +234,7 @@ def main():
     by_name = {m["name"]: m for m in mons}
     final = plan(mons)
 
-    specs = [spec(by_name[name], x, final[name])
+    specs = [spec(by_name[name], x, final[name]["transform"], final[name]["mode"])
              for name, x in order(mons, final)]
 
     if "--print" in sys.argv:

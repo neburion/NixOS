@@ -1,23 +1,23 @@
 { lib, hostConfig, ... }:
 
-# Apparent size, as a bar menu.
+# Runtime resolution, as a bar menu.
 #
 # Structure is the tray's, because the problem is the tray's: a list of things,
 # each of which has its own list underneath it. One icon, one popup, one focus
-# grab; clicking an output expands its sizes below a separator, and nothing is
+# grab; clicking an output expands its modes below a separator, and nothing is
 # ever nested in a second popup.
 #
-# Every row is a whole-number divisor of that output's native mode, and there is
-# nothing else on offer. The panel is always driven natively and a smaller
-# desktop is a compositor scale, so each row is pixel-exact by construction —
-# 2560x1440 is absent from a 4K panel's list because 1.5:1 has no sharp form.
-# wm/resolution.nix explains the arithmetic; this file only draws it.
+# The mode list is filtered hard on purpose. HDMI-A-1 advertises thirty-five
+# modes, twenty of which are 4:3 relics and five of which are the same
+# resolution at a slower refresh. What lands in the popup is one row per
+# resolution at its highest refresh, floored at 1280 wide and capped at that
+# output's declared ceiling — seven rows for the 32", three for the panels.
 #
-# The rows are therefore NOT read from the output's mode list. That list is full
-# of modes the panel would have to stretch, which is precisely what is being
-# avoided, so the sizes are derived from the declared native mode instead.
+# Nothing here computes geometry. set-monitor-mode writes one state file and
+# reflow-monitors decides where the outputs end up; see wm/monitor-layout.nix.
 
 let
+  # Declared maxima, per output, pre-parsed for the JS filter.
   parseMode = s:
     let
       parts = lib.splitString "@" s;
@@ -29,7 +29,7 @@ let
       r = lib.toInt (builtins.head (lib.splitString "." rate));
     };
 
-  natives = builtins.toJSON (lib.mapAttrs'
+  ceilings = builtins.toJSON (lib.mapAttrs'
     (_: m: lib.nameValuePair m.name (parseMode m.mode))
     hostConfig.displays.monitors);
 in
@@ -43,15 +43,19 @@ in
     Singleton {
         id: root
 
-        // [{ name, current, rate, sizes: [{ size, label, ratio, active }] }]
+        // [{ name, current, rate, modes: [{ mode, label, rate, active }] }]
         property var outputs: []
 
-        // Each declared output's native mode, from displays.nix.
-        readonly property var natives: (${natives})
+        readonly property var ceilings: (${ceilings})
 
-        // Below this a desktop is not usable, and on a 4K panel it is also the
-        // point where the next whole divisor (960 wide, 4:1) would appear.
+        // Below this, a "resolution" is a thing you set by accident.
         readonly property int minWidth: 1280
+
+        // A fixed-pixel panel can only letterbox or stretch a mode that is not
+        // its own shape, so only modes matching the output's aspect are offered.
+        // Without this the 16:9 LG lists eight rows, seven of them 16:10 and 4:3
+        // relics from the VESA table.
+        readonly property real aspectTolerance: 0.02
 
         function refresh() { probe.running = true; }
 
@@ -62,6 +66,13 @@ in
             stdout: StdioCollector {
                 onStreamFinished: root.outputs = root.parse(text)
             }
+        }
+
+        function parseMode(s) {
+            var m = /^(\d+)x(\d+)@([\d.]+)Hz?$/.exec(s.trim());
+            if (!m)
+                return null;
+            return { w: parseInt(m[1]), h: parseInt(m[2]), r: Math.round(parseFloat(m[3])) };
         }
 
         function parse(raw) {
@@ -75,39 +86,53 @@ in
             var out = [];
             for (var i = 0; i < mons.length; i++) {
                 var mon = mons[i];
+                var cap = root.ceilings[mon.name];
+                var list = mon.availableModes || [];
 
-                // An undeclared output still has a native mode: the one it is
-                // running. Falling back to it keeps a newly plugged-in monitor
-                // from showing an empty list.
-                var native = root.natives[mon.name]
-                    || ({ w: mon.width, h: mon.height, r: Math.round(mon.refreshRate) });
+                // The ceiling's shape where one is declared, the running mode's
+                // otherwise — an output nobody declared still has an aspect.
+                var aspect = cap ? (cap.w / cap.h) : (mon.width / mon.height);
 
-                // What the desktop currently measures, which is the mode divided
-                // by the scale — not the mode. At scale 2 a 4K output is a
-                // 1920x1080 desktop, and that is the row that should be ticked.
-                var scale = mon.scale || 1;
-                var logicalW = Math.round(mon.width / scale);
-                var logicalH = Math.round(mon.height / scale);
-
-                var sizes = [];
-                for (var n = 1; native.w / n >= root.minWidth; n++) {
-                    if (native.w % n || native.h % n)
+                // One entry per resolution, keeping its fastest refresh.
+                var best = ({});
+                for (var j = 0; j < list.length; j++) {
+                    var mode = root.parseMode(list[j]);
+                    if (!mode || mode.w < root.minWidth)
                         continue;
-                    var w = native.w / n;
-                    var h = native.h / n;
-                    sizes.push({
-                        size:   w + "x" + h,
-                        label:  w + " × " + h,
-                        ratio:  n + ":1",
-                        active: w === logicalW && h === logicalH
+                    if (cap && (mode.w > cap.w || mode.h > cap.h || mode.r > cap.r))
+                        continue;
+                    if (Math.abs(mode.w / mode.h - aspect) > root.aspectTolerance)
+                        continue;
+                    var key = mode.w + "x" + mode.h;
+                    if (best[key] === undefined || mode.r > best[key])
+                        best[key] = mode.r;
+                }
+
+                var dims = [];
+                for (var k in best)
+                    dims.push({ w: parseInt(k.split("x")[0]),
+                                h: parseInt(k.split("x")[1]),
+                                r: best[k] });
+                dims.sort(function (a, b) { return (b.w - a.w) || (b.h - a.h); });
+
+                var rows = [];
+                for (var d = 0; d < dims.length; d++) {
+                    rows.push({
+                        mode:  dims[d].w + "x" + dims[d].h + "@" + dims[d].r,
+                        label: dims[d].w + " × " + dims[d].h,
+                        rate:  dims[d].r + " Hz",
+                        // Matched on resolution alone. Only one refresh per
+                        // resolution is offered, so a monitor sitting at 4K@60
+                        // would otherwise show no active row at all.
+                        active: dims[d].w === mon.width && dims[d].h === mon.height
                     });
                 }
 
                 out.push({
                     name:    mon.name,
-                    current: logicalW + " × " + logicalH,
+                    current: mon.width + " × " + mon.height,
                     rate:    Math.round(mon.refreshRate) + " Hz",
-                    sizes:   sizes
+                    modes:   rows
                 });
             }
             return out;
@@ -118,28 +143,28 @@ in
         // the popup first becomes visible, which is a poor place to discover a
         // mistake. Reading `outputs` inside a plain function still registers the
         // dependency, so the caller's binding tracks it either way.
-        function sizesFor(name) {
+        function modesFor(name) {
             for (var i = 0; i < root.outputs.length; i++)
                 if (root.outputs[i].name === name)
-                    return root.outputs[i].sizes;
+                    return root.outputs[i].modes;
             return [];
         }
 
         // The wallpaper has to be re-sent afterwards, for the same reason a
         // rotation does: awww holds the image at the geometry it was given, so
-        // an output whose logical size just halved keeps showing a frame drawn
-        // for the old one. The sleep is for the change to retire — re-sending
+        // an output that has just dropped to 1440p keeps showing the 4K frame
+        // scaled to fit. The sleep is for the modeset to retire — re-sending
         // into the old geometry only reproduces the stretch. mpvpaper is killed
         // first because glass-wallpaper-restore starts one unconditionally, and
         // a live wallpaper would otherwise end up with two.
-        function apply(name, size) {
+        function apply(name, mode) {
             applier.command = [
                 "sh", "-c",
-                "set-monitor-size \"$1\" \"$2\" || exit 0; " +
+                "set-monitor-mode \"$1\" \"$2\" || exit 0; " +
                 "sleep 1; " +
                 "pkill -f \"mpvpaper .*$1\" >/dev/null 2>&1; " +
                 "glass-wallpaper-restore \"$1\"",
-                "sh", name, size
+                "sh", name, mode
             ];
             applier.running = true;
             settle.restart();
@@ -148,7 +173,7 @@ in
         Process { id: applier; running: false }
 
         // Re-read after a change lands, so a popup left open stops claiming the
-        // old size is current.
+        // old mode is current.
         Timer {
             id: settle
             interval: 2500
@@ -170,10 +195,10 @@ in
         implicitHeight: 20
         implicitWidth:  chip.implicitWidth
 
-        // Which output's size list is expanded, or "".
+        // Which output's mode list is expanded, or "".
         property string expanded: ""
 
-        readonly property var expandedSizes: MonitorModes.sizesFor(root.expanded)
+        readonly property var expandedModes: MonitorModes.modesFor(root.expanded)
 
         Text {
             id: chip
@@ -235,7 +260,7 @@ in
                         font.weight: Font.DemiBold
                         font.letterSpacing: -0.13
                         color: Glass.text
-                        text: "Display size"
+                        text: "Resolution"
                     }
 
                     // ---- outputs ----
@@ -273,26 +298,26 @@ in
                         color: Glass.stroke
                     }
 
-                    // ---- that output's sizes ----
+                    // ---- that output's modes ----
                     Column {
                         visible: root.expanded !== ""
                         width: parent.width
                         spacing: 2
 
                         Repeater {
-                            model: root.expandedSizes
+                            model: root.expandedModes
                             delegate: PopupRow {
                                 required property var modelData
                                 width: col.width
                                 // aspect_ratio
                                 glyph:  "\ue85b"
-                                label:  modelData.label + "  ·  " + modelData.ratio
+                                label:  modelData.label + "  ·  " + modelData.rate
                                 active: modelData.active
                                 // check
                                 trailing: modelData.active ? "\ue5ca" : ""
                                 onActivated: {
                                     if (!modelData.active)
-                                        MonitorModes.apply(root.expanded, modelData.size);
+                                        MonitorModes.apply(root.expanded, modelData.mode);
                                     PopupState.close();
                                     root.expanded = "";
                                 }
