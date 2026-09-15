@@ -122,11 +122,11 @@
     "media-tracker": {
       "flake": false,
       "locked": {
-        "lastModified": 1789507907,
-        "narHash": "sha256-eWfROZKnwXArlOxwj6hRk5mqBwsRULQtJDnFJCT2CMM=",
+        "lastModified": 1789509296,
+        "narHash": "sha256-1PYGJrIROqpjpOA4OeqJtw6taolHlrkPqw6+WJURQAU=",
         "owner": "neburion",
         "repo": "media-tracker",
-        "rev": "f2239757368766693812e188bc6565f253ea8cff",
+        "rev": "6ccb2fcba17f8599c30b173d2ff355fb403cf19e",
         "type": "github"
       },
       "original": {
