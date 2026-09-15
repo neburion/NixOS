@@ -14,6 +14,7 @@
     ./hardware.nix
     ./power-toggle.nix
     ./monitor-toggle.nix
+    ./resolution.nix
     ./tray.nix
     ./wifi.nix
     ./workspaces.nix

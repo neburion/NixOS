@@ -73,6 +73,7 @@
                     BarTray { }
                     BarPowerToggle { }
                     BarMonitorToggle { }
+                    BarResolution { }
                 }
 
                 // ---- centre ----

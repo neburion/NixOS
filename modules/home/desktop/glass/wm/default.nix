@@ -31,9 +31,11 @@
     ./layer-rules.nix
     ./lid.nix
     ./looks.nix
+    ./monitor-layout.nix
     ./monitors.nix
     ./movement.nix
     ./programs.nix
+    ./resolution.nix
     ./rotation.nix
     ./screenshot-tools.nix
     ./session.nix
