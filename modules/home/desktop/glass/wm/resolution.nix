@@ -1,84 +1,120 @@
-{ pkgs, lib, config, hostConfig, ... }:
+{ pkgs, config, ... }:
 
-# Per-monitor resolution. The second front-end on the layout engine in
+# Apparent size, per monitor. The second front-end on the layout engine in
 # monitor-layout.nix; rotation.nix is the first, and both work the same way —
 # write one state file, call reflow-monitors, touch hyprctl never.
 #
-# State: ~/.local/state/monitor-modes/<monitor-name>, holding a mode string in
-# the form the output's own mode list uses, e.g. 2560x1440@144.00.
+# State: ~/.local/state/monitor-modes/<name>, holding a mode and a scale, e.g.
+# "3840x2160@144.00 2".
 #
-# Two gates, and both matter:
+# ── why this takes a SIZE and not a mode ───────────────────────────────────
+# A fixed-pixel panel interpolates anything that is not a whole-number mapping
+# onto its own grid. Asking a 3840x2160 panel for 2560x1440 makes its internal
+# scaler stretch by 1.5, so every second pixel is split across two physical ones
+# and a 1px glyph stem becomes one pixel plus a half-bright neighbour. Text takes
+# it worst, because the app has already antialiased those edges for the smaller
+# grid and the scaler then filters the result a second time.
 #
-#   the mode list  — a mode the panel does not advertise is refused by Hyprland
-#                    mid-layout, which leaves every other output repacked around
-#                    a monitor that never changed size.
-#   the ceiling    — hosts/<h>/hardware/displays.nix declares each output's
-#                    maximum. Positions there are computed for it, and it is
-#                    also the mode an output with no state file runs at, so
-#                    nothing may sit above it.
+# So a smaller desktop is a SCALE at the native mode, never a smaller mode. At
+# scale 2 the compositor lays out 1920x1080 logical pixels and renders them into
+# all 3840x2160 real ones: identical apparent size to a 1080p signal, glyphs
+# rasterised with four times the detail, and no scaler anywhere in the path.
 #
-# Choosing the ceiling DELETES the state file rather than writing it. The two
-# would behave identically today, but "no file" is the one form that cannot go
-# stale if the declaration ever changes.
+# It follows that only whole-number divisors of the native mode are offered at
+# all. On a 3840x2160 panel that is 3840x2160, 1920x1080 and 1280x720; 2560x1440
+# is 1.5:1 and has no sharp form, so it is not on the menu. The planner enforces
+# the same rule independently — see target_scale in monitor-layout.py.
+#
+# The cost is honest: scale does not reduce what the GPU renders or copies. A
+# 1920x1080 logical desktop at scale 2 still pushes 8.29 Mpx per frame, same as
+# native. Sharpness was chosen over bandwidth deliberately.
+#
+# --raw exists for the case this rule forbids: it sets a real mode at scale 1,
+# blur included. Nothing in the UI calls it.
 
 let
-  reflow = config.monitorLayout.reflow;
+  reflow   = config.monitorLayout.reflow;
+  ceilings = config.monitorLayout.ceilings;
 
-  ceilings = pkgs.writeText "monitor-ceilings.json" (builtins.toJSON
-    (lib.mapAttrs' (_: m: lib.nameValuePair m.name m.mode)
-      hostConfig.displays.monitors));
-
-  set-monitor-mode = pkgs.writeShellApplication {
-    name = "set-monitor-mode";
+  set-monitor-size = pkgs.writeShellApplication {
+    name = "set-monitor-size";
     runtimeInputs = (with pkgs; [ hyprland jq coreutils ]) ++ [ reflow ];
     text = ''
       state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/monitor-modes"
 
+      raw=0
+      if [[ "''${1:-}" == "--raw" ]]; then
+        raw=1
+        shift
+      fi
+
       target="''${1:-}"
       want="''${2:-}"
       if [[ -z "$target" || -z "$want" ]]; then
-        echo "usage: set-monitor-mode <output> <WIDTHxHEIGHT@REFRESH>" >&2
+        echo "usage: set-monitor-size [--raw] <output> <WIDTHxHEIGHT>" >&2
         exit 2
       fi
 
-      if [[ ! "$want" =~ ^[0-9]+x[0-9]+@[0-9]+(\.[0-9]+)?$ ]]; then
-        echo "set-monitor-mode: '$want' is not a mode (want e.g. 2560x1440@144)" >&2
+      if [[ ! "$want" =~ ^[0-9]+x[0-9]+$ ]]; then
+        echo "set-monitor-size: '$want' is not a size (want e.g. 1920x1080)" >&2
         exit 2
       fi
 
       mon=$(hyprctl -j monitors | jq --arg n "$target" '.[] | select(.name == $n)')
       if [[ -z "$mon" || "$mon" == "null" ]]; then
-        echo "set-monitor-mode: no monitor named $target" >&2
+        echo "set-monitor-size: no monitor named $target" >&2
         exit 1
       fi
 
-      req_res="''${want%@*}"
-      req_w="''${req_res%x*}"
-      req_h="''${req_res#*x}"
-      # Refresh is compared rounded throughout: the same mode is 143.99899 live,
-      # 144.00 in the mode list and 144 in displays.nix.
-      req_r=$(printf '%.0f' "''${want#*@}")
+      req_w="''${want%x*}"
+      req_h="''${want#*x}"
 
-      ceiling=$(jq -r --arg n "$target" '.[$n] // empty' ${ceilings})
-      at_ceiling=0
-      if [[ -n "$ceiling" ]]; then
-        cap_res="''${ceiling%@*}"
-        cap_w="''${cap_res%x*}"
-        cap_h="''${cap_res#*x}"
-        cap_r=$(printf '%.0f' "''${ceiling#*@}")
+      native=$(jq -r --arg n "$target" '.[$n].mode // empty' ${ceilings})
+      if [[ -z "$native" ]]; then
+        echo "set-monitor-size: $target is not declared in displays.nix" >&2
+        exit 1
+      fi
+      nat_res="''${native%@*}"
+      nat_w="''${nat_res%x*}"
+      nat_h="''${nat_res#*x}"
 
-        if (( req_w > cap_w || req_h > cap_h || req_r > cap_r )); then
-          echo "set-monitor-mode: $want exceeds $target's declared ceiling $ceiling" >&2
-          exit 1
-        fi
-        if (( req_w == cap_w && req_h == cap_h && req_r == cap_r )); then
-          at_ceiling=1
-        fi
+      if (( req_w > nat_w || req_h > nat_h )); then
+        echo "set-monitor-size: $want exceeds $target's native $nat_res" >&2
+        exit 1
       fi
 
-      # Canonicalise against the output's own list, so the state file always
+      if (( raw )); then
+        # Escape hatch: a real mode at scale 1, whatever it does to sharpness.
+        canonical=$(jq -r --arg res "$want" '
+          .availableModes[] | sub("Hz$"; "") | select(startswith($res + "@"))
+        ' <<<"$mon" | head -1)
+        if [[ -z "$canonical" ]]; then
+          echo "set-monitor-size: $target cannot do $want" >&2
+          exit 1
+        fi
+        mkdir -p "$state_dir"
+        printf '%s 1' "$canonical" > "$state_dir/$target"
+        reflow-monitors
+        exit 0
+      fi
+
+      # The scale that turns the native mode into the requested size, and it has
+      # to come out whole on BOTH axes — a divisor that works across the width
+      # and not the height is not a scale, it is a different aspect ratio.
+      if (( req_w == 0 || req_h == 0 || nat_w % req_w || nat_h % req_h )); then
+        echo "set-monitor-size: $want is not a whole-number divisor of $nat_res" >&2
+        exit 1
+      fi
+      scale=$(( nat_w / req_w ))
+      if (( nat_h / req_h != scale )); then
+        echo "set-monitor-size: $want is not the aspect of $nat_res" >&2
+        exit 1
+      fi
+
+      # Resolve the native mode against the output's own list, so the state file
       # holds a string the planner can match exactly.
-      canonical=$(jq -r --arg res "''${req_w}x''${req_h}" --argjson r "$req_r" '
+      nat_r=$(printf '%.0f' "''${native#*@}")
+      canonical=$(jq -r --arg res "$nat_res" --argjson r "$nat_r" '
         .availableModes[]
         | sub("Hz$"; "")
         | select(startswith($res + "@"))
@@ -86,21 +122,46 @@ let
       ' <<<"$mon" | head -1)
 
       if [[ -z "$canonical" ]]; then
-        echo "set-monitor-mode: $target cannot do $want" >&2
+        echo "set-monitor-size: $target does not advertise its declared $native" >&2
         exit 1
       fi
 
       mkdir -p "$state_dir"
-      if (( at_ceiling )); then
+      if (( scale == 1 )); then
+        # Native at scale 1 is what an output with no state file runs at, and
+        # "no file" is the one form that cannot go stale if displays.nix changes.
         rm -f "$state_dir/$target"
       else
-        printf '%s' "$canonical" > "$state_dir/$target"
+        printf '%s %s' "$canonical" "$scale" > "$state_dir/$target"
       fi
 
       reflow-monitors
     '';
   };
+
+  # Insurance. A scale large enough to make the bar hard to use would otherwise
+  # leave the menu as the only way back to native, which is circular.
+  reset-monitor-size = pkgs.writeShellApplication {
+    name = "reset-monitor-size";
+    runtimeInputs = (with pkgs; [ hyprland jq coreutils ]) ++ [ reflow ];
+    text = ''
+      state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/monitor-modes"
+
+      if [[ $# -ge 1 ]]; then
+        target="$1"
+      else
+        target=$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')
+      fi
+
+      rm -f "$state_dir/$target"
+      reflow-monitors
+    '';
+  };
 in
 {
-  home.packages = [ set-monitor-mode ];
+  home.packages = [ set-monitor-size reset-monitor-size ];
+
+  wayland.windowManager.hyprland.settings.bind = [
+    "$mod SHIFT, backslash, exec, ${reset-monitor-size}/bin/reset-monitor-size"
+  ];
 }

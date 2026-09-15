@@ -14,11 +14,16 @@
 # things that surround it.
 #
 # ── the ceiling map ────────────────────────────────────────────────────────
-# hosts/<h>/hardware/displays.nix declares each output's MAXIMUM mode, not its
-# resting one. The planner needs that declaration to answer "no state file", so
-# it is handed in as JSON through $MONITOR_CEILINGS. Deleting an output's state
-# file is how you reset it, and without the map the planner would fall back to
-# the live mode and simply pin whatever was on screen.
+# hosts/<h>/hardware/displays.nix declares each output's MAXIMUM mode and its
+# resting scale, not the mode it happens to be running. The planner needs that
+# declaration to answer "no state file", so it is handed in as JSON through
+# $MONITOR_CEILINGS. Deleting an output's state file is how you reset it, and
+# without the map the planner would fall back to the live mode and simply pin
+# whatever was on screen.
+#
+# One file, exposed as an option, because three consumers want it: the planner,
+# set-monitor-size, and — in its own pre-parsed shape for JS — the bar menu.
+# Two writeText calls generating the same JSON is how they drift.
 #
 # ── the override file ──────────────────────────────────────────────────────
 # A nix rebuild reloads hyprland.conf, which re-applies the declared monitor
@@ -44,9 +49,9 @@
 let
   planner = ./monitor-layout.py;
 
-  # { "HDMI-A-1": "3840x2160@144", … } — every declared output's ceiling.
+  # { "HDMI-A-1": { mode = "3840x2160@144"; scale = "1"; }, … }
   ceilings = pkgs.writeText "monitor-ceilings.json" (builtins.toJSON
-    (lib.mapAttrs' (_: m: lib.nameValuePair m.name m.mode)
+    (lib.mapAttrs' (_: m: lib.nameValuePair m.name { inherit (m) mode scale; })
       hostConfig.displays.monitors));
 
   # The single entry point. Reads persisted state, packs the outputs left to
@@ -91,12 +96,22 @@ in
   # Internal, in the sense registry.nix is internal: the front-ends need the
   # derivation, not a copy of it, and re-deriving reflow-monitors per front-end
   # would put two planners in the store and let them drift.
-  options.monitorLayout.reflow = lib.mkOption {
-    type     = lib.types.package;
-    internal = true;
-    readOnly = true;
-    default  = reflow-monitors;
-    description = "The layout engine every monitor front-end delegates to.";
+  options.monitorLayout = {
+    reflow = lib.mkOption {
+      type     = lib.types.package;
+      internal = true;
+      readOnly = true;
+      default  = reflow-monitors;
+      description = "The layout engine every monitor front-end delegates to.";
+    };
+
+    ceilings = lib.mkOption {
+      type     = lib.types.path;
+      internal = true;
+      readOnly = true;
+      default  = ceilings;
+      description = "Each declared output's maximum mode and resting scale, as JSON.";
+    };
   };
 
   config = {

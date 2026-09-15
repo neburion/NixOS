@@ -61,13 +61,18 @@
     # which is why the ceiling is what it is. It was driven at 2560x1440 for a
     # long time, which the monitor's own scaler then stretched 1.5x back to
     # native — non-integer interpolation of already-antialiased glyphs, which
-    # is what made text look soft everywhere. Driving it natively fixed that,
-    # and dropping to 1440p from the bar brings the softness back for as long
-    # as it is selected. That is the trade the menu exists to make: 1440p is a
-    # quarter of the pixels for the iGPU to copy across PCIe to this panel.
+    # is what made text look soft everywhere. Driving it natively fixed that.
     #
-    # Do NOT lower this line to make 1440p the default. It is the ceiling; the
-    # state file is the choice, and a two-click menu is the way to make it.
+    # 2560x1440 is therefore not on the bar menu at all: 3840/2560 is 1.5, and
+    # there is no arrangement of a 1.5:1 mapping onto a fixed pixel grid that is
+    # not interpolated. A smaller desktop is a whole-number SCALE at this mode
+    # instead — 1920x1080 at scale 2 is the same apparent size as a 1080p signal
+    # with none of the stretching, because the compositor renders into all
+    # 3840x2160 real pixels. See wm/resolution.nix.
+    #
+    # Do NOT lower this line to make a smaller mode the default. It is the
+    # ceiling AND the mode every scale divides; lowering it takes the sharp
+    # sizes away with it.
     #
     # It then ran at scale 1.5 for a while — native pixels, 2560 logical
     # width — which is where the fuzz came back by another route. Fractional
