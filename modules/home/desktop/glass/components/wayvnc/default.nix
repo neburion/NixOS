@@ -24,6 +24,9 @@
 # headless output to its own screen on connect (verified: a 720x1600 request
 # moved HEADLESS-3 to exactly 720x1600). The values below are only the size
 # the output holds before the first client arrives.
+#
+# Landscape: the phone is held sideways as a second screen, so a portrait
+# default meant every connection started rotated a quarter turn.
 
 let
   phoneDisplayToggle = pkgs.writeShellApplication {
@@ -33,8 +36,8 @@ let
     ];
     text = ''
       # Pre-connection size only; the client resizes this on connect.
-      width=1080
-      height=1920
+      width=1920
+      height=1080
       scale=2
 
       state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/phone-display"
