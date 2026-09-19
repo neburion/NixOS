@@ -22,6 +22,7 @@
       "$mod,       P,      exec, keepassxc"
       "$mod,       W,      exec, $wallpaperManager"
       "$mod,       V,      exec, $phoneDisplay"
+      "$mod SHIFT, V,      workspace, name:phone"
 
       # Windows (H/J/K/L focus + Shift-move: see movement.nix for cross-monitor)
       "$mod,       Backspace, killactive"

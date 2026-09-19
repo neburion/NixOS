@@ -107,6 +107,17 @@ let
           exit 1
         fi
 
+        # Give the headless output its own named workspace rather than letting
+        # it eat a numbered one. Named workspaces live in a separate id space
+        # (this lands on -1337) and render with no number, so the phone screen
+        # never consumes a slot out of 1-10. Creating a workspace on a monitor
+        # requires focusing that monitor, so focus is handed straight back in
+        # the same batch -- one atomic hyprctl call, no visible detour.
+        prev_mon=$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')
+        hyprctl --batch "dispatch focusmonitor $new_output ; \
+                         dispatch workspace name:phone ; \
+                         dispatch focusmonitor ''${prev_mon:-$new_output}" >/dev/null
+
         # Keep the log. The previous version sent wayvnc to /dev/null, which
         # is why a failed start produced no evidence at all.
         wayvnc -L info --disable-input --output="$new_output" 0.0.0.0 5900 \
