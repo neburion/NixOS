@@ -74,6 +74,7 @@
                     BarPowerToggle { }
                     BarMonitorToggle { }
                     BarResolution { }
+                    BarPhoneDisplay { accent: window.accent }
                 }
 
                 // ---- centre ----

@@ -54,6 +54,7 @@
 
                 BarPowerToggle { }
                 BarMonitorToggle { }
+                BarPhoneDisplay { }
             }
 
             // Center: katakana ticker

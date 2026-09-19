@@ -1,35 +1,66 @@
 { pkgs, ... }:
 
 # Phone-as-extended-display via wayvnc + Hyprland headless output.
-# Toggle script: first press creates a virtual monitor and starts wayvnc on
-# 0.0.0.0:5900 bound to it; second press kills wayvnc and removes the monitor.
-# No auth (LAN-only, user-triggered — never left running), and view-only
-# (--disable-input) so an unauthenticated LAN client can't drive the desktop.
+# Toggle ($mod+V, or the bar widget): first press creates a virtual monitor
+# and starts wayvnc on 0.0.0.0:5900 bound to it; second press kills wayvnc
+# and removes the monitor.
+#
+# No auth, and view-only (--disable-input) — the phone is a second screen,
+# never a control surface, so a stray connection can look but never touch.
+#
+# Reaching it from the phone, in order of preference:
+#   1. The tailnet IP. This is the path that works on *any* network. Wi-Fi
+#      with AP/client isolation (hotel, café, guest SSIDs, and this house's
+#      own Plume pods) silently drops phone->laptop unicast, so the LAN IP
+#      is a coin flip. Tailscale doesn't care: "any device that can open an
+#      HTTPS connection to an arbitrary host can build a tunnel using DERP
+#      relays". Needs the Tailscale app on the phone.
+#   2. The LAN IP, when the network happens to allow client-to-client.
+# Both are printed in the notification, tailnet first.
+#
+# Resolution is NOT the phone's problem to match here. wayvnc's automatic
+# resizing is on by default and Hyprland exposes zwlr_output_manager_v1, so
+# a client advertising the ExtendedDesktopSize pseudo-encoding resizes the
+# headless output to its own screen on connect (verified: a 720x1600 request
+# moved HEADLESS-3 to exactly 720x1600). The values below are only the size
+# the output holds before the first client arrives.
 
 let
   phoneDisplayToggle = pkgs.writeShellApplication {
     name = "phone-display-toggle";
-    runtimeInputs = with pkgs; [ wayvnc hyprland jq iproute2 libnotify coreutils avahi nettools ];
+    runtimeInputs = with pkgs; [
+      wayvnc hyprland jq iproute2 libnotify coreutils tailscale gnugrep
+    ];
     text = ''
+      # Pre-connection size only; the client resizes this on connect.
+      width=1080
+      height=1920
+      scale=2
+
       state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}/phone-display"
       mkdir -p "$state_dir"
       pidfile="$state_dir/wayvnc.pid"
-      avahi_pidfile="$state_dir/avahi.pid"
       outfile="$state_dir/output.name"
+      logfile="$state_dir/wayvnc.log"
 
       is_running() {
         [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile" 2>/dev/null)" 2>/dev/null
       }
 
+      mon_size() {
+        hyprctl -j monitors | jq -r --arg n "$1" \
+          '.[] | select(.name == $n) | "\(.width)x\(.height)"'
+      }
+
+      outputs() { hyprctl -j monitors | jq -r '.[].name' | sort; }
+
+      # Tear down the monitor even if wayvnc already died on its own,
+      # otherwise a failed start leaves an orphan headless output behind.
       stop() {
         if is_running; then
           kill "$(cat "$pidfile")" 2>/dev/null || true
         fi
         rm -f "$pidfile"
-        if [ -f "$avahi_pidfile" ]; then
-          kill "$(cat "$avahi_pidfile")" 2>/dev/null || true
-          rm -f "$avahi_pidfile"
-        fi
         if [ -f "$outfile" ]; then
           hyprctl output remove "$(cat "$outfile")" >/dev/null 2>&1 || true
           rm -f "$outfile"
@@ -38,11 +69,16 @@ let
       }
 
       start() {
-        before=$(hyprctl -j monitors | jq -r '.[].name' | sort)
+        before=$(outputs)
         hyprctl output create headless >/dev/null
-        sleep 0.3
-        after=$(hyprctl -j monitors | jq -r '.[].name' | sort)
-        new_output=$(comm -13 <(echo "$before") <(echo "$after") | head -1)
+
+        # Poll for the new output rather than sleeping a guessed interval.
+        new_output=""
+        for _ in $(seq 1 20); do
+          new_output=$(comm -13 <(echo "$before") <(outputs) | head -1)
+          [ -n "$new_output" ] && break
+          sleep 0.1
+        done
 
         if [ -z "$new_output" ]; then
           notify-send -u critical "Phone display" "Failed to create headless output"
@@ -50,23 +86,51 @@ let
         fi
         echo "$new_output" > "$outfile"
 
-        # Portrait 1080x1920 @ 60Hz, placed automatically next to existing monitors.
-        hyprctl keyword monitor "$new_output,1080x1920@60,auto,1" >/dev/null
+        # `hyprctl keyword monitor` returns ok but intermittently does not
+        # apply when it lands too soon after the output is created — the
+        # monitor stays at its default landscape size. Re-assert until the
+        # size we asked for is the size Hyprland reports.
+        want="''${width}x''${height}"
+        for _ in $(seq 1 10); do
+          hyprctl keyword monitor "$new_output,''${want}@60,auto,$scale" >/dev/null
+          sleep 0.3
+          [ "$(mon_size "$new_output")" = "$want" ] && break
+        done
 
-        ip=$(ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -1)
+        if [ "$(mon_size "$new_output")" != "$want" ]; then
+          notify-send -u critical "Phone display" \
+            "Output stuck at $(mon_size "$new_output"), wanted $want"
+          stop
+          exit 1
+        fi
 
-        # --disable-input: view-only. The phone is an extra display, never a
-        # control surface — and the listener is unauthenticated on the LAN, so
-        # refusing all remote keyboard/mouse means a stray connection can look
-        # but never touch.
-        wayvnc --disable-input --output="$new_output" 0.0.0.0 5900 >/dev/null 2>&1 &
+        # Keep the log. The previous version sent wayvnc to /dev/null, which
+        # is why a failed start produced no evidence at all.
+        wayvnc -L info --disable-input --output="$new_output" 0.0.0.0 5900 \
+          > "$logfile" 2>&1 &
         echo $! > "$pidfile"
 
-        # Advertise as a discoverable VNC server so phone clients find it via scan.
-        avahi-publish-service "$(hostname) phone display" _rfb._tcp 5900 >/dev/null 2>&1 &
-        echo $! > "$avahi_pidfile"
+        listening=false
+        for _ in $(seq 1 25); do
+          if ss -ltn 2>/dev/null | grep -q ':5900 '; then listening=true; break; fi
+          is_running || break
+          sleep 0.2
+        done
 
-        notify-send "Phone display" "VNC on ''${ip:-<no-ip>}:5900"
+        if [ "$listening" != true ]; then
+          notify-send -u critical "Phone display" \
+            "wayvnc failed to listen — see $logfile"
+          stop
+          exit 1
+        fi
+
+        ts=$(tailscale ip -4 2>/dev/null | head -1 || true)
+        lan=$(ip -4 -o addr show scope global up \
+              | awk '$2 != "tailscale0" { print $4 }' \
+              | cut -d/ -f1 | head -1 || true)
+
+        notify-send "Phone display" \
+          "tailnet ''${ts:-unavailable}:5900''\n''${lan:+lan $lan:5900}"
       }
 
       if is_running; then

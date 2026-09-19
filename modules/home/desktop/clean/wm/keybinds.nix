@@ -21,6 +21,7 @@
       "$mod SHIFT, G,      exec, $steamLauncher"
       "$mod,       P,      exec, keepassxc"
       "$mod,       W,      exec, $wallpaperManager"
+      "$mod,       V,      exec, $phoneDisplay"
 
       # Windows (H/J/K/L focus + Shift-move: see movement.nix for cross-monitor)
       "$mod,       Backspace, killactive"

@@ -6,7 +6,8 @@
 # session is up. A widget that only appeared once wayvnc was already running
 # could stop the thing but never start it, and since nothing bound
 # $phoneDisplay to a key either, there was no way in at all short of typing
-# `phone-display-toggle` in a terminal. Idle is dimmed; active is full fg.
+# `phone-display-toggle` in a terminal. Idle is a dim `cast`; active is a
+# filled `cast_connected` in the bar's accent.
 
 {
   quickshell.services.PhoneDisplay = ''
@@ -59,13 +60,16 @@
         id: root
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
 
-        font.family: "FiraMono Nerd Font"
-        font.pixelSize: 13
-        color: PhoneDisplay.active
-                 ? Theme.fg
-                 : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.45)
+        property color accent: Glass.accentFallback
+
+        font.family: Glass.fontIcon
+        font.pixelSize: 17
+        font.variableAxes: PhoneDisplay.active ? Glass.iconActive : Glass.iconIdle
+        color: PhoneDisplay.active ? root.accent : Glass.muted
         opacity: PhoneDisplay.busy ? 0.45 : 1.0
-        text: PhoneDisplay.active ? "● PHONE" : "○ PHONE"
+
+        // cast / cast_connected
+        text: PhoneDisplay.active ? "" : ""
 
         Behavior on opacity { NumberAnimation { duration: 150 } }
 
