@@ -138,11 +138,14 @@ in
           -- the switch's own column, which is the LLVM default.
           "IndentCaseLabels: true",
           "AllowShortCaseLabelsOnASingleLine: true",
-          -- ...and line the bodies up once they are there. AlignCaseColons
-          -- false keeps the colon against its label and pads after it, which
-          -- is the same choice made everywhere else here; true would pad
-          -- before the colon instead and give `case A          : return ...`.
-          "AlignConsecutiveShortCaseStatements: {Enabled: true, AlignCaseColons: false}",
+          -- Bodies are lined up by align-prototypes.py, not here.
+          -- clang-format counts a case that opens a block as a member of the
+          -- run, so `case SYS_NNN: {` widens the column that every
+          -- neighbouring `return` is padded to -- the returns end up spaced
+          -- out to clear a label whose body is a brace. There is no option to
+          -- exclude it, and the grouping is the whole question, so the pass
+          -- that already owns column decisions owns this one too.
+          "AlignConsecutiveShortCaseStatements: {Enabled: false}",
           -- `char* p`, not `char *p`. The star belongs to the type, and
           -- keeping it there means a parameter's type is one unbroken token
           -- run that the prototype aligner can measure and pad as a column.

@@ -195,6 +195,51 @@ def align(group):
     return result
 
 
+# A case label conservative enough to be safe: `default`, or `case` plus a
+# bare identifier or number. Anything else -- a character literal like
+# `case ':':`, a GCC range, a constant expression -- is left alone rather than
+# risk cutting it at the wrong colon.
+CASE_LABEL = re.compile(
+    r"^([ \t]*)((?:case[ \t]+(?:[A-Za-z_][A-Za-z_0-9]*|[0-9]+))|default):[ \t]+(?!\{)(\S.*)$"
+)
+
+
+def align_cases(lines):
+    """Line up the bodies of consecutive one-line case labels.
+
+    A case that opens a block is deliberately not part of any run. Its body is
+    a brace, not a statement, and letting it widen the column spaces every
+    neighbouring `return` out to clear a label it has nothing to do with.
+    Because it does not match, it also breaks the run -- labels either side of
+    a block are aligned separately, which is what reading them as two tables
+    rather than one implies.
+    """
+    output, group = [], []
+
+    def flush():
+        if group:
+            width = max(len(m.group(1)) + len(m.group(2)) + 1 for m in group)
+            for match in group:
+                indent, label, body = match.groups()
+                head = f"{indent}{label}:"
+                output.append(f"{head.ljust(width)} {body}")
+            group.clear()
+
+    for line in lines:
+        match = CASE_LABEL.match(line)
+        # An indent change means a different switch; do not align across them.
+        if match and (not group or match.group(1) == group[0].group(1)):
+            group.append(match)
+        else:
+            flush()
+            if match:
+                group.append(match)
+            else:
+                output.append(line)
+    flush()
+    return output
+
+
 def run(lines):
     output, group = [], []
 
@@ -215,7 +260,7 @@ def run(lines):
 
 def main():
     text = sys.stdin.read()
-    sys.stdout.write("\n".join(run(text.split("\n"))))
+    sys.stdout.write("\n".join(align_cases(run(text.split("\n")))))
 
 
 if __name__ == "__main__":
