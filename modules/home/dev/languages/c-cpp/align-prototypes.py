@@ -27,6 +27,11 @@ The split is the last space at bracket depth zero, which puts `const u4` and
 `params[static 3]` on the correct sides and survives `[static 3]` containing a
 space of its own. A parameter with no name at all is all type.
 
+Column starts are absolute and shared by the whole group. A prototype that
+runs out of parameters still counts toward the width of the column it stopped
+in, so the next column begins past the widest cell in the group rather than
+past whatever that one row happened to end with.
+
 clang-format collapses this padding on the next run, and this pass puts it
 back, so the chain as a whole still settles on a fixed point.
 
@@ -131,25 +136,30 @@ def align(group):
 
     cells = render_columns(parsed, columns)
 
-    bodies = ["" for _ in parsed]
-    cursor = [head_width + 1 for _ in parsed]
+    # Every column gets one absolute start, shared by every prototype in the
+    # group. The width of a column is the widest cell anywhere in it -- a row
+    # that stops here still votes on where the next column begins, which is
+    # what keeps a three-parameter prototype lined up with the two-parameter
+    # ones above it rather than closing up against its own second parameter.
+    widths = [
+        max(len(row[index]) for row in cells if index < len(row))
+        for index in range(columns)
+    ]
+    starts = [head_width + 1]
+    for index in range(columns - 1):
+        starts.append(starts[index] + widths[index] + len(", "))
 
-    for index in range(columns):
-        live = [i for i, p in enumerate(parsed) if index < len(p[2])]
-        if index == 0:
-            for i in live:
-                bodies[i] += cells[i][0]
-                cursor[i] += len(cells[i][0])
-            continue
-        for i in live:
-            bodies[i] += ","
-            cursor[i] += 1
-        target = max(cursor[i] + 1 for i in live)
-        for i in live:
-            bodies[i] += " " * (target - cursor[i]) + cells[i][index]
-            cursor[i] = target + len(cells[i][index])
-
-    result = [f"{head.ljust(head_width)}({body.rstrip()});" for head, body in zip(heads, bodies)]
+    result = []
+    for head, row in zip(heads, cells):
+        line = head.ljust(head_width) + "("
+        cursor = head_width + 1
+        for index, cell in enumerate(row):
+            line += " " * (starts[index] - cursor) + cell
+            cursor = starts[index] + len(cell)
+            if index < len(row) - 1:
+                line += ","
+                cursor += 1
+        result.append(line.rstrip() + ");")
 
     # Padding costs columns. If that pushes any line past the budget, the
     # unaligned original is the better answer.
