@@ -116,6 +116,11 @@ in
           -- one thing still breaks open, so this compacts a dispatch table
           -- without compacting real logic.
           "AllowShortCaseLabelsOnASingleLine: true",
+          -- ...and line the bodies up once they are there. AlignCaseColons
+          -- false keeps the colon against its label and pads after it, which
+          -- is the same choice made everywhere else here; true would pad
+          -- before the colon instead and give `case A          : return ...`.
+          "AlignConsecutiveShortCaseStatements: {Enabled: true, AlignCaseColons: false}",
           "BreakBeforeBraces: Attach",
           "SpaceBeforeParens: Never",
           -- There is no "wrap after N parameters" option; the only lever is a
