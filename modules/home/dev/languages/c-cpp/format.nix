@@ -119,6 +119,9 @@ in
           -- `case A: return execute_CLS(chip8);`. A case that does more than
           -- one thing still breaks open, so this compacts a dispatch table
           -- without compacting real logic.
+          -- Indent case labels inside the switch rather than sitting them on
+          -- the switch's own column, which is the LLVM default.
+          "IndentCaseLabels: true",
           "AllowShortCaseLabelsOnASingleLine: true",
           -- ...and line the bodies up once they are there. AlignCaseColons
           -- false keeps the colon against its label and pads after it, which
