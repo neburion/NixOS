@@ -59,7 +59,18 @@
           "TypenameMacros: [_BitInt, typeof_unqual, __typeof__]",
           "IndentWidth: " .. ctx.shiftwidth,
           "UseTab: " .. (vim.bo[ctx.buf].expandtab and "Never" or "ForIndentation"),
-          "BreakBeforeBraces: Linux",
+          -- Braces attached, and no space before a control statement's paren:
+          -- `if(i) {`, `int foo(void) {`. The remaining space between ) and {
+          -- is not removable. clang-format has no option for it -- the whole
+          -- Space* family was checked -- and upstream llvm-project#59744 is an
+          -- open feature request for precisely that, unimplemented. uncrustify
+          -- does have the knob (sp_fparen_brace/sp_sparen_brace), but running
+          -- it after clang-format costs the _BitInt typedef column: uncrustify
+          -- renormalises inter-token whitespace, and since it cannot parse
+          -- _BitInt it regroups those typedefs away from the plain ones. That
+          -- trade was not worth one space.
+          "BreakBeforeBraces: Attach",
+          "SpaceBeforeParens: Never",
           -- There is no "wrap after N parameters" option; the only lever is a
           -- column budget, and the alignment padding is spent from the same
           -- budget. That coupling bites: at 100 a declaration that fits only
