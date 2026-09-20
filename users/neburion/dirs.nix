@@ -26,15 +26,16 @@ let
     "Media/Music"
     "Media/Books"
     "Media/Wallpapers"
-    "Media/Wallpapers/Catppuccin"
-    "Media/Wallpapers/Dark"
-    "Media/Wallpapers/Everforest"
-    "Media/Wallpapers/Gruvbox"
-    "Media/Wallpapers/Nord"
   ]
   # Orientation/category wallpaper layout. Files are named
   # `static-*` / `animated-*` so the two kinds stay sortable within a
   # category instead of needing separate trees.
+  #
+  # There used to be a per-theme row here too — Catppuccin, Dark, Everforest,
+  # Gruvbox, Nord — because clean switches wallpaper by theme name. clean is
+  # not imported by anyone, so those five were recreated empty at every login
+  # and never held a file. The library is the two orientations below; if clean
+  # ever comes back it can carry its own dirs, since they are its concern.
   ++ builtins.concatMap
     (orientation: map (category: "Media/Wallpapers/${orientation}/${category}") [
       "Minimal"
