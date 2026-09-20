@@ -18,7 +18,6 @@
     ../dev/tools/claude-code.nix
     ../dev/tools/direnv.nix
     ../dev/tools/git.nix
-    ../dev/tools/sublime-merge.nix
     ../dev/tools/tokei.nix
   ];
 }
