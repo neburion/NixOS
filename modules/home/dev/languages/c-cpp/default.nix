@@ -4,6 +4,7 @@
   imports = [
     ./compiler.nix
     ./lsp.nix
+    ./format.nix
     ./gdb.nix
     ./cmake.nix
     ./make.nix
