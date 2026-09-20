@@ -121,6 +121,10 @@ in
           -- is the same choice made everywhere else here; true would pad
           -- before the colon instead and give `case A          : return ...`.
           "AlignConsecutiveShortCaseStatements: {Enabled: true, AlignCaseColons: false}",
+          -- `char* p`, not `char *p`. The star belongs to the type, and
+          -- keeping it there means a parameter's type is one unbroken token
+          -- run that the prototype aligner can measure and pad as a column.
+          "PointerAlignment: Left",
           "BreakBeforeBraces: Attach",
           "SpaceBeforeParens: Never",
           -- There is no "wrap after N parameters" option; the only lever is a

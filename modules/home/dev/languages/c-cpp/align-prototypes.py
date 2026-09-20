@@ -16,8 +16,19 @@ Chosen deliberately over right-aligning the names, which would have kept the
 paren tight. The gap only ever appears inside a group of two or more
 prototypes that are being aligned against each other.
 
-clang-format collapses that gap on the next run, and this pass puts it back,
-so the chain as a whole still settles on a fixed point.
+Within a column each parameter is split into its type and its name, and the
+two are padded separately -- the same shape clang-format gives a run of
+variable declarations, where the types form one column and the names another:
+
+    Error bit_isolation  (bool*  out_bit, size_t   position);
+    Error nibbles_to_u8  (u8*    out_bits, const u4 nibbles[static 2]);
+
+The split is the last space at bracket depth zero, which puts `const u4` and
+`params[static 3]` on the correct sides and survives `[static 3]` containing a
+space of its own. A parameter with no name at all is all type.
+
+clang-format collapses this padding on the next run, and this pass puts it
+back, so the chain as a whole still settles on a fixed point.
 
 Everything here is deliberately conservative, because this rewrites source
 files on every save. A line is only ever touched when it is unambiguously a
@@ -81,6 +92,34 @@ def depth_balanced(text):
     return depth == 0
 
 
+def split_type_name(param):
+    """Cut a parameter at its last top-level space: type before, name after."""
+    depth, cut = 0, -1
+    for index, char in enumerate(param):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == " " and depth == 0:
+            cut = index
+    if cut < 0:
+        return param, ""
+    return param[:cut], param[cut + 1:]
+
+
+def render_columns(parsed, columns):
+    """Pad every parameter's type so the names line up inside each column."""
+    cells = [[] for _ in parsed]
+    for index in range(columns):
+        live = [i for i, p in enumerate(parsed) if index < len(p[2])]
+        split = {i: split_type_name(parsed[i][2][index]) for i in live}
+        type_width = max(len(split[i][0]) for i in live)
+        for i in live:
+            kind, name = split[i]
+            cells[i].append(f"{kind.ljust(type_width)} {name}".rstrip() if name else kind)
+    return cells
+
+
 def align(group):
     parsed = [parse(line) for line in group]
     columns = max(len(p[2]) for p in parsed)
@@ -90,6 +129,8 @@ def align(group):
     heads = [p[0] + p[1] for p in parsed]
     head_width = max(len(head) for head in heads)
 
+    cells = render_columns(parsed, columns)
+
     bodies = ["" for _ in parsed]
     cursor = [head_width + 1 for _ in parsed]
 
@@ -97,18 +138,18 @@ def align(group):
         live = [i for i, p in enumerate(parsed) if index < len(p[2])]
         if index == 0:
             for i in live:
-                bodies[i] += parsed[i][2][0]
-                cursor[i] += len(parsed[i][2][0])
+                bodies[i] += cells[i][0]
+                cursor[i] += len(cells[i][0])
             continue
         for i in live:
             bodies[i] += ","
             cursor[i] += 1
         target = max(cursor[i] + 1 for i in live)
         for i in live:
-            bodies[i] += " " * (target - cursor[i]) + parsed[i][2][index]
-            cursor[i] = target + len(parsed[i][2][index])
+            bodies[i] += " " * (target - cursor[i]) + cells[i][index]
+            cursor[i] = target + len(cells[i][index])
 
-    result = [f"{head.ljust(head_width)}({body});" for head, body in zip(heads, bodies)]
+    result = [f"{head.ljust(head_width)}({body.rstrip()});" for head, body in zip(heads, bodies)]
 
     # Padding costs columns. If that pushes any line past the budget, the
     # unaligned original is the better answer.
