@@ -48,8 +48,11 @@ import sys
 # function body, where `r = foo(a, b);` would otherwise look identical to this.
 PROTO = re.compile(r"^(\S.*?[ *])([A-Za-z_][A-Za-z_0-9]*)\((.+)\);[ \t]*$")
 
-# Prefixes that make a line a statement rather than a declaration.
-NOT_A_DECL = re.compile(r"[=;{}]|\b(return|if|while|for|switch|do|else)\b")
+# Prefixes that make a line a statement rather than a declaration. `template`
+# is here because a template header makes the prototype far wider than its
+# neighbours, and one of them would otherwise set the paren column for a whole
+# table of ordinary declarations.
+NOT_A_DECL = re.compile(r"[=;{}]|\b(return|if|while|for|switch|do|else|template)\b")
 
 # Passed in so the Nix module stays the single source of truth for the budget.
 COLUMN_LIMIT = int(sys.argv[1]) if len(sys.argv) > 1 else 120
@@ -97,8 +100,32 @@ def depth_balanced(text):
     return depth == 0
 
 
+def top_level_index(param, wanted):
+    """Index of the first `wanted` char outside (), [] and {}, or -1."""
+    depth = 0
+    for index, char in enumerate(param):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == wanted and depth == 0:
+            return index
+    return -1
+
+
 def split_type_name(param):
-    """Cut a parameter at its last top-level space: type before, name after."""
+    """Cut a parameter at its last top-level space: type before, name after.
+
+    A C++ default argument is kept with the name. Splitting at the last space
+    outright would cut `int width = 640` into `int width =` and `640`, and then
+    pad the gap before the literal -- rewriting the default's own spacing.
+    """
+    default = ""
+    equals = top_level_index(param, "=")
+    if equals >= 0:
+        default = " " + param[equals:].strip()
+        param = param[:equals].rstrip()
+
     depth, cut = 0, -1
     for index, char in enumerate(param):
         if char in "([{":
@@ -108,8 +135,8 @@ def split_type_name(param):
         elif char == " " and depth == 0:
             cut = index
     if cut < 0:
-        return param, ""
-    return param[:cut], param[cut + 1:]
+        return param, default.strip()
+    return param[:cut], param[cut + 1:] + default
 
 
 def render_columns(parsed, columns):

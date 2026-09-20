@@ -23,6 +23,10 @@ let
   #
   # else and do get the same treatment even though they have no parenthesis to
   # close against. \b keeps the keyword whole, so `int undo = 1;` is safe.
+  #
+  # class and namespace join struct here, and the C++ definition suffixes --
+  # const, noexcept, override, final -- join else and do, since a trailing
+  # `) const {` puts a keyword rather than the paren against the brace.
   # align-prototypes.py sits between them: it needs the return-type column
   # clang-format produces, and the brace rules do not care what it did.
   clang-format-tight-braces = pkgs.writeShellScript "clang-format-tight-braces" ''
@@ -30,8 +34,8 @@ let
       | ${lib.getExe pkgs.python3} ${./align-prototypes.py} ${toString columnLimit} \
       | ${lib.getExe pkgs.gnused} -E '
       s/\) \{$/){/
-      s/(struct|union|enum)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
-      s/\b(else|do) \{$/\1{/
+      s/(struct|union|enum|class|namespace)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
+      s/\b(else|do|const|noexcept|override|final) \{$/\1{/
     '
   '';
 in
@@ -125,6 +129,13 @@ in
           -- keeping it there means a parameter's type is one unbroken token
           -- run that the prototype aligner can measure and pad as a column.
           "PointerAlignment: Left",
+          -- C++: put the template header on its own line. Left inline, a
+          -- `template <typename T> Error store(...)` counts as a declaration
+          -- for AlignConsecutiveDeclarations, and its width then sets the name
+          -- column for every plain declaration around it -- a whole table of
+          -- `Error` returns pushed out by one template. Breaking it is also
+          -- the conventional layout, so nothing is traded for the fix.
+          "BreakTemplateDeclarations: Yes",
           "BreakBeforeBraces: Attach",
           "SpaceBeforeParens: Never",
           -- There is no "wrap after N parameters" option; the only lever is a
@@ -145,7 +156,7 @@ in
       end
     '';
 
-  # Format on write, C only.
+  # Format on write, C and C++.
   #
   # nvf's own hook is conform's format_on_save, gated on vim.g.formatsave --
   # the global flag that vim.lsp.formatOnSave sets. Flipping it would start
@@ -159,7 +170,7 @@ in
   # produce differently-styled writes instead of an error.
   programs.nvf.settings.vim.luaConfigRC.c-format-on-save = ''
     vim.api.nvim_create_autocmd("BufWritePre", {
-      pattern = { "*.c", "*.h" },
+      pattern = { "*.c", "*.h", "*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hh", "*.hxx" },
       callback = function(args)
         require("conform").format({
           bufnr = args.buf,
