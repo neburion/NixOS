@@ -111,6 +111,11 @@ in
           -- renormalises inter-token whitespace, and since it cannot parse
           -- _BitInt it regroups those typedefs away from the plain ones. That
           -- trade was not worth one space.
+          -- A case whose whole body is one statement stays on its line:
+          -- `case A: return execute_CLS(chip8);`. A case that does more than
+          -- one thing still breaks open, so this compacts a dispatch table
+          -- without compacting real logic.
+          "AllowShortCaseLabelsOnASingleLine: true",
           "BreakBeforeBraces: Attach",
           "SpaceBeforeParens: Never",
           -- There is no "wrap after N parameters" option; the only lever is a
