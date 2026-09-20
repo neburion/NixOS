@@ -43,6 +43,15 @@
 
         local style = {
           "BasedOnStyle: LLVM",
+          -- _BitInt(N) is a C23 keyword clang-format's lexer does not know, so
+          -- `unsigned _BitInt(4) u4` parses as a function named _BitInt taking
+          -- (4). That is not merely unaligned: one such line poisons the whole
+          -- consecutive run, and plain `uint8_t u8;` beside it stops aligning
+          -- too. TypenameMacros is the knob that says "X(...) is a type, not a
+          -- call" -- it exists for STACK_OF(T) style macros, and it happens to
+          -- be the only thing that gets _BitInt parsed correctly. TypeNames,
+          -- the option that sounds right, does nothing here.
+          "TypenameMacros: [_BitInt]",
           "IndentWidth: " .. ctx.shiftwidth,
           "UseTab: " .. (vim.bo[ctx.buf].expandtab and "Never" or "ForIndentation"),
           "BreakBeforeBraces: Linux",
