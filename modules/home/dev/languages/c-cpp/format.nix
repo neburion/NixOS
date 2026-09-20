@@ -43,18 +43,31 @@
 
         local style = {
           "BasedOnStyle: LLVM",
-          -- _BitInt(N) is a C23 keyword clang-format's lexer does not know, so
-          -- `unsigned _BitInt(4) u4` parses as a function named _BitInt taking
-          -- (4). That is not merely unaligned: one such line poisons the whole
-          -- consecutive run, and plain `uint8_t u8;` beside it stops aligning
-          -- too. TypenameMacros is the knob that says "X(...) is a type, not a
-          -- call" -- it exists for STACK_OF(T) style macros, and it happens to
-          -- be the only thing that gets _BitInt parsed correctly. TypeNames,
-          -- the option that sounds right, does nothing here.
-          "TypenameMacros: [_BitInt]",
+          -- clang-format has no C23 mode to switch on, so the type keywords
+          -- that look like calls have to be named. Its lexer stops at C17
+          -- plus GNU: `unsigned _BitInt(4) u4` parses as a function named
+          -- _BitInt taking (4), and one such line poisons the entire
+          -- consecutive run -- a plain `uint8_t u8;` beside it stops aligning
+          -- too. TypenameMacros is the designed knob for this; upstream
+          -- documents it as making an identifier behave like typeof().
+          -- TypeNames, the option that sounds right, does nothing here.
+          --
+          -- This list is closed, not a running repair log. C has exactly four
+          -- type constructs spelled `X(...)`, and clang-format already knows
+          -- _Atomic and typeof; these three are the rest of the set. Nothing
+          -- short of a new language standard can extend it.
+          "TypenameMacros: [_BitInt, typeof_unqual, __typeof__]",
           "IndentWidth: " .. ctx.shiftwidth,
           "UseTab: " .. (vim.bo[ctx.buf].expandtab and "Never" or "ForIndentation"),
           "BreakBeforeBraces: Linux",
+          -- There is no "wrap after N parameters" option; the only lever is a
+          -- column budget, and the alignment padding is spent from the same
+          -- budget. That coupling bites: at 100 a declaration that fits only
+          -- once its padding is dropped gets its padding dropped, so the
+          -- column silently collapses on some lines and not others. 120 clears
+          -- a five-parameter prototype in this style at 101 columns, with the
+          -- alignment intact and room left over.
+          "ColumnLimit: 120",
           "AlignConsecutiveMacros: {Enabled: true}",
           "AlignConsecutiveAssignments: {Enabled: true}",
           "AlignConsecutiveBitFields: {Enabled: true}",
