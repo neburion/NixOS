@@ -32,7 +32,8 @@
 
       # Dev
       cddev = "cd ~/Projects/Dev";
-      # mkrepo / rmrepo are functions, not aliases: they take a forge argument.
+      # mkrepo / rmrepo / rnrepo are functions, not aliases: they take a
+      # forge argument.
       # See the functions block below.
     };
 
@@ -154,6 +155,111 @@
               echo "rmrepo: unknown host '$host' (use gh or cb)" >&2
               return 1
           end
+        '';
+      };
+
+      # Rename the current repo on its forge, and the directory with it.
+      #
+      #   rnrepo <newname> [gh|cb]
+      #
+      # The directory is not incidental here. mkrepo and rmrepo both take the
+      # repo name from `basename $PWD`, so in this scheme the folder name IS
+      # the repo name; renaming one side alone would leave a later `rmrepo`
+      # computing a name the forge has never heard of. The forge goes first,
+      # because it is the half that can refuse.
+      #
+      # Forge inference follows rmrepo, not mkrepo: a repo standing in its own
+      # directory already has an origin, so the URL answers the question. An
+      # explicit gh/cb still wins.
+      rnrepo = {
+        argumentNames = [ "newname" "host" ];
+        body = ''
+          set -l oldname (basename $PWD)
+          set -l parent  (dirname $PWD)
+
+          if test -z "$newname"
+            echo "rnrepo: name the new repo" >&2
+            return 1
+          end
+          # owner/repo is a transfer, not a rename. gh says so itself, and the
+          # Codeberg PATCH would take the slash into the name and make a repo
+          # nothing can address.
+          if string match -q '*/*' -- $newname
+            echo "rnrepo: '$newname' is owner/repo; this renames, it does not transfer" >&2
+            return 1
+          end
+          if test "$newname" = "$oldname"
+            echo "rnrepo: already called '$oldname'" >&2
+            return 1
+          end
+          # `mv a b` moves a INTO b when b is a directory, so an unchecked
+          # collision would bury the repo one level down instead of failing.
+          if test -e "$parent/$newname"
+            echo "rnrepo: $parent/$newname already exists" >&2
+            return 1
+          end
+
+          if test -z "$host"
+            set -l url (git remote get-url origin 2>/dev/null)
+            if test -z "$url"
+              echo "rnrepo: no origin remote; name a forge (gh or cb)" >&2
+              return 1
+            end
+            switch "$url"
+              case "*codeberg.org*"
+                set host cb
+              case "*github.com*"
+                set host gh
+              case "*"
+                echo "rnrepo: cannot tell the forge from '$url' (use gh or cb)" >&2
+                return 1
+            end
+          end
+
+          switch "$host"
+            case cb codeberg
+              set -l tok (cat /run/secrets/codeberg-token)
+              or begin
+                echo "rnrepo: cannot read /run/secrets/codeberg-token" >&2
+                return 1
+              end
+              # Owner comes from the token, not a literal. See mkrepo.
+              set -l owner (curl -fsS https://codeberg.org/api/v1/user \
+                -H "Authorization: token $tok" | jq -r .login)
+              or return 1
+              set -l resp (curl -fsS -X PATCH https://codeberg.org/api/v1/repos/$owner/$oldname \
+                -H "Authorization: token $tok" \
+                -H "Content-Type: application/json" \
+                -d '{"name":"'$newname'"}')
+              or return 1
+              # Forgejo does not touch your remote, so the new URL comes out of
+              # the response the way mkrepo takes it out of the POST.
+              if git remote get-url origin >/dev/null 2>&1
+                git remote set-url origin (echo $resp | jq -r .ssh_url)
+                or return 1
+              end
+            case gh github
+              # gh rewrites origin itself on github.com, so unlike the Codeberg
+              # branch there is no set-url to follow.
+              #
+              # -y, where rmrepo lets `gh repo delete` ask. The prompt is not
+              # worth keeping here: typing the new name already was the
+              # confirmation, a rename is reversible where a delete is not,
+              # and gh refuses a named argument outright without -y once stdin
+              # is not a terminal, which would make this the one function in
+              # the family that cannot be used from a script.
+              gh repo rename -y $newname
+              or return 1
+            case "*"
+              echo "rnrepo: unknown host '$host' (use gh or cb)" >&2
+              return 1
+          end
+
+          # The forge is done, so bring the directory across to match. fish
+          # keeps a logical $PWD and the shell is sitting on the inode, not the
+          # path, so it has to be walked into the new name explicitly.
+          mv $parent/$oldname $parent/$newname
+          and cd $parent/$newname
         '';
       };
 
