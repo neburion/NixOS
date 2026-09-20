@@ -12,6 +12,7 @@
     ../dev/languages/java
     ../dev/languages/nix
     ../dev/languages/python
+    ../dev/languages/rust
     ../dev/editors/neovim
     ../dev/editors/intellij.nix
     ../dev/engines/godot.nix
