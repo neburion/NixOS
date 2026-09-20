@@ -1,6 +1,10 @@
 { lib, pkgs, ... }:
 
 let
+  # One budget, spent by three things: clang-format's wrapping, the prototype
+  # aligner's padding, and the check that keeps the two from fighting.
+  columnLimit = 120;
+
   # clang-format, then one anchored pass to close up `) {` into `){`.
   #
   # clang-format cannot do this itself and never will without upstream work:
@@ -19,8 +23,12 @@ let
   #
   # else and do get the same treatment even though they have no parenthesis to
   # close against. \b keeps the keyword whole, so `int undo = 1;` is safe.
+  # align-prototypes.py sits between them: it needs the return-type column
+  # clang-format produces, and the brace rules do not care what it did.
   clang-format-tight-braces = pkgs.writeShellScript "clang-format-tight-braces" ''
-    ${lib.getExe' pkgs.clang-tools "clang-format"} "$@" | ${lib.getExe pkgs.gnused} -E '
+    ${lib.getExe' pkgs.clang-tools "clang-format"} "$@" \
+      | ${lib.getExe pkgs.python3} ${./align-prototypes.py} ${toString columnLimit} \
+      | ${lib.getExe pkgs.gnused} -E '
       s/\) \{$/){/
       s/(struct|union|enum)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
       s/\b(else|do) \{$/\1{/
@@ -112,7 +120,7 @@ in
           -- column silently collapses on some lines and not others. 120 clears
           -- a five-parameter prototype in this style at 101 columns, with the
           -- alignment intact and room left over.
-          "ColumnLimit: 120",
+          "ColumnLimit: ${toString columnLimit}",
           "AlignConsecutiveMacros: {Enabled: true}",
           "AlignConsecutiveAssignments: {Enabled: true}",
           "AlignConsecutiveBitFields: {Enabled: true}",
