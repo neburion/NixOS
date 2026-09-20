@@ -5,12 +5,19 @@ AlignConsecutiveDeclarations only ever reaches as far as the name. Nothing in
 clang-format or uncrustify aligns the parameters of one prototype against the
 parameters of the next, so this runs after clang-format and does that one job.
 
-The opening paren is deliberately left tight against the name. Aligning it too
-would let the first parameter share a column as well, but only by padding
-between the name and its paren -- `bit_isolation (bool *out_bit` -- which
-reads as a typo and contradicts the brace style this config otherwise keeps.
-The first parameter therefore starts wherever the name ends; every parameter
-after it is aligned.
+Every parameter column lines up, the first one included. That requires the
+opening parens to line up, and the paren sits wherever the name ends, so the
+difference in name length is absorbed between the name and its paren:
+
+    Error execute_CLS      (Chip8 *chip8);
+    Error execute_DRW_V_V_N(Chip8 *chip8, const u4 params[static 3]);
+
+Chosen deliberately over right-aligning the names, which would have kept the
+paren tight. The gap only ever appears inside a group of two or more
+prototypes that are being aligned against each other.
+
+clang-format collapses that gap on the next run, and this pass puts it back,
+so the chain as a whole still settles on a fixed point.
 
 Everything here is deliberately conservative, because this rewrites source
 files on every save. A line is only ever touched when it is unambiguously a
@@ -78,8 +85,13 @@ def align(group):
     parsed = [parse(line) for line in group]
     columns = max(len(p[2]) for p in parsed)
 
+    # Pad each `returntype name` to the widest in the group, so every paren --
+    # and therefore every first parameter -- starts in the same column.
+    heads = [p[0] + p[1] for p in parsed]
+    head_width = max(len(head) for head in heads)
+
     bodies = ["" for _ in parsed]
-    cursor = [len(p[0]) + len(p[1]) + 1 for p in parsed]
+    cursor = [head_width + 1 for _ in parsed]
 
     for index in range(columns):
         live = [i for i, p in enumerate(parsed) if index < len(p[2])]
@@ -96,7 +108,7 @@ def align(group):
             bodies[i] += " " * (target - cursor[i]) + parsed[i][2][index]
             cursor[i] = target + len(parsed[i][2][index])
 
-    result = [f"{p[0]}{p[1]}({body});" for p, body in zip(parsed, bodies)]
+    result = [f"{head.ljust(head_width)}({body});" for head, body in zip(heads, bodies)]
 
     # Padding costs columns. If that pushes any line past the budget, the
     # unaligned original is the better answer.
