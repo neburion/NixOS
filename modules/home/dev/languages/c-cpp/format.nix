@@ -1,12 +1,38 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
+let
+  # clang-format, then one anchored pass to close up `) {` into `){`.
+  #
+  # clang-format cannot do this itself and never will without upstream work:
+  # the whole Space* family has no option for the gap between ) and {, and
+  # llvm-project#59744 is an open, unimplemented request for exactly it.
+  # Unlike _BitInt, where TypenameMacros happened to be the right lever, there
+  # is no lever here at all -- so the text gets edited after the formatter is
+  # finished with it.
+  #
+  # Both rules are anchored to end of line, which is what makes a regex pass
+  # over source code defensible. clang-format only ever leaves this brace at
+  # the end of a line, so the anchor matches exactly the construct in question:
+  # a string literal would have to *end its line* with `) {` to be caught, and
+  # `int arr[] = {1, 2}` or `struct point p = {` never end that way. Verified
+  # against both.
+  #
+  # `} else {` and `do {` are left alone. They have no parenthesis to close up
+  # against, and `else{` reads like a typo.
+  clang-format-tight-braces = pkgs.writeShellScript "clang-format-tight-braces" ''
+    ${lib.getExe' pkgs.clang-tools "clang-format"} "$@" | ${lib.getExe pkgs.gnused} -E '
+      s/\) \{$/){/
+      s/(struct|union|enum)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
+    '
+  '';
+in
 {
   # Column-aligned declarations, assignments, macros and bitfields on write.
   #
   # There is no alignment-only mechanism. Neovim cannot do this as you type,
   # and clang-format's Align* options only exist inside a full reformat, so
   # every save rewrites the whole buffer -- brace placement, spacing, wrapping
-  # at 80 columns -- not just the columns. That is the price of the alignment.
+  # at the column limit -- not just the columns. That is the price of it.
   #
   # nvf already owns the plumbing: languages.clang.format wires conform-nvim to
   # clang-format and sets formatters_by_ft for c and cpp. It was off only
@@ -29,6 +55,13 @@
   # prepend_args, not args: conform's builtin already passes
   # -assume-filename $FILENAME, which is what tells clang-format it is looking
   # at C when the text arrives on stdin.
+  # mkForce, because nvf's clang module already points this at clang-format
+  # itself. conform runs whatever `command` names, so wrapping the binary keeps
+  # this a single formatter -- adding a second entry to formatters_by_ft would
+  # mean redeclaring nvf's list and inheriting its merge order.
+  programs.nvf.settings.vim.formatter.conform-nvim.setupOpts.formatters.clang-format.command =
+    lib.mkForce "${clang-format-tight-braces}";
+
   programs.nvf.settings.vim.formatter.conform-nvim.setupOpts.formatters.clang-format.prepend_args =
     lib.generators.mkLuaInline ''
       function(self, ctx)
