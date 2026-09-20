@@ -27,6 +27,20 @@ let
   # class and namespace join struct here, and the C++ definition suffixes --
   # const, noexcept, override, final -- join else and do, since a trailing
   # `) const {` puts a keyword rather than the paren against the brace.
+  #
+  # The `: +{` rule does two jobs at once. It tightens a case that opens a
+  # block into `case SYS_NNN:{`, and because it eats *runs* of spaces it also
+  # undoes AlignConsecutiveShortCaseStatements having dragged that brace out
+  # to the column where the neighbouring `return`s start -- a brace is not a
+  # short case statement and has no business in their column:
+  #
+  #     case CLS:     return execute_CLS(chip8);
+  #     case SYS_NNN: {        <- clang-format put the brace here
+  #     case SYS_NNN:{         <- what the rule leaves
+  #
+  # Nothing else in C or C++ ends a line with a colon then a brace: an
+  # inheritance list ends `public Bar {` and a constructor initialiser ends
+  # `) {`, both of which have a token in between.
   # align-prototypes.py sits between them: it needs the return-type column
   # clang-format produces, and the brace rules do not care what it did.
   clang-format-tight-braces = pkgs.writeShellScript "clang-format-tight-braces" ''
@@ -36,6 +50,7 @@ let
       s/\) \{$/){/
       s/(struct|union|enum|class|namespace)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
       s/\b(else|do|const|noexcept|override|final) \{$/\1{/
+      s/: +\{$/:{/
     '
   '';
 in
