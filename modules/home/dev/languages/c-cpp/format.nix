@@ -17,12 +17,13 @@ let
   # `int arr[] = {1, 2}` or `struct point p = {` never end that way. Verified
   # against both.
   #
-  # `} else {` and `do {` are left alone. They have no parenthesis to close up
-  # against, and `else{` reads like a typo.
+  # else and do get the same treatment even though they have no parenthesis to
+  # close against. \b keeps the keyword whole, so `int undo = 1;` is safe.
   clang-format-tight-braces = pkgs.writeShellScript "clang-format-tight-braces" ''
     ${lib.getExe' pkgs.clang-tools "clang-format"} "$@" | ${lib.getExe pkgs.gnused} -E '
       s/\) \{$/){/
       s/(struct|union|enum)( +[A-Za-z_][A-Za-z_0-9]*)? \{$/\1\2{/
+      s/\b(else|do) \{$/\1{/
     '
   '';
 in
