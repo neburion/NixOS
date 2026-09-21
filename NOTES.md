@@ -252,31 +252,53 @@ there. `ShellScreen` is rotation-aware.
 
 **The power dial is three widgets that became one.** The laptop battery, the peripherals
 readout and the power-profile toggle all answered the same question, so they are now one
-`BarPower`: a dial of concentric arcs — laptop outermost, then mouse, then headset — and
-one number, the lowest reading present. Its menu carries the three at full size plus the
-profile as a three-way switch, which is why `PowerProfile` gained `set` and lost `cycle`;
-cycling blind is only worth it when there is nowhere to draw the list.
+`BarPower`, living in `bar/power/`. `PowerProfile` gained `set` and lost `cycle` on the way:
+cycling blind is only worth it when there is nowhere to draw the list, and the menu draws it.
 
-The ring order is fixed and **every track is drawn whether or not its device answers**. A
-headset that goes to sleep has to leave its groove behind — drop the ring instead and the
-remaining two slide outward, and the dial starts lying about which reading is which.
+**Adding a battery is one file and one import line.** `bar/power/registry.nix` declares
+`quickshell.powerSources`; each file under `sources/` contributes its own service and a
+`reading` — a QML *expression*, not a value, because every source polls its own hardware on
+its own clock. `widget.nix` sorts them by `order` and interpolates them into one array, so
+nothing in the dial, the flame or the widget knows how many there are. The bar grows a ring,
+the menu grows a column, and the popup widens by itself.
 
-The outer ring is tinted by the power profile rather than by the wallpaper: green idling,
-amber working, red and flickering on performance. That costs the laptop ring its low-battery
-colour, so the **number** beside the dial is what goes critical, not the arc.
+> **The reading is `lines`, not a typed schema.** A Nix type that describes a QML expression
+> can only check that it is a string. A malformed source shows up as a missing ring, and it
+> is one file away from its own service.
 
-**`QtQuick.Shapes` is available and is what makes small arcs work.** `ShapePath` +
-`PathAngleArc` animates its sweep and its stroke colour through ordinary bindings, where
-`Canvas` would want a repaint loop. Two details that only show up at 26px: set
-`preferredRendererType: Shape.CurveRenderer`, because geometry tessellation quantises a
-1.9px stroke into a smudge; and a sweep of 360 must switch to `FlatCap`, or the round cap
-at the end lands on top of the start and puts a visible lump on a full ring.
+**The gauge is open at the bottom, 270 degrees of travel.** A closed ring has no beginning,
+so at 26px a full one and an empty one land in the same place. Each ring is drawn at a fixed
+thickness outward from a small core, so *the width of the dial is itself a reading* — one
+source is a small ring, four is a wide one. Past `maxSize` the rings compress rather than
+outgrow the 34px panel.
 
-The performance flicker is two triangle waves at 430ms and 670ms summed into one opacity.
-One wave pulses like a notification; two that do not divide into each other drift in and
-out of phase for about nine seconds before repeating, and that irregularity is the whole
-effect. Measured across consecutive frames the ring's mean luma moves 186 → 206 → 188 →
-193 → 206.
+**`QtQuick.Shapes` is available and is what makes all of this work.** `ShapePath` +
+`PathAngleArc` animates its sweep through ordinary bindings where `Canvas` would want a
+repaint loop. Set `preferredRendererType: Shape.CurveRenderer`: geometry tessellation
+quantises a 2px stroke into a smudge at this size.
+
+**The flame is one closed outline, not a set of tongues.** Separate tongues were the first
+attempt and they do not survive the bar — at 26px each is three pixels wide and the group
+reads as a comb. One silhouette with pinched valleys keeps its shape all the way down.
+
+Three things took four attempts to get right, and all three are the kind of mistake that
+renders without erroring:
+
+- **Both cubic control points on the straight line from base to tip give a triangle.** The
+  low control has to sit *outside* the base so the flank bulges; the high one tucks under
+  the tip so it pulls back in. Attempts one through three drew mountain ranges.
+- **The outline closes along the foot of the item**, so the fire sits on a visible shelf.
+  The gradient's bottom two stops fade to alpha zero to dissolve it — a straight edge is the
+  one thing a flame never has.
+- **Fire and gauge are the same orange at the same brightness**, so the rings vanish into the
+  flame. `Dial.knockout` draws each arc once in near-black at `thickness + 2.6` first; the
+  reference this copies solves the same problem by outlining its battery.
+
+The path is built in JS through `PathSvg` rather than a fixed run of `PathCubic` elements,
+so the tongue count is a property. One `phase` drives every tongue through its own frequency
+and offset — anything periodic shared between them shows up as a wave travelling along the
+fire — and the animation stops when nothing is burning, or a hidden flame rebuilds a path
+string sixty times a second for nothing.
 
 **Qt 6.11 specifics the glass QML relies on:** `font.features` (6.6+) for tabular figures,
 and `font.variableAxes` (6.7+) to drive the Material Symbols `FILL` axis — active state is

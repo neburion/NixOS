@@ -8,15 +8,11 @@
     ../shell
     ./popup-state.nix
     ./popup-widgets.nix
-    ./battery.nix
     ./bluetooth.nix
     ./clock.nix
     ./hardware.nix
     ./monitor-toggle.nix
-    ./peripherals.nix
-    ./power-profile.nix
-    ./dial.nix
-    ./power.nix
+    ./power
     ./phone-display.nix
     ./resolution.nix
     ./tray.nix
