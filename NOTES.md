@@ -252,9 +252,15 @@ there. `ShellScreen` is rotation-aware.
 
 **The display menu is two widgets that became one.** Rotation used to be its own bar icon
 beside the resolution menu — two controls for one subject, and a toggle that could not say
-which output it applied to. It is a row inside the expanded section now, shown only for the
-output that has a persisted transform. `MonitorRotation` watches its state file rather than
-reading it once, so the row also follows a rotation done from `$mod + backslash`.
+which output it applied to. It is a button on the right of an output's own row now, present
+only on the output that has a persisted transform, so the thing it turns is the thing it
+sits on. The label needs no orientation word: a rotated screen reports its dimensions
+swapped, and the row already shows them.
+
+> **A row-wide `MouseArea` declared after the `Row` swallows every click inside it.** For
+> `PopupRow.action` to be clickable at all, the row's own MouseArea has to be declared
+> *first*, so the button's sits on top. The rest of the row is plain `Text`, which accepts
+> no events, so clicks there still fall through to it.
 
 **The power dial is three widgets that became one.** The laptop battery, the peripherals
 readout and the power-profile toggle all answered the same question, so they are now one

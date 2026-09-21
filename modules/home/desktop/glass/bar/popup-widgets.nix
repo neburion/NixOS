@@ -75,8 +75,25 @@
         property bool   active:   false
         signal activated()
 
-        color: mouse.containsMouse ? Glass.hover : "transparent"
+        // An optional second control on the right of the row, for a row that
+        // has one thing to say and two things you can do to it. Empty by
+        // default, so the rows that do not want one are unchanged.
+        property string action: ""
+        signal actionTriggered()
+
+        color: mouse.containsMouse || actionMouse.containsMouse ? Glass.hover : "transparent"
         Behavior on color { ColorAnimation { duration: 120 } }
+
+        // Declared before the Row, not after it, so the action button sits on
+        // top of this and can take its own clicks. A row-wide MouseArea
+        // declared last swallows everything underneath it.
+        MouseArea {
+            id: mouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape:  Qt.PointingHandCursor
+            onClicked:    root.activated()
+        }
 
         Row {
             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
@@ -111,13 +128,40 @@
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 66
+                width: parent.width - 66 - (root.action !== "" ? 34 : 0)
                 font.family: Glass.fontUi
                 font.pixelSize: 13
                 font.letterSpacing: -0.1
                 color: root.active ? Glass.text : Glass.muted
                 text:  root.label
                 elide: Text.ElideRight
+            }
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.action !== ""
+                width: 24; height: 24
+                radius: 8
+                color: actionMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
+                Behavior on color { ColorAnimation { duration: 120 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    font.family: Glass.fontIcon
+                    font.pixelSize: 15
+                    font.variableAxes: actionMouse.containsMouse ? Glass.iconActive : Glass.iconIdle
+                    color: actionMouse.containsMouse ? Glass.text : Glass.muted
+                    text:  root.action
+                }
+
+                MouseArea {
+                    id: actionMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    enabled: root.action !== ""
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked:   root.actionTriggered()
+                }
             }
 
             Text {
@@ -129,14 +173,6 @@
                 color: root.active ? Glass.text : Glass.faint
                 text:  root.trailing
             }
-        }
-
-        MouseArea {
-            id: mouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape:  Qt.PointingHandCursor
-            onClicked:    root.activated()
         }
     }
   '';

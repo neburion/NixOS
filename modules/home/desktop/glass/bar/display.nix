@@ -5,8 +5,9 @@
 #
 # Rotation used to be its own bar icon next to this one, which meant two
 # controls for one subject and a toggle that could not say which output it
-# applied to. It is a row in the expanded section now, shown only for the
-# output that can actually rotate.
+# applied to. It is a button on the right of an output's own row now, present
+# only on the output that can actually rotate, so the thing it turns is the
+# thing it sits on.
 #
 # Structure is the tray's, because the problem is the tray's: a list of things,
 # each of which has its own list underneath it. One icon, one popup, one focus
@@ -258,7 +259,9 @@ in
                 root.expanded = "";
             }
             color: "transparent"
-            implicitWidth:  288
+            // 288 until the rotate button arrived; an output's name and its
+            // current mode no longer fit beside it at that width.
+            implicitWidth:  308
             implicitHeight: shell.implicitHeight
 
             anchor.item: root
@@ -305,6 +308,16 @@ in
                                 trailing: root.expanded === modelData.name ? "\ue5cf" : "\ue409"
                                 onActivated: root.expanded =
                                     root.expanded === modelData.name ? "" : modelData.name
+
+                                // Only the external monitor has a persisted
+                                // transform, so only it gets the button. The
+                                // label already says which way round it is —
+                                // a rotated screen reports its own dimensions
+                                // swapped — so the button says nothing, it
+                                // just turns it. autorenew.
+                                action: modelData.name === MonitorRotation.monName
+                                        ? "\ue863" : ""
+                                onActionTriggered: root.rotate()
                             }
                         }
 
@@ -322,35 +335,11 @@ in
                         color: Glass.stroke
                     }
 
-                    // ---- that output's orientation and modes ----
+                    // ---- that output's modes ----
                     Column {
                         visible: root.expanded !== ""
                         width: parent.width
                         spacing: 2
-
-                        // Only the external monitor has a persisted transform,
-                        // so only it gets the row. MonitorRotation watches the
-                        // state file, so the label follows a rotation done from
-                        // the keybind too.
-                        PopupRow {
-                            width: col.width
-                            visible: root.expanded === MonitorRotation.monName
-                            // mobile_rotate
-                            glyph:  "\uf2d5"
-                            label:  "Orientation  ·  " + (MonitorRotation.transform !== 0
-                                                          ? "Portrait" : "Landscape")
-                            active: MonitorRotation.transform !== 0
-                            // mobile / mobile_landscape
-                            trailing: MonitorRotation.transform !== 0 ? "\ue7ba" : "\ued3e"
-                            onActivated: root.rotate()
-                        }
-
-                        Rectangle {
-                            visible: root.expanded === MonitorRotation.monName
-                            width: parent.width
-                            height: 1
-                            color: Qt.rgba(1, 1, 1, 0.06)
-                        }
 
                         Repeater {
                             model: root.expandedModes
