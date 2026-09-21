@@ -109,6 +109,57 @@ rather than removing it. Set the policy anyway.
 
 ---
 
+## Backups
+
+Two destinations, one declaration. `backup.paths` generates every job twice:
+`<user>` to Cloudflare R2 at 06:00, `<user>-mirror` to a restic REST server on
+personal-server at 06:30. Adding a path still means editing one list.
+
+**The mirror is append-only, and that is the whole point.** The R2 credentials
+on pod042 can delete the R2 repository, so a second copy that accepted deletes
+from the same machine would be two copies of one trust boundary — one bad
+`restic forget`, or one bad afternoon, and both are gone. Verified rather than
+assumed: a client asking the server to remove a snapshot gets
+
+```
+Remove(<snapshot/…>) failed: unexpected HTTP response (403): 403 Forbidden
+```
+
+and the snapshot is still there afterwards. `restic init` *does* work through
+append-only, and so does removing a stale lock — rest-server carves out
+`locks/` deliberately, or no client could ever back up twice.
+
+> **Retention for the mirror lives on the server, not the client.** The mirror
+> jobs carry empty `pruneOpts`, because a `forget --prune` from a client is
+> exactly what 403s. `restic-mirror-prune.timer` on personal-server applies the
+> same keep-policy locally every Sunday at 04:00, where the HTTP layer is not
+> in the way.
+
+**The mirror jobs run `--no-cache`, and removing that flag breaks them
+eventually.** A server-side prune deletes index files behind the client's back;
+a client with a cached index naming a file that is now gone fails its next
+backup outright with `<index/…> does not exist` (restic #3963). The repository
+is a couple of hundred megabytes, so re-reading the index nightly costs seconds
+— far less than the night it silently stops working.
+
+**The repositories live at `/var/backup/restic`, outside `/var/lib`, and that
+is load-bearing.** personal-server's own policy is `/var/lib` entire. Put the
+mirror inside it and tonight's R2 upload carries every other machine's backup
+history, and more of it every night, forever. The alternative was an exclusion
+in `policy/backup.nix` — but that file's entire virtue is that a new app is
+backed up the day it is deployed without anyone remembering to list it, and an
+exclusion list is the remembering it exists to avoid.
+
+personal-server does not mirror to itself. A copy on the same disk is not a
+backup.
+
+**What append-only does not buy you.** A compromised client can still push
+snapshots with an attacker-chosen `--time` and push the real ones out of the
+keep policy on the next server-side prune (restic #22057). The mirror protects
+against deletion, not against a client that lies about when it is.
+
+---
+
 ## The glass preset
 
 **The blur is Hyprland's, not Quickshell's.** A layer surface cannot read the pixels behind
