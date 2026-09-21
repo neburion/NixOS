@@ -134,15 +134,81 @@
     }
   '';
 
+  # Five dashes, lit from the left. Quantised on purpose: the bar cannot
+  # honestly resolve more than five steps at this size, and a meter that
+  # claims otherwise is a number wearing a costume. The numbers themselves are
+  # gone from these three — they were never the reason you glance at them.
+  #
+  # Thresholds sit at 10/30/50/70/90 rather than 20/40/60/80/100, so a pip
+  # lights at the value it is nearest to. Below 10 the row is empty, which is
+  # not a fault — this dGPU really does sit at 0% whenever nothing is drawing,
+  # and five dark dashes is what that should look like.
+  quickshell.widgets.BarMeter = ''
+    import QtQuick
+    import "../Common"
+
+    Item {
+        id: root
+
+        property string glyph:   ""
+        property int    value:   0
+        property int    alertAt: 101
+        property color  tint:    Glass.muted
+
+        readonly property bool alert: value >= alertAt
+
+        implicitWidth:  line.implicitWidth
+        implicitHeight: line.implicitHeight
+
+        Row {
+            id: line
+            anchors.centerIn: parent
+            spacing: 5
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: Glass.fontIcon
+                font.pixelSize: 15
+                font.variableAxes: Glass.iconIdle
+                color: root.alert ? Glass.critical : Glass.muted
+                text:  root.glyph
+                Behavior on color { ColorAnimation { duration: 200 } }
+            }
+
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Repeater {
+                    model: 5
+                    delegate: Rectangle {
+                        required property int index
+
+                        readonly property bool lit: root.value >= index * 20 + 10
+
+                        width: 3; height: 13; radius: 1.5
+                        color: !lit       ? Qt.rgba(1, 1, 1, 0.11)
+                             : root.alert ? Glass.critical
+                             :              root.tint
+                        Behavior on color { ColorAnimation { duration: 220 } }
+                    }
+                }
+            }
+        }
+    }
+  '';
+
   quickshell.modules.BarHardwareGroup = ''
     import QtQuick
     import "../Services"
     import "../Common"
     import "../Widgets"
 
-    // Glyphs, so the swap is reviewable: developer_board is a circuit board
-    // (GPU), memory is the chip (CPU), memory_alt is the DIMM (RAM). `memory`
-    // was on RAM and `speed` — a speedometer — was on CPU.
+    // developer_board was on the GPU and it is a circuit board — a generic
+    // one, and close enough to the RAM DIMM beside it to be read as a second
+    // stick. deployed_code is a cube: nothing in this font is a graphics
+    // card, and "the thing that draws solids" is the honest association.
+    // memory is the chip (CPU), memory_alt is the DIMM (RAM).
     Row {
         id: root
         spacing: 13
@@ -151,7 +217,7 @@
 
         BarStat {
             anchors.verticalCenter: parent.verticalCenter
-            glyph:  Audio.muted ? "" : ""
+            glyph:  Audio.muted ? "\ue04f" : "\ue050"
             value:  Audio.volume + "%"
             filled: !Audio.muted
             MouseArea {
@@ -165,30 +231,30 @@
             }
         }
 
-        BarStat {
+        BarMeter {
             anchors.verticalCenter: parent.verticalCenter
-            glyph: ""
-            value: SystemStats.gpuPercent + "%"
-            alert: SystemStats.gpuPercent >= 95
+            glyph:   "\uf720"
+            value:   SystemStats.gpuPercent
+            alertAt: 95
+            tint:    root.accent
         }
 
-        BarStat {
+        BarMeter {
             anchors.verticalCenter: parent.verticalCenter
-            glyph: ""
-            value: SystemStats.cpuPercent + "%"
-            alert: SystemStats.cpuPercent >= 90
+            glyph:   "\ue322"
+            value:   SystemStats.cpuPercent
+            alertAt: 90
+            tint:    root.accent
         }
 
-        BarStat {
+        BarMeter {
             anchors.verticalCenter: parent.verticalCenter
-            glyph: ""
-            value: SystemStats.memPercent + "%"
-            alert: SystemStats.memPercent >= 85
+            glyph:   "\uf7a3"
+            value:   SystemStats.memPercent
+            alertAt: 85
+            tint:    root.accent
         }
 
-        // Every cell in reach, on one dial, with the power profile as its
-        // outer ring's colour. Last in the group because it is the only
-        // member you can click into.
         BarPower {
             anchors.verticalCenter: parent.verticalCenter
             accent: root.accent

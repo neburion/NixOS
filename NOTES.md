@@ -250,6 +250,16 @@ recursive and everything lands in one flat carousel. Orientation is derived from
 its `width`/`height` are the physical mode, so a rotated screen still reports 2560x1440
 there. `ShellScreen` is rotation-aware.
 
+**GPU, CPU and RAM are meters, not numbers.** Five dashes each, lit from the left, with
+thresholds at 10/30/50/70/90 so a pip lights at the value it is nearest. Quantised on
+purpose — the bar cannot honestly resolve more than about five steps at 34px, and a
+percentage there is precision it does not have. Below 10% the row is empty, which is what
+an idle dGPU should look like.
+
+`developer_board` was on the GPU and it is a generic circuit board, close enough to the RAM
+DIMM beside it to read as a second stick. Nothing in Material Symbols is a graphics card;
+`deployed_code` is a cube, and "the thing that draws solids" is the honest association.
+
 **Two tones inside one glyph read as a rendering bug.** The Wi-Fi indicator used to draw
 the full `wifi` cone at 28% and lay the reached arcs on top at full strength —
 `wifi_1_bar` and `wifi_2_bar` are geometric subsets of `wifi` on the same grid, so the
