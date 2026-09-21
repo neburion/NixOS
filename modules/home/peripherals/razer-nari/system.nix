@@ -25,6 +25,9 @@
       name = "razer-nari-udev-rules";
       destination = "/lib/udev/rules.d/60-razer-nari.rules";
       text = ''
+        # 051E is the dongle, which stays plugged in. 051F is the headset
+        # itself, which only appears while it is on the charging cable.
+        SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="051e", TAG+="uaccess"
         SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="051f", TAG+="uaccess"
       '';
     })

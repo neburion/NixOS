@@ -330,16 +330,33 @@ off the same report:
 
 ```
 request   FF 0A 00 FD 04 12 F1 02 05  00…
-response  FF ss ss FE 12 04 11 08 05 05 03 05 │0F 70│ 50 │ 00…
-                                                mV     percent
+response  FF 0F 05 FE 12 04 1F 08 05 03 05 01 │0F 10│ 50 │ 00…
+                                                mV     NOT a percentage
 ```
 
-Bytes 1-2 are a sequence that changes per call. Everything from 4 onward held still across
-reads while the voltage tracked the charge, which is what rules out byte 14 being a
-checksum. The voltage is the field that has been *watched moving*; the percentage beside it
-agrees with it on a 1S cell and is otherwise unproven, which is why the menu shows both.
+**The headset has two USB ids and they are easy to swap.** `1532:051E` is the *dongle* —
+always plugged in, answers whether the headset is on the charger or not. `1532:051F` is the
+headset's own interface, which exists **only while it is on the charging cable**. The first
+version of this module read `051F`, which meant the row worked perfectly on the bench with
+the cable in and vanished the moment the cable came out. `nari-battery` now tries `051E`
+first and falls back to `051F`, and the udev rule covers both.
 
-> **If the two ever disagree, the voltage is the one that was verified.**
+Bytes 12-13 are the cell voltage, big-endian, and they are the **only** field here that has
+been watched move: 4096 mV on the charger, then 3864 → 3856 → 3848 discharging, stepping by
+exactly 8 mV as the `0x051C` write-up describes. Byte 14 reads `0x50` at 3856 mV and `0x50`
+at 4096 mV — it is a fixed device field. An earlier version of this module published it as
+the battery percentage, on nothing better than 80 being a plausible-looking number.
+
+> **There is no percentage in this frame.** The one in the menu is computed from the
+> voltage against a generic 1S Li-ion curve, and the voltage is shown beside it so the
+> estimate can be judged. The cell sags under load, so it reads low while audio plays, and
+> the flat middle of the curve turns one 8 mV step into about two points.
+
+No charging flag has been identified either, so the headset row never shows one.
+
+A dongle whose headset is **off** answers with a zeroed frame, which is what `nari-battery`
+treats as absence. One reading straight after an idle spell came back zeroed and was fine
+four seconds later, so it retries three times before giving up.
 
 **The udev ordering trap.** The reader opens the node `O_RDWR` — reading the battery means
 writing the query first — and hidraw nodes are created root-only. The fix is

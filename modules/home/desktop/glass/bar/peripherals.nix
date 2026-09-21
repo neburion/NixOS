@@ -87,9 +87,9 @@
                     root.headset = m ? ({
                         glyph:   "",
                         label:   "Nari Essential",
-                        // The voltage is the reading that has been watched
-                        // moving; the percentage beside it is the dongle's
-                        // own byte. Showing both is the cross-check.
+                        // The voltage is the measurement; the percent is a
+                        // Li-ion curve read backwards from it. The caption
+                        // carries the datum so the estimate can be judged.
                         caption: (parseInt(m[2], 10) / 1000).toFixed(2) + " V",
                         percent: parseInt(m[1], 10),
                         charging: false
