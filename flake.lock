@@ -77,11 +77,11 @@
     "fleet-dashboard": {
       "flake": false,
       "locked": {
-        "lastModified": 1789984032,
-        "narHash": "sha256-oGFW8vUO7sHxCj4FAOaz6WhpmfHMAEdhcSWUdWA0Srk=",
+        "lastModified": 1789984700,
+        "narHash": "sha256-2gX00qror6V5YxtrFLSXk17MvvSD+dROBCjNO3puf34=",
         "owner": "neburion",
         "repo": "fleet-dashboard",
-        "rev": "281371c2c8c0e9e4eda1dbe3ca76629ebac68c35",
+        "rev": "18768952442901002095c5e6f1e14cd9666b7fd1",
         "type": "github"
       },
       "original": {
