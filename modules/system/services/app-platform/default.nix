@@ -304,6 +304,11 @@ in
         app.urls)
       (attrValues apps));
 
+    # The fleet dashboard knocks on each of these over loopback. A unit can be
+    # `active` while the thing inside it has stopped answering, and that gap is
+    # the whole reason the probe exists rather than reading unit state twice.
+    fleetStatus.apps = mapAttrs (_: app: app.port) apps;
+
     # `sudo <app> --stats`, `sudo <app> --warm-covers` and friends from a shell
     # on the host, which is how these were debugged before they had a UI.
     environment.systemPackages = map cliOf (attrValues apps);

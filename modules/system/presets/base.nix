@@ -10,6 +10,7 @@
     ../core/sudo.nix
     ../network/networkmanager.nix
     ../network/ssh.nix
+    ../services/fleet-status
     ../../tools/fleet/hooks.nix
   ];
 }

@@ -21,10 +21,17 @@
 # Their secrets live in secrets/personal-server.yaml under `<app>-<key>`, which
 # is the naming the platform enforces — `media-tracker-password` and
 # `elden-ring-tracker-password` today. A repo can only ever name its own.
+#
+# The fleet dashboard is the odd one out: it stores nothing and serves no data
+# of its own, it only reads the fleet-status agent on each host. It is here
+# rather than on home-server because home-server is the family's box and stays
+# boring — which does mean this host's own outage takes the dashboard with it.
+# A dead page is personal-server's down signal; nothing else reports it.
 
 {
   config.apps.instances = {
     media-tracker = inputs.media-tracker;
     elden-ring-tracker = inputs.elden-ring-tracker;
+    fleet-dashboard = inputs.fleet-dashboard;
   };
 }

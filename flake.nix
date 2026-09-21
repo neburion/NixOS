@@ -54,6 +54,10 @@
       url = "github:neburion/elden-ring-tracker";
       flake = false;
     };
+    fleet-dashboard = {
+      url = "github:neburion/fleet-dashboard";
+      flake = false;
+    };
   };
 
   outputs = { nixpkgs, home-manager, zen-browser, helium, nvf, disko, spicetify-nix, sops-nix, ... }@inputs:

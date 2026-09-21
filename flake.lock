@@ -74,6 +74,22 @@
         "type": "github"
       }
     },
+    "fleet-dashboard": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789984032,
+        "narHash": "sha256-oGFW8vUO7sHxCj4FAOaz6WhpmfHMAEdhcSWUdWA0Srk=",
+        "owner": "neburion",
+        "repo": "fleet-dashboard",
+        "rev": "281371c2c8c0e9e4eda1dbe3ca76629ebac68c35",
+        "type": "github"
+      },
+      "original": {
+        "owner": "neburion",
+        "repo": "fleet-dashboard",
+        "type": "github"
+      }
+    },
     "helium": {
       "inputs": {
         "nixpkgs": [
@@ -233,6 +249,7 @@
       "inputs": {
         "disko": "disko",
         "elden-ring-tracker": "elden-ring-tracker",
+        "fleet-dashboard": "fleet-dashboard",
         "helium": "helium",
         "home-manager": "home-manager",
         "media-tracker": "media-tracker",

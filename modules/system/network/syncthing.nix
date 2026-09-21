@@ -1,6 +1,12 @@
 { ... }:
 
 {
+  # The fleet dashboard's sync tiles come from this user's syncthing API, and
+  # the key for it lives in their config.xml. Set here rather than on the host
+  # for the same reason `user` is: delete this file and the question of whose
+  # syncthing to report on stops existing.
+  fleetStatus.syncUser = "neburion";
+
   services.syncthing = {
     enable           = true;
     user             = "neburion";
