@@ -1,7 +1,8 @@
 { ... }:
 
 # Widgets/Dial.qml — concentric gauges, outermost first. Knows nothing about
-# batteries; it is handed a list of rings and draws them.
+# batteries; it is handed a list of rings and draws them, and sets any ring
+# that says it is burning alight along its own filled length.
 #
 # Open at the bottom, 270 degrees of travel. A closed ring has no beginning,
 # so a value near 100 and a value near 0 land in the same place and the eye
@@ -32,23 +33,18 @@
         // [{ value: 0-100, color: <color> }] — outermost first.
         property var rings: []
 
-        property real core:      4.0    // the hole left in the middle
+        property real core:      3.5    // the hole left in the middle
         property real thickness: 2.0
-        property real gap:       1.4
-        property real maxSize:   28
+        property real gap:       1.3
+        property real maxSize:   26
         property real outer:     0      // fixed width; 0 lets the list decide
 
         // Open at the bottom: 135 degrees is 7:30, sweeping clockwise to 4:30.
         property real startAngle: 135
         property real travel:     270
 
-        // Drawn under each ring, a little wider, when something is burning
-        // behind the dial. Without it the fire and the arcs are the same
-        // orange at the same brightness and the gauge disappears into the
-        // flame — the reference this copies solves the same problem by
-        // outlining its battery. Dark rather than light, because the glass
-        // behind is dark.
-        property bool knockout: false
+        // How far the flames reach off a lit ring. Zero disables them.
+        property real fire: 0
 
         readonly property int  count: rings.length
         readonly property real step:  thickness + gap
@@ -81,18 +77,6 @@
                 readonly property real sweep:
                     root.travel * Math.max(0, Math.min(100, modelData.value)) / 100
 
-                ShapePath {
-                    strokeColor: root.knockout ? Qt.rgba(0.02, 0.025, 0.04, 0.92) : "transparent"
-                    strokeWidth: ring.width_ + 2.6
-                    fillColor:   "transparent"
-                    capStyle:    ShapePath.RoundCap
-                    PathAngleArc {
-                        centerX: ring.mid; centerY: ring.mid
-                        radiusX: ring.radius; radiusY: ring.radius
-                        startAngle: root.startAngle; sweepAngle: root.travel
-                    }
-                }
-
                 // The groove, always the full travel, so an empty gauge still
                 // says where full would be.
                 ShapePath {
@@ -121,6 +105,21 @@
                             NumberAnimation { duration: 460; easing.type: Easing.OutCubic }
                         }
                     }
+                }
+
+                // Rooted on this ring's outer edge and running only as far as
+                // the ring is filled. Drawn last so its tips sit over the
+                // groove of whatever ring is outside it.
+                ArcFire {
+                    anchors.fill: parent
+                    centreX: ring.mid; centreY: ring.mid
+                    radius:    ring.radius
+                    thickness: ring.width_
+                    startAngle: root.startAngle
+                    sweepAngle: ring.sweep
+                    base:      ring.modelData.color
+                    amplitude: root.fire
+                    burning:   root.fire > 0 && ring.modelData.burning === true
                 }
             }
         }

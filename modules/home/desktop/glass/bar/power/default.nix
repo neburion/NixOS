@@ -7,7 +7,7 @@
 # without the dial has nowhere to report, so there is no half of this to take.
 #
 # Adding a battery is one file under sources/ and one line below. Nothing in
-# dial.nix, flame.nix or widget.nix knows how many there are — see
+# dial.nix, fire.nix or widget.nix knows how many there are — see
 # registry.nix for what a source has to produce.
 
 {
@@ -15,7 +15,7 @@
     ./registry.nix
     ./profile.nix
     ./dial.nix
-    ./flame.nix
+    ./fire.nix
     ./widget.nix
 
     ./sources/laptop.nix

@@ -107,29 +107,11 @@ ${refreshes}
                 implicitWidth:  gauge.implicitWidth
                 implicitHeight: gauge.implicitHeight
 
-                // Behind the rings and wider than them, so the tongues flank
-                // the gauge instead of hiding behind it, and rising through
-                // the gap at the bottom. 32 is the whole panel less a hair —
-                // the fire is the tallest thing the bar draws, and it has
-                // nowhere else to go.
-                Flame {
-                    anchors {
-                        bottom: parent.bottom; bottomMargin: -2
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                    width:   gauge.implicitWidth * 1.30
-                    height:  32
-                    tongues: 4
-                    valley:  0.07
-                    shoulder: 0.72
-                    burning: root.burning
-                }
-
                 Dial {
                     id: gauge
                     anchors.centerIn: parent
                     rings: root.live
-                    knockout: root.burning
+                    fire: 4
                 }
             }
 
@@ -210,43 +192,17 @@ ${refreshes}
                                 width: dials.width / root.sources.length
                                 spacing: 6
 
-                                // Every cell grows, not just the one that is
-                                // alight, or the labels under them stop
-                                // lining up across the row.
                                 Item {
-                                    width: 56
-                                    height: root.burning ? 78 : 52
+                                    width: 56; height: 56
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    Behavior on height {
-                                        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
-                                    }
-
-                                    Flame {
-                                        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-                                        width:  56
-                                        height: 74
-                                        tongues: 5
-                                        valley:  0.06
-                                        shoulder: 0.74
-                                        burning: modelData.burning
-                                    }
-                                    Flame {
-                                        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-                                        width:  26
-                                        height: 38
-                                        tongues: 2
-                                        shoulder: 0.82
-                                        inner:   true
-                                        burning: modelData.burning
-                                    }
 
                                     Dial {
                                         id: cell
-                                        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-                                        outer: 46
+                                        anchors.centerIn: parent
+                                        outer: 44
                                         thickness: 2.8
                                         rings: [ modelData ]
-                                        knockout: modelData.burning
+                                        fire: 6
                                     }
 
                                     Text {

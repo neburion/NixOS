@@ -277,28 +277,42 @@ outgrow the 34px panel.
 repaint loop. Set `preferredRendererType: Shape.CurveRenderer`: geometry tessellation
 quantises a 2px stroke into a smudge at this size.
 
-**The flame is one closed outline, not a set of tongues.** Separate tongues were the first
-attempt and they do not survive the bar — at 26px each is three pixels wide and the group
-reads as a comb. One silhouette with pinched valleys keeps its shape all the way down.
+**The fire is on the line, not behind it.** The first version drew a flame silhouette
+across the whole widget, which made it a fire with a gauge in it. `ArcFire` is bound to one
+arc instead: tongues root on that arc's outer edge and run only as far as the ring is
+filled, so a ring at 40% burns for 40% of its travel and nothing is drawn anywhere else.
 
-Three things took four attempts to get right, and all three are the kind of mistake that
-renders without erroring:
+The profile is built in arc-length space and mapped to polar, which is why there are no
+Beziers in it — control points do not survive that map, and a polyline at eight samples per
+tongue is already smoother than 26px can show.
 
-- **Both cubic control points on the straight line from base to tip give a triangle.** The
-  low control has to sit *outside* the base so the flank bulges; the high one tucks under
-  the tip so it pulls back in. Attempts one through three drew mountain ranges.
-- **The outline closes along the foot of the item**, so the fire sits on a visible shelf.
-  The gradient's bottom two stops fade to alpha zero to dissolve it — a straight edge is the
-  one thing a flame never has.
-- **Fire and gauge are the same orange at the same brightness**, so the rings vanish into the
-  flame. `Dial.knockout` draws each arc once in near-black at `thickness + 2.6` first; the
-  reference this copies solves the same problem by outlining its battery.
+Four attempts, and every failure rendered happily without erroring:
 
-The path is built in JS through `PathSvg` rather than a fixed run of `PathCubic` elements,
-so the tongue count is a property. One `phase` drives every tongue through its own frequency
-and offset — anything periodic shared between them shows up as a wave travelling along the
-fire — and the animation stops when nothing is burning, or a hidden flame rebuilds a path
-string sixty times a second for nothing.
+- **`sin(pi*c)^n` stays round on top** however hard `n` is pushed, and a ring of round bumps
+  is a cog. `1 - |2c-1|^cusp` with cusp below 1 gives concave flanks and an actual point.
+- **Tongues as wide as they are tall read as lumps**, whatever the profile does. Each one
+  now fills only the middle `wfrac` of its slot, leaving bare line between them.
+- **Overlapping the slots to soften the gaps merges them into a sausage.** Don't.
+- **A purely radial tongue at the bottom of a ring points at the floor.** `bend` pulls every
+  tip toward vertical.
+
+The gradient is `RadialGradient` about the dial's own centre, so hot-at-the-root and
+pale-at-the-tip holds all the way round instead of only along one axis — and its stop
+positions are fractions of `centerRadius`, so the root of the flames has to be placed where
+the line actually is, not at 0.
+
+One `phase` drives every tongue through its own frequency and offset; anything periodic
+shared between them shows up as a wave travelling around the ring. The animation stops when
+nothing is burning, or a hidden fire rebuilds a path string sixty times a second for nothing.
+
+**Previewing this without putting anything on screen.** `env -u WAYLAND_DISPLAY -u DISPLAY
+QT_QPA_PLATFORM=offscreen quickshell -p shell.qml` has no display connection at all, so
+`visible: true` puts nothing anywhere; a `Timer` then calls `grabToImage` on a QML-declared
+`Item` and saves a PNG. Same renderer as the real bar, `QtQuick.Shapes` included. Two traps:
+grab an `Item` you declared, never `win.contentItem` — that is a quickshell proxy and fails
+with *"item has no QML engine"* — and **quickshell only registers config subdirectories that
+the root `shell.qml` imports**, so a scene loaded through a `Loader` gets *"Dial is not a
+type"* unless `shell.qml` itself carries `import "Widgets"`.
 
 **Qt 6.11 specifics the glass QML relies on:** `font.features` (6.6+) for tabular figures,
 and `font.variableAxes` (6.7+) to drive the Material Symbols `FILL` axis — active state is
