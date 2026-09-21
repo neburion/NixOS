@@ -19,20 +19,26 @@
 # at the apex. It is also zero at both ends of its slot, so every tongue meets
 # the line rather than floating off it.
 #
-# Each tongue occupies only the middle `wfrac` of its slot, leaving bare line
-# between them. Without that the tongues merge into a lumpy sausage — they were
-# as wide as they were tall, and that aspect ratio reads as lumps no matter
-# what the profile does. `wfrac` is the knob that decides sharp against bubbly,
-# far more than `cusp` does: a third of the slot is a lick, half is a blister.
+# The profile is `(1 - t^cusp)^flank` over `t = |2c-1|`, and it needs both
+# exponents. `cusp` below 1 sharpens the apex; `flank` below 1 makes the
+# tongue leave the line steeply instead of easing away from it. Together they
+# give a flank that is convex at the base and concave under the tip — the S a
+# flame has. One exponent alone gives either a triangle or a petal.
 #
-# `cusp` cannot go above 1. At exactly 1 the tongue is a straight-sided
-# triangle; below it the flanks tuck in and the point gets finer; above it the
-# apex goes TANGENTIALLY FLAT and rounds off, which is the opposite of what the
-# name suggests.
+# Neither may go above 1. At exactly 1 the tongue is a straight-sided triangle;
+# above it the curve goes TANGENTIALLY FLAT at that end, which rounds off the
+# very thing the name says it sharpens.
 #
-# Sampling density does not matter, which is worth knowing before spending an
-# afternoon on it — the apex sits at the centre of its slot and a sample always
-# lands on it, so 8 points per slot and 24 render identically.
+# `density` carries more of the look than either exponent. It is tongues per
+# unit of radius, so it holds the tongue WIDTH roughly constant as the dial
+# grows, and width against height is what decides whether this reads as fire,
+# as a row of petals or as a comb. Below about 0.5 the tongues are wider than
+# they are tall and scallop; the version that shipped before this one was at
+# 0.38 with gaps between, which read as spikes on a wire.
+#
+# Sampling density does almost nothing — the apex sits near the centre of its
+# slot and a sample lands close to it either way. Worth knowing before spending
+# an afternoon on it.
 #
 # Two details that make it fire rather than a starburst: `bend` pulls every
 # tip toward vertical, because flames rise and a purely radial one at the
@@ -60,14 +66,15 @@
 
         // Shape. Defaults are the ones that survived the sweep; the only knob
         // a caller normally touches is `amplitude`.
-        property real density:  0.38  // tongues per unit of radius
-        property real wfrac:    0.32  // how much of its slot a tongue fills
-        property real cusp:     0.75  // below 1 for a pointed apex
+        property real density:  1.15  // tongues per unit of radius
+        property real cusp:     0.50  // below 1 for a pointed apex
+        property real flank:    0.60  // below 1 for flanks that leave the line steeply
+        property real bed:      0.12  // the sheath that runs the whole lit length
         property real skew:     0.70  // lean
-        property real floorFrac: 0.30 // the shortest tongue, against the tallest
+        property real floorFrac: 0.10 // the shortest tongue, against the tallest
         property real bend:     0.85  // how hard tips are pulled upright
         property real lick:     3.0   // how far a tip drifts along the arc
-        property int  samples:  12    // polyline points per tongue slot
+        property int  samples:  8     // polyline points per tongue slot
 
         readonly property int tongues: Math.max(3, Math.round(radius * density))
 
@@ -109,13 +116,15 @@
                 var peak = root.amplitude
                          * (root.floorFrac + (1 - root.floorFrac) * (0.5 + 0.5 * wob));
 
-                // Bare line either side of the tongue inside its own slot.
-                var c = (u - (1 - root.wfrac) * 0.5) / root.wfrac;
-                var h = 0;
-                if (c > 0 && c < 1) {
-                    var cs = Math.pow(c, root.skew);
-                    h = peak * (1 - Math.pow(Math.abs(2 * cs - 1), root.cusp));
-                }
+                // No bare line anywhere: every tongue fills its slot, and a
+                // thin bed of fire runs the whole lit length underneath them.
+                // `bed` is taken against `amplitude` rather than this tongue's
+                // own peak, or the sheath would step at every slot boundary.
+                var cs = Math.pow(u, root.skew);
+                var t  = Math.abs(2 * cs - 1);
+                var h  = root.bed * root.amplitude
+                       + (1 - root.bed) * peak
+                         * Math.pow(1 - Math.pow(t, root.cusp), root.flank);
 
                 // The tip drifts along the arc as well as away from it.
                 var a  = (root.startAngle + root.sweepAngle * s

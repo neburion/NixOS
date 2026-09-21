@@ -288,19 +288,33 @@ tongue is already smoother than 26px can show.
 
 Four attempts, and every failure rendered happily without erroring:
 
-- **`sin(pi*c)^n` stays round on top** however hard `n` is pushed, and a ring of round bumps
-  is a cog. `1 - |2c-1|^cusp` with cusp below 1 gives concave flanks and an actual point.
-- **`cusp` above 1 rounds the apex off**, which is the opposite of what the name suggests:
-  at exactly 1 the tongue is a straight-sided triangle, and above it the peak goes
-  tangentially flat. Sharp lives below 1.
-- **`wfrac` decides sharp against bubbly, far more than `cusp` does.** A third of the slot
-  is a lick; half is a blister. The first version at 0.52 was the "too bubbly" one.
-- **Overlapping the slots to soften the gaps merges them into a sausage.** Don't.
+The profile is `(1 - t^cusp)^flank` over `t = |2c-1|`, and it needs **both** exponents:
+`cusp` below 1 sharpens the apex, `flank` below 1 makes the tongue leave the line steeply
+rather than easing away from it. Together they give the flank a flame's S — convex at the
+base, concave under the tip. One exponent alone gives either a triangle or a petal.
+
+Four shapes were rejected on the way, and every one of them rendered happily:
+
+- **`sin(pi*c)^n` stays round on top** however hard `n` is pushed. A ring of round bumps is
+  a cog.
+- **Either exponent above 1 rounds that end off**, which is the opposite of what `cusp`
+  sounds like it should do: at exactly 1 the curve is straight, above it it goes
+  tangentially flat. Both live below 1.
+- **Gaps between tongues read as spikes on a wire**, not as something burning. The whole
+  slot is filled now, and `bed` puts a thin sheath of fire along the entire lit length
+  underneath them. Take `bed` against `amplitude`, not against the tongue's own peak, or
+  the sheath steps at every slot boundary.
 - **A purely radial tongue at the bottom of a ring points at the floor.** `bend` pulls every
   tip toward vertical.
-- **Sampling density is not one of the knobs.** The apex sits at the centre of its slot and
-  a sample always lands on it, so 8 points per slot and 24 render identically. Worth knowing
-  before spending an afternoon on it.
+
+> **`density` carries more of the look than either exponent.** It is tongues per unit of
+> radius, so it holds tongue *width* roughly constant as the dial grows, and width against
+> height is what decides between fire, petals and a comb. Below about 0.5 the tongues are
+> wider than they are tall and scallop.
+
+**Sampling density is not one of the knobs.** The apex sits near the centre of its slot and
+a sample lands close to it either way, so 8 points per slot and 24 render identically. Worth
+knowing before spending an afternoon on it.
 
 The gradient is `RadialGradient` about the dial's own centre, so hot-at-the-root and
 pale-at-the-tip holds all the way round instead of only along one axis — and its stop
