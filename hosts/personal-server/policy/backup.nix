@@ -29,4 +29,28 @@
 
 {
   backup.paths.root = [ "/var/lib" ];
+
+  # Backblaze, fed by copying from the mirrored repositories this host already
+  # holds — see services/backup/fanout.nix. It exists because everything else
+  # off-site is Cloudflare: R2, the tunnels, the DNS and the mail are one
+  # account, and losing it would take the only off-site backup at the same
+  # moment it took the domain.
+  #
+  # The key behind these two secrets is restricted to this one bucket and holds
+  # six capabilities — list, read, write and delete files, and the two list-
+  # buckets rights an S3 client needs to find it. It cannot create a bucket,
+  # delete the bucket, or mint another key; that was checked by asking it to,
+  # and being refused.
+  #
+  # The bucket carries a lifecycle rule deleting hidden versions after a day.
+  # B2 keeps every version of a file forever by default, so without it restic's
+  # prune would hide objects that go on being billed — a repository that
+  # shrinks on paper and never on the invoice.
+  backup.fanout.b2 = {
+    repository  = "s3:s3.us-east-005.backblazeb2.com/neburion-fleet-backup";
+    credentials = {
+      AWS_ACCESS_KEY_ID     = "b2-key-id";
+      AWS_SECRET_ACCESS_KEY = "b2-application-key";
+    };
+  };
 }
