@@ -1,6 +1,7 @@
 { pkgs, ... }:
 
-# SystemStats service + the right-hand stats cluster.
+# SystemStats service, the audio stat, and the cluster that lines the three
+# of them up. The three load meters and their menu are in loads.nix.
 #
 # The GPU reading came from `nvidia-settings -q GPUUtilization` and had never
 # produced a number on this machine — it answers
@@ -42,6 +43,22 @@
         property int memPercent: 0
         property int gpuPercent: 0
 
+        // Detail, read on the same tick and only ever shown in the menu.
+        property string cpuModel:  ""
+        property string loadAvg:   ""
+        property int    cpuTemp:   0
+
+        property string gpuName:     ""
+        property int    gpuMemUsed:  0   // MiB
+        property int    gpuMemTotal: 0
+        property int    gpuTemp:     0
+        property int    gpuClock:    0
+
+        property real memUsedGiB:   0
+        property real memTotalGiB:  0
+        property real swapUsedGiB:  0
+        property real swapTotalGiB: 0
+
         property real lastTotal: 0
         property real lastIdle:  0
 
@@ -77,13 +94,69 @@
             watchChanges: false
             onLoaded: {
                 var t = text();
-                var mTotal = /MemTotal:\s+(\d+)/.exec(t);
-                var mAvail = /MemAvailable:\s+(\d+)/.exec(t);
-                if (mTotal && mAvail) {
-                    var total = parseInt(mTotal[1], 10);
-                    var avail = parseInt(mAvail[1], 10);
-                    root.memPercent = Math.round((1 - avail / total) * 100);
+                function kb(key) {
+                    var m = new RegExp(key + ":\\s+(\\d+)").exec(t);
+                    return m ? parseInt(m[1], 10) : 0;
                 }
+                var total = kb("MemTotal");
+                var avail = kb("MemAvailable");
+                if (total && avail) {
+                    root.memPercent  = Math.round((1 - avail / total) * 100);
+                    root.memTotalGiB = total / 1048576;
+                    root.memUsedGiB  = (total - avail) / 1048576;
+                }
+                var swTotal = kb("SwapTotal");
+                var swFree  = kb("SwapFree");
+                root.swapTotalGiB = swTotal / 1048576;
+                root.swapUsedGiB  = (swTotal - swFree) / 1048576;
+            }
+        }
+
+        // Read once. The model name does not change, and /proc/cpuinfo is
+        // 20 cores' worth of text to re-parse every two seconds for it.
+        FileView {
+            path: "/proc/cpuinfo"
+            watchChanges: false
+            onLoaded: {
+                var m = /model name\s*:\s*(.+)/.exec(text());
+                // "13th Gen Intel(R) Core(TM) i9-13900H" is mostly legal
+                // boilerplate; the menu has one line for this.
+                if (m) root.cpuModel = m[1].replace(/\((R|TM)\)/g, "")
+                                           .replace(/\s+/g, " ").trim();
+            }
+        }
+
+        FileView {
+            id: loadFile
+            path: "/proc/loadavg"
+            watchChanges: false
+            onLoaded: {
+                var f = text().trim().split(/\s+/);
+                if (f.length >= 3) root.loadAvg = f[0] + "  " + f[1] + "  " + f[2];
+            }
+        }
+
+        // hwmon numbering is not stable across boots, so the coretemp node is
+        // found once by name and the FileView follows the answer. Globbing on
+        // every tick would mean a shell spawn every two seconds for one int.
+        property string cpuTempPath: ""
+
+        Process {
+            running: true
+            command: ["sh", "-c",
+                "for h in /sys/class/hwmon/hwmon*; do " +
+                "[ \"$(cat \"$h/name\" 2>/dev/null)\" = coretemp ] && " +
+                "{ echo \"$h/temp1_input\"; break; }; done"]
+            stdout: StdioCollector { onStreamFinished: root.cpuTempPath = text.trim() }
+        }
+
+        FileView {
+            id: tempFile
+            path: root.cpuTempPath
+            watchChanges: false
+            onLoaded: {
+                var n = parseInt(text().trim(), 10);
+                if (!isNaN(n)) root.cpuTemp = Math.round(n / 1000);
             }
         }
 
@@ -91,21 +164,37 @@
             id: gpuProc
             command: [
                 "${pkgs.linuxPackages.nvidia_x11.bin}/bin/nvidia-smi",
-                "--query-gpu=utilization.gpu",
+                "--query-gpu=utilization.gpu,memory.used,memory.total," +
+                "temperature.gpu,clocks.gr,name",
                 "--format=csv,noheader,nounits"
             ]
             running: false
             stdout: StdioCollector {
+                // One call for all six: the extra fields are free next to the
+                // process spawn, and the name is last because it is the only
+                // one that could ever contain a comma.
                 onStreamFinished: {
-                    var n = parseInt(text.trim(), 10);
+                    var f = text.trim().split(",");
+                    if (f.length < 6) return;
+                    var n = parseInt(f[0], 10);
                     if (!isNaN(n)) root.gpuPercent = n;
+                    root.gpuMemUsed  = parseInt(f[1], 10) || 0;
+                    root.gpuMemTotal = parseInt(f[2], 10) || 0;
+                    root.gpuTemp     = parseInt(f[3], 10) || 0;
+                    root.gpuClock    = parseInt(f[4], 10) || 0;
+                    root.gpuName     = f.slice(5).join(",").trim()
+                                        .replace(/^NVIDIA GeForce /, "");
                 }
             }
         }
 
         Timer {
             interval: 2000; running: true; triggeredOnStart: true; repeat: true
-            onTriggered: { statFile.reload(); memFile.reload(); gpuProc.running = true; }
+            onTriggered: {
+                statFile.reload(); memFile.reload();
+                loadFile.reload(); tempFile.reload();
+                gpuProc.running = true;
+            }
         }
     }
   '';
@@ -162,91 +251,12 @@
     }
   '';
 
-  # Five dashes, lit from the left. Quantised on purpose: the bar cannot
-  # honestly resolve more than five steps at this size, and a meter that
-  # claims otherwise is a number wearing a costume. The numbers themselves are
-  # gone from these three — they were never the reason you glance at them.
-  #
-  # Thresholds sit at 10/30/50/70/90 rather than 20/40/60/80/100, so a pip
-  # lights at the value it is nearest to. Below 10 the row is empty, which is
-  # not a fault — this dGPU really does sit at 0% whenever nothing is drawing,
-  # and five dark dashes is what that should look like.
-  quickshell.widgets.BarMeter = ''
-    import QtQuick
-    import "../Common"
-
-    Item {
-        id: root
-
-        property string glyph:     ""
-        // Material Symbols unless something says otherwise.
-        property string glyphFont: Glass.fontIcon
-        property real   glyphSize: 15
-        property int    value:     0
-        property int    alertAt: 101
-        property color  tint:    Glass.muted
-
-        readonly property bool alert: value >= alertAt
-
-        implicitWidth:  line.implicitWidth
-        implicitHeight: line.implicitHeight
-
-        Row {
-            id: line
-            anchors.centerIn: parent
-            spacing: 5
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                font.family: root.glyphFont
-                font.pixelSize: root.glyphSize
-                font.variableAxes: Glass.iconIdle
-                color: root.alert ? Glass.critical : Glass.muted
-                text:  root.glyph
-                Behavior on color { ColorAnimation { duration: 200 } }
-            }
-
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Repeater {
-                    model: 5
-                    delegate: Rectangle {
-                        required property int index
-
-                        readonly property bool lit: root.value >= index * 20 + 10
-
-                        width: 3; height: 13; radius: 1.5
-                        color: !lit       ? Qt.rgba(1, 1, 1, 0.11)
-                             : root.alert ? Glass.critical
-                             :              root.tint
-                        Behavior on color { ColorAnimation { duration: 220 } }
-                    }
-                }
-            }
-        }
-    }
-  '';
-
   quickshell.modules.BarHardwareGroup = ''
     import QtQuick
     import "../Services"
     import "../Common"
     import "../Widgets"
 
-    // Material Symbols has no graphics card. It has a circuit board
-    // (developer_board, which sat here and read as a second RAM stick) and a
-    // cube (deployed_code, which reads as 3D and not as hardware), and that is
-    // the end of the shortlist. The nerd-patched face has the actual thing —
-    // an expansion card with its connector edge — so the GPU borrows one
-    // glyph from it and nothing else does.
-    //
-    // It is a filled glyph among outlines, so it is set a size smaller to
-    // carry the same weight. Codepoint via String.fromCodePoint: U+F08AE sits
-    // in Plane 15, and a "\u" escape takes four hex digits and would eat it.
-    //
-    // memory is the chip (CPU), memory_alt is the DIMM (RAM).
     Row {
         id: root
         spacing: 13
@@ -269,30 +279,9 @@
             }
         }
 
-        BarMeter {
+        BarLoads {
             anchors.verticalCenter: parent.verticalCenter
-            glyph:     String.fromCodePoint(0xF08AE)
-            glyphFont: Glass.fontGlyph
-            glyphSize: 14
-            value:     SystemStats.gpuPercent
-            alertAt:   95
-            tint:      root.accent
-        }
-
-        BarMeter {
-            anchors.verticalCenter: parent.verticalCenter
-            glyph:   "\ue322"
-            value:   SystemStats.cpuPercent
-            alertAt: 90
-            tint:    root.accent
-        }
-
-        BarMeter {
-            anchors.verticalCenter: parent.verticalCenter
-            glyph:   "\uf7a3"
-            value:   SystemStats.memPercent
-            alertAt: 85
-            tint:    root.accent
+            accent: root.accent
         }
 
         BarPower {

@@ -11,6 +11,7 @@
     ./bluetooth.nix
     ./clock.nix
     ./hardware.nix
+    ./loads.nix
     ./power
     ./phone-display.nix
     ./display.nix

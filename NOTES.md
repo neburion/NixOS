@@ -274,7 +274,20 @@ agrees with `free` to the point. The three fields the formula omits (`steal`, `g
 thresholds at 10/30/50/70/90 so a pip lights at the value it is nearest. Quantised on
 purpose — the bar cannot honestly resolve more than about five steps at 34px, and a
 percentage there is precision it does not have. Below 10% the row is empty, which is what
-an idle dGPU should look like.
+an idle dGPU should look like. They sit 8px apart rather than the bar's usual 13: they are
+one subject and one click target, and the wider rhythm would say otherwise.
+
+The numbers did not disappear, they moved — clicking the three opens a menu with what the
+bar could never fit. The GPU's name, VRAM, temperature and clock all come out of the same
+`nvidia-smi` call as the percentage, because the extra fields are free next to the process
+spawn. Memory is gigabytes and swap rather than a percentage.
+
+> **hwmon numbering is not stable across boots**, so the CPU's `coretemp` node is found
+> once by name at startup and the `FileView` path follows that answer. Globbing it on every
+> tick would mean a shell spawn every two seconds to read one integer.
+
+`/proc/cpuinfo` is read once and never again: the model name does not change, and it is
+twenty cores' worth of text to re-parse for one line.
 
 **Material Symbols has no graphics card.** It has `developer_board`, a generic circuit
 board that sat on the GPU and read as a second RAM stick, and `deployed_code`, a cube that
