@@ -181,8 +181,14 @@ def backups():
     lying in the most expensive direction.
     """
     out = []
-    for u in units_json("restic-backups-*.service"):
+    # Both shapes of job. A `restic-backups-*` unit reads this machine's own
+    # files; a `restic-fanout-*` unit copies an already-made backup out to a
+    # further destination. They fail differently and a page that showed only
+    # the first would call a fleet healthy while a whole destination had gone
+    # quiet.
+    for u in units_json("restic-backups-*.service", "restic-fanout-*.service"):
         name = u["unit"]
+        fanout = name.startswith("restic-fanout-")
         # InactiveExitTimestamp, not ActiveEnterTimestamp: a Type=oneshot
         # unit never records entering active, so that property comes back
         # empty and every duration reads as unknown. This one is the moment
@@ -193,9 +199,11 @@ def backups():
                  "NextElapseUSecRealtime", "LastTriggerUSec")
         started = stamp(s.get("InactiveExitTimestamp"))
         ended = stamp(s.get("InactiveEnterTimestamp"))
+        prefix = "restic-fanout-" if fanout else "restic-backups-"
         out.append({
             "unit": name,
-            "job": name[len("restic-backups-"):-len(".service")],
+            "job": name[len(prefix):-len(".service")],
+            "kind": "copy" if fanout else "backup",
             "running": s.get("ActiveState") == "active",
             "result": s.get("Result", "unknown"),
             "exit": s.get("ExecMainStatus"),
@@ -206,7 +214,7 @@ def backups():
                                               and ended >= started) else None,
             "next": stamp(t.get("NextElapseUSecRealtime")),
         })
-    return sorted(out, key=lambda b: b["job"])
+    return sorted(out, key=lambda b: (b["kind"], b["job"]))
 
 
 def services():
