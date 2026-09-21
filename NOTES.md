@@ -153,6 +153,46 @@ exclusion list is the remembering it exists to avoid.
 personal-server does not mirror to itself. A copy on the same disk is not a
 backup.
 
+### Fanning out to a third destination
+
+Further destinations are fed by `restic copy` from the mirrored repositories
+this host already holds, not by another job on every client — one entry in
+`backup.fanout` and it becomes its own unit and timer. The point is not the
+bandwidth saved, it is that pod042 holds no Backblaze credential and never
+will. Append-only means a compromised laptop cannot *delete* the mirror; this
+means it cannot *reach* B2 at all.
+
+**Destinations must be `init`'d with `--copy-chunker-params` from the source.**
+Without it the destination picks its own chunker seed, identical files chunk
+differently, and nothing ever deduplicates — the repository looks healthy and
+quietly stores several times what it should. Confirmed by reading
+`chunker_polynomial` out of both configs: `2a480b110ce39f` on each side.
+
+**`restic copy` mints new snapshot IDs.** Source and destination have different
+master keys even on the same passphrase, so every snapshot is decrypted and
+re-encrypted and comes out with a different ID. Snapshots match on *time*, host
+and paths — never on ID. Comparing the two by ID will just tell you the
+snapshot does not exist.
+
+**B2 keeps every version of a file forever unless told not to.** restic's prune
+*hides* objects rather than erasing them, and hidden versions go on being
+billed. The bucket carries a lifecycle rule with `daysFromHidingToDeleting: 1`,
+so a repository that shrinks on paper also shrinks on the invoice. A fan-out
+destination added without one will grow without bound while every number restic
+prints looks correct.
+
+> **Never run restic as root against the mirror repositories.** It leaves
+> root-owned `0400` files in a tree the `restic` user has to keep writing to,
+> and the next real run dies on `permission denied` opening a lock it cannot
+> read or remove. This is not hypothetical: the first fan-out to B2 failed
+> exactly this way, on a lock left behind by a root-run test twenty minutes
+> earlier. Every unit here runs as `restic`; debugging by hand should too —
+> `sudo -u restic`, and `--no-cache` so no root-owned cache appears either.
+
+The fan-out units clear stale locks at *both* ends before copying, because
+`copy` locks the source as well as the destination, and a mirror backup killed
+mid-run would otherwise block every copy after it.
+
 **What append-only does not buy you.** A compromised client can still push
 snapshots with an attacker-chosen `--time` and push the real ones out of the
 keep policy on the next server-side prune (restic #22057). The mirror protects
