@@ -1,8 +1,32 @@
 { pkgs, ... }:
 
-# SystemStats service + the right-hand stats cluster. Service copied verbatim
-# from clean; only the presentation changed — icon plus tabular percentage,
-# and thresholds recolour to critical rather than to a warning hue.
+# SystemStats service + the right-hand stats cluster.
+#
+# The GPU reading came from `nvidia-settings -q GPUUtilization` and had never
+# produced a number on this machine — it answers
+#
+#     ERROR: Error resolving target specification '' (No targets match ...)
+#
+# and the regex simply never matched, so gpuPercent sat at its initial 0 while
+# the card was doing 15-50%. nvidia-settings talks to the X server's NV-CONTROL
+# extension, which XWayland does not implement, so under Wayland it has no
+# targets to resolve and never will. Measured against nvidia-smi it read 0
+# through utilisation of 15, 21, 24, 36 and 50 percent.
+#
+# nvidia-smi needs no display and costs about 27ms. It comes from
+# pkgs.linuxPackages.nvidia_x11, the same place the old nvidia-settings did;
+# on this host that evaluates to the identical derivation as
+# hardware.nvidia.package, checked rather than assumed.
+#
+# > A mismatched nvidia-smi refuses to talk to the driver at all. If this host
+# > ever pins hardware.nvidia.package to something other than the default for
+# > its kernel — a beta or production branch — this line has to follow it, and
+# > the symptom is the GPU silently reading 0 again.
+#
+# CPU and RAM were checked at the same time and are right: against a reference
+# reading /proc/stat on its own clock, cpuPercent tracked 37.5/56.4/51.0/44.8/
+# 37.3 as 38/57/51/44/37, one sample behind because the two clocks are not in
+# step. memPercent agrees with `free` to the point.
 
 {
   quickshell.services.SystemStats = ''
@@ -65,12 +89,16 @@
 
         Process {
             id: gpuProc
-            command: [ "${pkgs.linuxPackages.nvidia_x11.settings}/bin/nvidia-settings", "-q", "GPUUtilization" ]
+            command: [
+                "${pkgs.linuxPackages.nvidia_x11.bin}/bin/nvidia-smi",
+                "--query-gpu=utilization.gpu",
+                "--format=csv,noheader,nounits"
+            ]
             running: false
-            stdout: SplitParser {
-                onRead: data => {
-                    var m = /graphics=(\d+)/.exec(data);
-                    if (m) root.gpuPercent = parseInt(m[1], 10);
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    var n = parseInt(text.trim(), 10);
+                    if (!isNaN(n)) root.gpuPercent = n;
                 }
             }
         }

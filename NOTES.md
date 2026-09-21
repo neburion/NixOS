@@ -250,6 +250,26 @@ recursive and everything lands in one flat carousel. Orientation is derived from
 its `width`/`height` are the physical mode, so a rotated screen still reports 2560x1440
 there. `ShellScreen` is rotation-aware.
 
+**`nvidia-settings` cannot read anything under Wayland.** The GPU stat came from
+`nvidia-settings -q GPUUtilization` and had never once produced a number on this host — it
+answers *"Error resolving target specification '' (No targets match ...)"*, the regex never
+matched, and `gpuPercent` sat at its initial 0 while the card was doing 15-50%. It talks to
+the X server's NV-CONTROL extension, which XWayland does not implement, so there is nothing
+to resolve and never will be. The reading is `nvidia-smi --query-gpu=utilization.gpu` now:
+no display, ~27ms, and it tracks sample for sample.
+
+> **A mismatched `nvidia-smi` refuses to talk to the driver at all.** It comes from
+> `pkgs.linuxPackages.nvidia_x11.bin`, which on this host is the identical derivation to
+> `hardware.nvidia.package` — checked, not assumed. Pin `hardware.nvidia.package` to a beta
+> or production branch and this line has to follow it; the symptom is the GPU reading 0
+> again, silently.
+
+CPU and RAM were verified at the same time and are correct. Against a reference reading
+`/proc/stat` on its own clock, `cpuPercent` tracked 37.5/56.4/51.0/44.8/37.3 as
+38/57/51/44/37 — one sample behind, because the two clocks are not in step. `memPercent`
+agrees with `free` to the point. The three fields the formula omits (`steal`, `guest`,
+`guest_nice`) are all zero on bare metal, so including them changes nothing.
+
 **GPU, CPU and RAM are meters, not numbers.** Five dashes each, lit from the left, with
 thresholds at 10/30/50/70/90 so a pip lights at the value it is nearest. Quantised on
 purpose — the bar cannot honestly resolve more than about five steps at 34px, and a
