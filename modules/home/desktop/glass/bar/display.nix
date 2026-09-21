@@ -1,10 +1,16 @@
 { lib, hostConfig, ... }:
 
-# Runtime resolution, as a bar menu.
+# Everything about the displays, as one bar menu: what each output is set to,
+# what else it can do, and which way round it is.
+#
+# Rotation used to be its own bar icon next to this one, which meant two
+# controls for one subject and a toggle that could not say which output it
+# applied to. It is a row in the expanded section now, shown only for the
+# output that can actually rotate.
 #
 # Structure is the tray's, because the problem is the tray's: a list of things,
 # each of which has its own list underneath it. One icon, one popup, one focus
-# grab; clicking an output expands its modes below a separator, and nothing is
+# grab; clicking an output expands its rows below a separator, and nothing is
 # ever nested in a second popup.
 #
 # The mode list is filtered hard on purpose. HDMI-A-1 advertises thirty-five
@@ -183,8 +189,9 @@ in
     }
   '';
 
-  quickshell.modules.BarResolution = ''
+  quickshell.modules.BarDisplay = ''
     import Quickshell
+    import Quickshell.Io
     import QtQuick
     import "../Common"
     import "../Services"
@@ -199,6 +206,23 @@ in
         property string expanded: ""
 
         readonly property var expandedModes: MonitorModes.modesFor(root.expanded)
+
+        Process { id: refresher; running: false }
+
+        // The wallpaper has to be re-sent afterwards, for the same reason a
+        // mode change does: awww holds the image at the geometry it was given,
+        // so a screen that has just gone portrait keeps showing the landscape
+        // frame stretched to fit. The delay is for the reflow to settle —
+        // re-sending into the old geometry only reproduces the stretch.
+        function rotate() {
+            MonitorRotation.toggle();
+            refresher.command = [
+                "sh", "-c",
+                "sleep 1; glass-wallpaper-restore \"$1\"",
+                "sh", MonitorRotation.monName
+            ];
+            refresher.running = true;
+        }
 
         Text {
             id: chip
@@ -260,7 +284,7 @@ in
                         font.weight: Font.DemiBold
                         font.letterSpacing: -0.13
                         color: Glass.text
-                        text: "Resolution"
+                        text: "Display"
                     }
 
                     // ---- outputs ----
@@ -298,11 +322,35 @@ in
                         color: Glass.stroke
                     }
 
-                    // ---- that output's modes ----
+                    // ---- that output's orientation and modes ----
                     Column {
                         visible: root.expanded !== ""
                         width: parent.width
                         spacing: 2
+
+                        // Only the external monitor has a persisted transform,
+                        // so only it gets the row. MonitorRotation watches the
+                        // state file, so the label follows a rotation done from
+                        // the keybind too.
+                        PopupRow {
+                            width: col.width
+                            visible: root.expanded === MonitorRotation.monName
+                            // mobile_rotate
+                            glyph:  "\uf2d5"
+                            label:  "Orientation  ·  " + (MonitorRotation.transform !== 0
+                                                          ? "Portrait" : "Landscape")
+                            active: MonitorRotation.transform !== 0
+                            // mobile / mobile_landscape
+                            trailing: MonitorRotation.transform !== 0 ? "\ue7ba" : "\ued3e"
+                            onActivated: root.rotate()
+                        }
+
+                        Rectangle {
+                            visible: root.expanded === MonitorRotation.monName
+                            width: parent.width
+                            height: 1
+                            color: Qt.rgba(1, 1, 1, 0.06)
+                        }
 
                         Repeater {
                             model: root.expandedModes

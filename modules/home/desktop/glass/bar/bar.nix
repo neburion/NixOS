@@ -70,8 +70,7 @@
                     }
 
                     BarTray { }
-                    BarMonitorToggle { }
-                    BarResolution { }
+                    BarDisplay { }
                     BarPhoneDisplay { accent: window.accent }
                 }
 

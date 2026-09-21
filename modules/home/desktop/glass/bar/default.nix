@@ -11,10 +11,9 @@
     ./bluetooth.nix
     ./clock.nix
     ./hardware.nix
-    ./monitor-toggle.nix
     ./power
     ./phone-display.nix
-    ./resolution.nix
+    ./display.nix
     ./tray.nix
     ./wifi.nix
     ./workspaces.nix

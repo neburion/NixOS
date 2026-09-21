@@ -250,6 +250,12 @@ recursive and everything lands in one flat carousel. Orientation is derived from
 its `width`/`height` are the physical mode, so a rotated screen still reports 2560x1440
 there. `ShellScreen` is rotation-aware.
 
+**The display menu is two widgets that became one.** Rotation used to be its own bar icon
+beside the resolution menu — two controls for one subject, and a toggle that could not say
+which output it applied to. It is a row inside the expanded section now, shown only for the
+output that has a persisted transform. `MonitorRotation` watches its state file rather than
+reading it once, so the row also follows a rotation done from `$mod + backslash`.
+
 **The power dial is three widgets that became one.** The laptop battery, the peripherals
 readout and the power-profile toggle all answered the same question, so they are now one
 `BarPower`, living in `bar/power/`. `PowerProfile` gained `set` and lost `cycle` on the way:
@@ -309,6 +315,11 @@ Four shapes were rejected on the way, and every one of them rendered happily:
   outline is the **max** of them — one uneven body with a few heads out of it. `gamma` is
   what keeps those heads rare: heights are raised to it, so most sit low and a few reach.
   Linear height gives an even hedge.
+- **A seven-long constant table read with `i % 7` repeats every seven tongues**, and at
+  eighteen of them that repeat is a pattern you can see going round the ring. Every tongue
+  takes its own frequency and phase from a hash of its index instead.
+- **Without `crown` the tongues make a plateau** that stops dead wherever the arc happens
+  to end. Heights taper toward both ends of the lit sweep, so the fire has a middle.
 - **A purely radial tongue at the bottom of a ring points at the floor.** `bend` pulls every
   tip toward vertical.
 
