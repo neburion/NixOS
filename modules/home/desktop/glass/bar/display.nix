@@ -11,8 +11,8 @@
 #
 # Structure is the tray's, because the problem is the tray's: a list of things,
 # each of which has its own list underneath it. One icon, one popup, one focus
-# grab; clicking an output expands its rows below a separator, and nothing is
-# ever nested in a second popup.
+# grab; clicking an output expands its modes directly under its own row, and
+# nothing is ever nested in a second popup.
 #
 # The mode list is filtered hard on purpose. HDMI-A-1 advertises thirty-five
 # modes, twenty of which are 4:3 relics and five of which are the same
@@ -206,23 +206,38 @@ in
         // Which output's mode list is expanded, or "".
         property string expanded: ""
 
-        readonly property var expandedModes: MonitorModes.modesFor(root.expanded)
 
-        Process { id: refresher; running: false }
+        Process { id: rotator; running: false }
 
+        // `rotate-monitor <name>` flips that output's persisted transform and
+        // reflows; it has always taken a name, and the bar was the only thing
+        // pretending rotation belonged to one particular monitor.
+        //
         // The wallpaper has to be re-sent afterwards, for the same reason a
         // mode change does: awww holds the image at the geometry it was given,
         // so a screen that has just gone portrait keeps showing the landscape
-        // frame stretched to fit. The delay is for the reflow to settle —
-        // re-sending into the old geometry only reproduces the stretch.
-        function rotate() {
-            MonitorRotation.toggle();
-            refresher.command = [
+        // frame stretched to fit. The sleep is for the reflow to settle —
+        // re-sending into the old geometry only reproduces the stretch. The
+        // mode list is re-read after, so the row stops claiming the old
+        // dimensions.
+        function rotate(name) {
+            rotator.command = [
                 "sh", "-c",
-                "sleep 1; glass-wallpaper-restore \"$1\"",
-                "sh", MonitorRotation.monName
+                "rotate-monitor \"$1\" || exit 0; " +
+                "sleep 1; " +
+                "pkill -f \"mpvpaper .*$1\" >/dev/null 2>&1; " +
+                "glass-wallpaper-restore \"$1\"",
+                "sh", name
             ];
-            refresher.running = true;
+            rotator.running = true;
+            rotated.restart();
+        }
+
+        Timer {
+            id: rotated
+            interval: 2500
+            repeat: false
+            onTriggered: MonitorModes.refresh()
         }
 
         Text {
@@ -290,34 +305,79 @@ in
                         text: "Display"
                     }
 
-                    // ---- outputs ----
+                    // ---- outputs, each with its own modes under it ----
+                    //
+                    // The modes used to be one list below the separator at the
+                    // bottom of the popup, which put DP-1's resolutions
+                    // underneath HDMI-A-1's row and made them look like
+                    // HDMI-A-1's. They hang off the row that owns them now,
+                    // indented, and the separator is gone with them.
                     Column {
                         width: parent.width
                         spacing: 2
 
                         Repeater {
                             model: MonitorModes.outputs
-                            delegate: PopupRow {
+
+                            delegate: Column {
+                                id: output
                                 required property var modelData
                                 width: col.width
-                                // monitor
-                                glyph:  "\uef5b"
-                                label:  modelData.name + "  ·  " + modelData.current
-                                active: root.expanded === modelData.name
-                                // expand_more / chevron_right
-                                trailing: root.expanded === modelData.name ? "\ue5cf" : "\ue409"
-                                onActivated: root.expanded =
-                                    root.expanded === modelData.name ? "" : modelData.name
+                                spacing: 2
 
-                                // Only the external monitor has a persisted
-                                // transform, so only it gets the button. The
-                                // label already says which way round it is —
-                                // a rotated screen reports its own dimensions
-                                // swapped — so the button says nothing, it
-                                // just turns it. autorenew.
-                                action: modelData.name === MonitorRotation.monName
-                                        ? "\ue863" : ""
-                                onActionTriggered: root.rotate()
+                                readonly property bool open:
+                                    root.expanded === output.modelData.name
+
+                                PopupRow {
+                                    width: parent.width
+                                    // monitor
+                                    glyph:  "\uef5b"
+                                    label:  output.modelData.name + "  ·  " + output.modelData.current
+                                    active: output.open
+                                    // expand_more / chevron_right
+                                    trailing: output.open ? "\ue5cf" : "\ue409"
+                                    onActivated: root.expanded =
+                                        output.open ? "" : output.modelData.name
+
+                                    // Every output can rotate; the state is one
+                                    // file per name and the script takes a name.
+                                    // The button says nothing about which way
+                                    // round it currently is, because the label
+                                    // already does — a rotated screen reports
+                                    // its dimensions swapped. autorenew.
+                                    action: "\ue863"
+                                    onActionTriggered: root.rotate(output.modelData.name)
+                                }
+
+                                Column {
+                                    visible: output.open
+                                    width: parent.width - 16
+                                    x: 16
+                                    spacing: 2
+                                    bottomPadding: output.open ? 4 : 0
+
+                                    Repeater {
+                                        model: MonitorModes.modesFor(output.modelData.name)
+
+                                        delegate: PopupRow {
+                                            required property var modelData
+                                            width: parent.width
+                                            // aspect_ratio
+                                            glyph:  "\ue85b"
+                                            label:  modelData.label + "  ·  " + modelData.rate
+                                            active: modelData.active
+                                            // check
+                                            trailing: modelData.active ? "\ue5ca" : ""
+                                            onActivated: {
+                                                if (!modelData.active)
+                                                    MonitorModes.apply(output.modelData.name,
+                                                                       modelData.mode);
+                                                PopupState.close();
+                                                root.expanded = "";
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -325,40 +385,6 @@ in
                             width: parent.width
                             visible: MonitorModes.outputs.length === 0
                             label: "Reading outputs…"
-                        }
-                    }
-
-                    Rectangle {
-                        visible: root.expanded !== ""
-                        width: parent.width
-                        height: 1
-                        color: Glass.stroke
-                    }
-
-                    // ---- that output's modes ----
-                    Column {
-                        visible: root.expanded !== ""
-                        width: parent.width
-                        spacing: 2
-
-                        Repeater {
-                            model: root.expandedModes
-                            delegate: PopupRow {
-                                required property var modelData
-                                width: col.width
-                                // aspect_ratio
-                                glyph:  "\ue85b"
-                                label:  modelData.label + "  ·  " + modelData.rate
-                                active: modelData.active
-                                // check
-                                trailing: modelData.active ? "\ue5ca" : ""
-                                onActivated: {
-                                    if (!modelData.active)
-                                        MonitorModes.apply(root.expanded, modelData.mode);
-                                    PopupState.close();
-                                    root.expanded = "";
-                                }
-                            }
                         }
                     }
                 }

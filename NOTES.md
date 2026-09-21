@@ -252,10 +252,16 @@ there. `ShellScreen` is rotation-aware.
 
 **The display menu is two widgets that became one.** Rotation used to be its own bar icon
 beside the resolution menu — two controls for one subject, and a toggle that could not say
-which output it applied to. It is a button on the right of an output's own row now, present
-only on the output that has a persisted transform, so the thing it turns is the thing it
-sits on. The label needs no orientation word: a rotated screen reports its dimensions
-swapped, and the row already shows them.
+which output it applied to. It is a spinning-arrows button on the right of each output's
+own row now, so the thing it turns is the thing it sits on. The label needs no orientation
+word: a rotated screen reports its dimensions swapped, and the row already shows them.
+
+`rotate-monitor` has always taken a monitor name and the state has always been one file per
+output; only the bar pretended rotation belonged to the external monitor. The
+`MonitorRotation` singleton existed to hold that one name and is gone from glass — clean/
+still has its own copy. Each output's modes hang off its own row, indented, rather than
+appearing as one list at the bottom of the popup, where DP-1's resolutions sat underneath
+HDMI-A-1's row and read as HDMI-A-1's.
 
 > **A row-wide `MouseArea` declared after the `Row` swallows every click inside it.** For
 > `PopupRow.action` to be clickable at all, the row's own MouseArea has to be declared

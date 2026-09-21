@@ -27,7 +27,6 @@
     ./registry.nix
     ./shell.nix
     ./services/audio.nix
-    ./services/monitor-rotation.nix
 
     # The glass layer: literal tokens and a per-output wallpaper, rather than
     # the palette-switching Theme.qml the other preset uses. The palette itself
