@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 
-# Fleet-wide restic backup to Cloudflare R2.
+# Fleet-wide restic backup, to two destinations.
 #
 # Each user declares what to back up via `backup.paths.<user> = [ ... ];`
 # in their dirs.nix (or wherever fits). This module reads all declarations,
@@ -12,6 +12,18 @@
 # users with 0750 directories that no single one of them can read past. It is
 # namespaced by hostname instead of by user, because otherwise two machines
 # backing up /var/lib as root would share one repository called `root`.
+#
+# Two destinations, one declaration. Every job is generated twice: once to
+# Cloudflare R2, once to the append-only REST server on personal-server (see
+# services/backup/server.nix). `<user>` goes to R2 at 06:00; `<user>-mirror`
+# goes to the server at 06:30.
+#
+# The second one is not just a spare copy. The R2 credentials on this machine
+# can delete the R2 repository, so a mirror that accepted deletes from the same
+# machine would share its blast radius. The mirror refuses them, which is also
+# why its `pruneOpts` are empty and the server applies retention itself.
+#
+# personal-server does not mirror to itself; its one job goes to R2 only.
 #
 # Data model:
 # - One R2 bucket `backup` shared across all users.
@@ -36,6 +48,17 @@ let
   r2Endpoint  = "https://${cfAccountId}.r2.cloudflarestorage.com";
   bucket      = "backup";
 
+  # The second destination — a restic REST server on personal-server. See
+  # services/backup/server.nix for what it is and why it is append-only.
+  mirrorHost = "personal-server";
+  mirrorPort = 8000;
+  mirrorUser = "fleet";
+
+  # A job named `root` is the machine's state rather than one person's, so it
+  # is filed under the hostname. Both destinations use the same rule, so a
+  # repository means the same thing wherever you find it.
+  repoName = user: if user == "root" then config.networking.hostName else user;
+
   # Common exclude patterns — caches, trash, build junk. Not sensitive to
   # missing paths; restic ignores excludes that don't exist.
   standardExcludes = [
@@ -58,6 +81,10 @@ let
   # recursion (we set extraGroups on users.users based on activePaths, but
   # activePaths depends on users.users).
   activePaths = config.backup.paths;
+
+  # personal-server does not mirror to itself. A second copy on the same disk
+  # is not a backup, and the one job it has already goes to R2.
+  mirroring = config.networking.hostName != mirrorHost;
 in
 {
   options.backup.paths = lib.mkOption {
@@ -101,24 +128,50 @@ in
       };
     };
 
-    # sops-nix renders this file at activation with the decrypted secret
-    # values interpolated. Consumed by restic via EnvironmentFile.
-    sops.templates."restic-r2-env" = {
-      content = ''
-        AWS_ACCESS_KEY_ID=${config.sops.placeholder.r2-backup-access-key-id}
-        AWS_SECRET_ACCESS_KEY=${config.sops.placeholder.r2-backup-secret-access-key}
-      '';
-      group = "restic-backup";
-      mode  = "0440";
+    # The mirror's HTTP password. Declared even on the host that does no
+    # mirroring, because it costs a file and keeps the two branches of this
+    # module from disagreeing about what exists.
+    sops.secrets.restic-rest-password = {
+      sopsFile = ../../../../secrets/common.yaml;
+      group    = "restic-backup";
+      mode     = "0440";
     };
+
+    # Both destinations' credentials, rendered by sops-nix at activation with
+    # the decrypted values interpolated.
+    #
+    # The mirror gets one file per job rather than a `repository` string in the
+    # unit, because the URL carries the password and a unit file is
+    # world-readable — `systemctl cat restic-backups-neburion-mirror` would
+    # otherwise print it. The restic module reads the path as
+    # $RESTIC_REPOSITORY_FILE.
+    sops.templates =
+      {
+        # Consumed by the R2 jobs via EnvironmentFile.
+        "restic-r2-env" = {
+          content = ''
+            AWS_ACCESS_KEY_ID=${config.sops.placeholder.r2-backup-access-key-id}
+            AWS_SECRET_ACCESS_KEY=${config.sops.placeholder.r2-backup-secret-access-key}
+          '';
+          group = "restic-backup";
+          mode  = "0440";
+        };
+      }
+      // lib.mapAttrs' (user: _paths:
+        lib.nameValuePair "restic-mirror-${user}" {
+          content = "rest:http://${mirrorUser}:"
+                    + config.sops.placeholder.restic-rest-password
+                    + "@${mirrorHost}:${toString mirrorPort}/${repoName user}";
+          group = "restic-backup";
+          mode  = "0440";
+        }) (lib.optionalAttrs mirroring activePaths);
 
     services.restic.backups = lib.mapAttrs (user: paths: {
       inherit user paths;
       # See the header: a root job is the machine's state, not a person's, so
       # it is filed under the hostname. Retention is unaffected either way —
       # `restic forget` groups by host and paths before applying --keep-*.
-      repository      = "s3:${r2Endpoint}/${bucket}/"
-                        + (if user == "root" then config.networking.hostName else user);
+      repository      = "s3:${r2Endpoint}/${bucket}/${repoName user}";
       passwordFile    = config.sops.secrets.restic-passphrase.path;
       environmentFile = config.sops.templates."restic-r2-env".path;
       initialize      = true;   # `restic init` if the repo doesn't exist yet
@@ -137,6 +190,38 @@ in
         # all hammer R2 simultaneously.
         RandomizedDelaySec = "15min";
       };
-    }) activePaths;
+    }) activePaths
+
+    # The same paths again, to the append-only server on personal-server.
+    // lib.mapAttrs' (user: paths:
+      lib.nameValuePair "${user}-mirror" {
+        inherit user paths;
+        repositoryFile = config.sops.templates."restic-mirror-${user}".path;
+        passwordFile   = config.sops.secrets.restic-passphrase.path;
+        initialize     = true;
+        exclude        = standardExcludes;
+
+        # Empty on purpose, and the reason the server prunes itself. The
+        # destination refuses deletes, so a `forget --prune` here would fail
+        # every night — retention for this copy lives in
+        # services/backup/server.nix.
+        pruneOpts = [ ];
+
+        # No local cache. The server's own prune removes index files behind
+        # this client's back, and a cached index naming a file that is gone
+        # fails the next backup with `<index/…> does not exist` — restic
+        # issue #3963. The repository is a couple of hundred megabytes, so
+        # re-reading the index each night costs seconds and removes the whole
+        # failure class.
+        extraBackupArgs = [ "--no-cache" ];
+
+        timerConfig = {
+          # Half an hour after R2, so the two never read the same files at
+          # once, and a long way from the server's Sunday 04:00 prune.
+          OnCalendar = "*-*-* 06:30:00";
+          Persistent = true;
+          RandomizedDelaySec = "15min";
+        };
+      }) (lib.optionalAttrs mirroring activePaths);
   };
 }

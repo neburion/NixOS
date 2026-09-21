@@ -16,6 +16,12 @@
 # app, which is bookkeeping for nothing. A root job is filed under the hostname
 # instead of under `root`; see the module header.
 #
+# `/var/lib` stays the whole answer because the other machines' backups do not
+# land there. This host is also the fleet's second backup destination, and the
+# restic REST server keeps its repositories at /var/backup/restic — outside
+# this path on purpose. Inside it, tonight's R2 upload would carry every other
+# machine's backup history, and would carry more of it every night.
+#
 # This continues the repository the manual snapshot on 2026-08-25 created, so
 # the first nightly run deduplicates against it rather than re-uploading 52 MB
 # of cover art. Restore is `restic restore latest --target …` or `restic mount`

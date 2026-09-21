@@ -32,6 +32,7 @@
     ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/reconcile.nix
     ../../modules/system/services/backup/restic.nix
+    ../../modules/system/services/backup/server.nix
     ../../modules/system/services/app-platform
 
     ../../modules/home/cli/shell/fish/system.nix
