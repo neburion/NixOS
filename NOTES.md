@@ -290,11 +290,17 @@ Four attempts, and every failure rendered happily without erroring:
 
 - **`sin(pi*c)^n` stays round on top** however hard `n` is pushed, and a ring of round bumps
   is a cog. `1 - |2c-1|^cusp` with cusp below 1 gives concave flanks and an actual point.
-- **Tongues as wide as they are tall read as lumps**, whatever the profile does. Each one
-  now fills only the middle `wfrac` of its slot, leaving bare line between them.
+- **`cusp` above 1 rounds the apex off**, which is the opposite of what the name suggests:
+  at exactly 1 the tongue is a straight-sided triangle, and above it the peak goes
+  tangentially flat. Sharp lives below 1.
+- **`wfrac` decides sharp against bubbly, far more than `cusp` does.** A third of the slot
+  is a lick; half is a blister. The first version at 0.52 was the "too bubbly" one.
 - **Overlapping the slots to soften the gaps merges them into a sausage.** Don't.
 - **A purely radial tongue at the bottom of a ring points at the floor.** `bend` pulls every
   tip toward vertical.
+- **Sampling density is not one of the knobs.** The apex sits at the centre of its slot and
+  a sample always lands on it, so 8 points per slot and 24 render identically. Worth knowing
+  before spending an afternoon on it.
 
 The gradient is `RadialGradient` about the dial's own centre, so hot-at-the-root and
 pale-at-the-tip holds all the way round instead of only along one axis — and its stop

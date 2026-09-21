@@ -22,7 +22,17 @@
 # Each tongue occupies only the middle `wfrac` of its slot, leaving bare line
 # between them. Without that the tongues merge into a lumpy sausage — they were
 # as wide as they were tall, and that aspect ratio reads as lumps no matter
-# what the profile does.
+# what the profile does. `wfrac` is the knob that decides sharp against bubbly,
+# far more than `cusp` does: a third of the slot is a lick, half is a blister.
+#
+# `cusp` cannot go above 1. At exactly 1 the tongue is a straight-sided
+# triangle; below it the flanks tuck in and the point gets finer; above it the
+# apex goes TANGENTIALLY FLAT and rounds off, which is the opposite of what the
+# name suggests.
+#
+# Sampling density does not matter, which is worth knowing before spending an
+# afternoon on it — the apex sits at the centre of its slot and a sample always
+# lands on it, so 8 points per slot and 24 render identically.
 #
 # Two details that make it fire rather than a starburst: `bend` pulls every
 # tip toward vertical, because flames rise and a purely radial one at the
@@ -50,13 +60,14 @@
 
         // Shape. Defaults are the ones that survived the sweep; the only knob
         // a caller normally touches is `amplitude`.
-        property real density:  0.28  // tongues per unit of radius
-        property real wfrac:    0.52  // how much of its slot a tongue fills
-        property real cusp:     0.70  // below 1 for a pointed apex
-        property real skew:     0.85  // lean
+        property real density:  0.38  // tongues per unit of radius
+        property real wfrac:    0.32  // how much of its slot a tongue fills
+        property real cusp:     0.75  // below 1 for a pointed apex
+        property real skew:     0.70  // lean
         property real floorFrac: 0.30 // the shortest tongue, against the tallest
         property real bend:     0.85  // how hard tips are pulled upright
         property real lick:     3.0   // how far a tip drifts along the arc
+        property int  samples:  12    // polyline points per tongue slot
 
         readonly property int tongues: Math.max(3, Math.round(radius * density))
 
@@ -82,7 +93,7 @@
             var cx = root.centreX, cy = root.centreY;
             var r0 = root.root_;
             var K = Math.max(2, root.tongues);
-            var N = K * 8;
+            var N = K * root.samples;
             var rad = Math.PI / 180;
 
             var out = [], back = [];
