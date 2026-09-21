@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 # The fleet's second backup destination — a restic REST server, so the nightly
 # jobs have somewhere to go that is not Cloudflare.
@@ -31,13 +31,12 @@
 # may fill the disk, not about who may read the backups.
 
 let
-  dataDir = "/var/backup/restic";
+  dataDir = config.backup.server.dataDir;
   port = 8000;
 
-  # Retention, and the one place it is written down for this destination. The
-  # same numbers the R2 jobs use, applied here instead of on the client because
-  # a client is not allowed to delete anything.
-  keep = [ "--keep-daily 7" "--keep-weekly 4" "--keep-monthly 12" ];
+  # The fleet's one retention list, applied here rather than on the client
+  # because a client is not allowed to delete anything. Defined in restic.nix.
+  keep = config.backup.keep;
 
   prune = pkgs.writeShellApplication {
     name = "restic-mirror-prune";
@@ -69,65 +68,82 @@ let
   };
 in
 {
-  services.restic.server = {
-    enable = true;
-    listenAddress = toString port;   # port only; the module is socket-activated
-    inherit dataDir;
-    appendOnly = true;
-    htpasswd-file = config.sops.secrets.restic-rest-htpasswd.path;
+  options.backup.server.dataDir = lib.mkOption {
+    type    = lib.types.path;
+    default = "/var/backup/restic";
+    description = ''
+      Where the mirrored repositories live. Outside /var/lib on purpose — this
+      host's own backup policy is /var/lib entire, and inside it the nightly R2
+      upload would carry every other machine's backup history, and more of it
+      every night.
+
+      An option rather than a constant because the fan-out (see fanout.nix)
+      reads these repositories to feed every further destination, and the two
+      disagreeing would mean a fan-out that silently copies nothing.
+    '';
   };
 
-  # rest-server refuses to start rather than serve without authentication, so
-  # this file is load-bearing, not decoration. It holds a bcrypt line made with
-  # `htpasswd -nbB`; the matching plaintext is `restic-rest-password`, which is
-  # what the clients put in their repository URL.
-  sops.secrets.restic-rest-htpasswd = {
-    sopsFile = ../../../../secrets/common.yaml;
-    owner = "restic";
-    mode = "0400";
-    # The server reads this once at start, so rotating the pair without a
-    # restart leaves the retired password working while the deploy says
-    # nothing at all.
-    restartUnits = [ "restic-rest-server.service" ];
-  };
-
-  systemd.services.restic-mirror-prune = {
-    description = "Apply retention to the mirrored restic repositories";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${prune}/bin/restic-mirror-prune";
-      # Runs as the server's own user so every file in the repository keeps one
-      # owner. A prune running as root would leave root-owned index files in a
-      # tree the server has to keep writing to.
-      User = "restic";
-      Group = "restic";
-      # Read as root at unit start and handed over after the User= drop, which
-      # keeps the passphrase out of the process environment table.
-      LoadCredential = "passphrase:${config.sops.secrets.restic-passphrase.path}";
-      ReadWritePaths = [ dataDir ];
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateTmp = true;
-      PrivateDevices = true;
-      NoNewPrivileges = true;
-      RestrictNamespaces = true;
-      LockPersonality = true;
-      SystemCallArchitectures = "native";
+  config = {
+    services.restic.server = {
+      enable = true;
+      listenAddress = toString port;   # port only; the module is socket-activated
+      inherit dataDir;
+      appendOnly = true;
+      htpasswd-file = config.sops.secrets.restic-rest-htpasswd.path;
     };
-  };
 
-  systemd.timers.restic-mirror-prune = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      # Sunday 04:00 — deliberately nowhere near 06:00 (R2) or 06:30 (the
-      # mirror jobs). Pruning underneath a running backup is the one way this
-      # arrangement breaks, and weekly at four in the morning is the cheapest
-      # way to never be near it.
-      OnCalendar = "Sun *-*-* 04:00:00";
-      Persistent = true;
-      RandomizedDelaySec = "20min";
+    # rest-server refuses to start rather than serve without authentication, so
+    # this file is load-bearing, not decoration. It holds a bcrypt line made with
+    # `htpasswd -nbB`; the matching plaintext is `restic-rest-password`, which is
+    # what the clients put in their repository URL.
+    sops.secrets.restic-rest-htpasswd = {
+      sopsFile = ../../../../secrets/common.yaml;
+      owner = "restic";
+      mode = "0400";
+      # The server reads this once at start, so rotating the pair without a
+      # restart leaves the retired password working while the deploy says
+      # nothing at all.
+      restartUnits = [ "restic-rest-server.service" ];
     };
-  };
 
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ port ];
+    systemd.services.restic-mirror-prune = {
+      description = "Apply retention to the mirrored restic repositories";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${prune}/bin/restic-mirror-prune";
+        # Runs as the server's own user so every file in the repository keeps one
+        # owner. A prune running as root would leave root-owned index files in a
+        # tree the server has to keep writing to.
+        User = "restic";
+        Group = "restic";
+        # Read as root at unit start and handed over after the User= drop, which
+        # keeps the passphrase out of the process environment table.
+        LoadCredential = "passphrase:${config.sops.secrets.restic-passphrase.path}";
+        ReadWritePaths = [ dataDir ];
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        PrivateTmp = true;
+        PrivateDevices = true;
+        NoNewPrivileges = true;
+        RestrictNamespaces = true;
+        LockPersonality = true;
+        SystemCallArchitectures = "native";
+      };
+    };
+
+    systemd.timers.restic-mirror-prune = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        # Sunday 04:00 — deliberately nowhere near 06:00 (R2) or 06:30 (the
+        # mirror jobs). Pruning underneath a running backup is the one way this
+        # arrangement breaks, and weekly at four in the morning is the cheapest
+        # way to never be near it.
+        OnCalendar = "Sun *-*-* 04:00:00";
+        Persistent = true;
+        RandomizedDelaySec = "20min";
+      };
+    };
+
+    networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ port ];
+  };
 }

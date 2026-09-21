@@ -87,6 +87,18 @@ let
   mirroring = config.networking.hostName != mirrorHost;
 in
 {
+  options.backup.keep = lib.mkOption {
+    type        = lib.types.listOf lib.types.str;
+    default     = [ "--keep-daily 7" "--keep-weekly 4" "--keep-monthly 12" ];
+    description = ''
+      Retention, as `restic forget` flags, for every destination the fleet
+      writes to. Three things apply it and they must agree: the R2 jobs prune
+      themselves, the append-only mirror is pruned on its own server, and each
+      fan-out destination is pruned where its credentials live. One list so a
+      change lands everywhere at once.
+    '';
+  };
+
   options.backup.paths = lib.mkOption {
     type        = lib.types.attrsOf (lib.types.listOf lib.types.str);
     default     = { };
@@ -176,11 +188,7 @@ in
       environmentFile = config.sops.templates."restic-r2-env".path;
       initialize      = true;   # `restic init` if the repo doesn't exist yet
       exclude         = standardExcludes;
-      pruneOpts = [
-        "--keep-daily 7"
-        "--keep-weekly 4"
-        "--keep-monthly 12"
-      ];
+      pruneOpts = config.backup.keep;
       timerConfig = {
         OnCalendar = "*-*-* 06:00:00";
         # Persistent = true → if the system was off at 06:00, run the backup
