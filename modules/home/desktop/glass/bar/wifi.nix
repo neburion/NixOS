@@ -124,43 +124,31 @@
     Item {
         id: root
         implicitHeight: 20
-        implicitWidth:  Math.max(track.implicitWidth, strength.implicitWidth)
+        implicitWidth:  strength.implicitWidth
 
         readonly property bool wifiMode: !NetworkState.isEthernet && NetworkState.wifiEnabled
 
-        // Material's wifi_1_bar / wifi_2_bar are not a dimmed full icon — they
-        // omit the upper arcs entirely, so a weak signal looked like a broken
-        // glyph with its top missing. They ARE geometric subsets of `wifi` on
-        // the same grid though, so drawing the full cone faintly underneath
-        // puts the unreached arcs back as an outline.
-        Text {
-            id: track
-            anchors.centerIn: parent
-            visible: root.wifiMode
-            font.family: Glass.fontIcon
-            font.pixelSize: 17
-            font.variableAxes: Glass.iconIdle
-            color: Glass.faint
-            text:  ""
-        }
+        // No strength arcs, and no faint cone behind them. wifi_1_bar and
+        // wifi_2_bar are geometric subsets of `wifi` on the same grid, so
+        // the trick was to draw the full cone at 28% underneath and let the
+        // reached arcs sit on top at full strength. At 17px what that
+        // actually looks like is an icon whose top arc failed to render:
+        // two tones inside one glyph read as a drawing bug, not as a
+        // measurement. Strength is a number in the popup; the bar's job is
+        // to say connected or not, and colour already does that.
 
         Text {
             id: strength
             anchors.centerIn: parent
             font.family: Glass.fontIcon
-            font.pixelSize: 17
+            font.pixelSize: 16
             font.variableAxes: NetworkState.connected ? Glass.iconActive : Glass.iconIdle
             color: NetworkState.connected ? Glass.text : Glass.muted
 
             text: {
-                if (NetworkState.isEthernet)    return "";
-                if (!NetworkState.wifiEnabled)  return "";
-                // Radio on but no link: the faint cone behind is the whole
-                // story, so draw nothing over it.
-                if (!NetworkState.connected)    return "";
-                if (NetworkState.signal >= 70)  return "";
-                if (NetworkState.signal >= 40)  return "";
-                return "";
+                if (NetworkState.isEthernet)   return "\ueb2f";
+                if (!NetworkState.wifiEnabled) return "\ue648";
+                return "\ue63e";
             }
 
             Behavior on color { ColorAnimation { duration: 200 } }

@@ -250,6 +250,17 @@ recursive and everything lands in one flat carousel. Orientation is derived from
 its `width`/`height` are the physical mode, so a rotated screen still reports 2560x1440
 there. `ShellScreen` is rotation-aware.
 
+**Two tones inside one glyph read as a rendering bug.** The Wi-Fi indicator used to draw
+the full `wifi` cone at 28% and lay the reached arcs on top at full strength —
+`wifi_1_bar` and `wifi_2_bar` are geometric subsets of `wifi` on the same grid, so the
+arcs line up exactly. It is a neat idea and it looks like an icon whose top arc failed to
+render. Signal strength is a number in the popup; the bar draws one cone in one tone and
+says connected or not with colour.
+
+**`bluetooth_connected` has a dot either side**, and at every size that fits a 34px bar
+they land as two stray pixels rather than as an affordance. Connected is the same glyph as
+on, filled and at full colour, which is what the rest of the bar does anyway.
+
 **The display menu is two widgets that became one.** Rotation used to be its own bar icon
 beside the resolution menu — two controls for one subject, and a toggle that could not say
 which output it applied to. It is a spinning-arrows button on the right of each output's

@@ -92,13 +92,17 @@
             id: icon
             anchors.centerIn: parent
             font.family: Glass.fontIcon
-            font.pixelSize: 17
+            font.pixelSize: 16
             font.variableAxes: BluetoothState.connectedCount > 0 ? Glass.iconActive : Glass.iconIdle
             color: BluetoothState.connectedCount > 0 ? Glass.text : Glass.muted
-            text:  BluetoothState.connectedCount > 0 ? ""
-                 : BluetoothState.scanning           ? ""
-                 : BluetoothState.powered            ? ""
-                 :                                     ""
+            // bluetooth_connected has a dot either side, and at every
+            // size that fits this bar they render as two stray pixels
+            // rather than as an affordance. Connected is the same
+            // glyph as on, filled and at full colour — which is how
+            // the rest of this bar says the same thing.
+            text:  BluetoothState.scanning ? "\ue1aa"
+                 : BluetoothState.powered  ? "\ue1a7"
+                 :                           "\ue1a9"
             Behavior on color { ColorAnimation { duration: 200 } }
         }
 

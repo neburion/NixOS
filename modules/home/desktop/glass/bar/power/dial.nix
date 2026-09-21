@@ -33,10 +33,10 @@
         // [{ value: 0-100, color: <color> }] — outermost first.
         property var rings: []
 
-        property real core:      3.5    // the hole left in the middle
+        property real core:      3.2    // the hole left in the middle
         property real thickness: 2.0
         property real gap:       1.3
-        property real maxSize:   26
+        property real maxSize:   23
         property real outer:     0      // fixed width; 0 lets the list decide
 
         // Open at the bottom: 135 degrees is 7:30, sweeping clockwise to 4:30.
