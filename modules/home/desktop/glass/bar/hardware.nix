@@ -190,6 +190,14 @@
             anchors.verticalCenter: parent.verticalCenter
             accent: root.accent
         }
+
+        // Next to the laptop's own cell rather than over with the radios:
+        // both are a percentage you read, and the separator after this group
+        // is what divides readings from things you switch on and off.
+        BarPeripherals {
+            anchors.verticalCenter: parent.verticalCenter
+            accent: root.accent
+        }
     }
   '';
 }

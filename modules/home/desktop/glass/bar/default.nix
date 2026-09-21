@@ -14,6 +14,7 @@
     ./hardware.nix
     ./power-toggle.nix
     ./monitor-toggle.nix
+    ./peripherals.nix
     ./phone-display.nix
     ./resolution.nix
     ./tray.nix

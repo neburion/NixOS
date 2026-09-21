@@ -304,6 +304,60 @@ with the resting orientation makes every rebuild visibly reshuffle the layout be
 
 ---
 
+## Peripheral batteries
+
+Two readers, both in `modules/home/peripherals/`, both feeding one bar menu. Neither uses
+the obvious tool, and both reasons are worth keeping.
+
+**The mouse.** `hid-logitech-hidpp` owns the battery for a PRO X Wireless and publishes it
+as a `power_supply` node — but only over the *cable*. Its id table lists `046d:c094`, the
+mouse's own USB id, and not `046d:c547`, the Lightspeed receiver. Over the dongle the
+receiver falls through to `hid-generic`, no node is ever created, and
+`/sys/class/power_supply` holds nothing but `BAT0` and `ADP0`. So `logitech-battery` shells
+out to solaar, which speaks HID++ over hidraw. It costs about five seconds a call: a Python
+start plus a full feature enumeration of every paired device. **Poll it in minutes.**
+
+**The headset.** Nothing off the shelf reads a Razer Nari Essential. OpenRazer has never
+supported any Nari — the request is closed as not planned, and `razerkbd`/`razerkraken`'s
+id tables stop well short of `0x051e`. HeadsetControl carries no Razer device at all. That
+is why `razergenie` is gone from this tree: enabling `hardware.openrazer` would have
+silenced its "daemon not available" dialog and replaced it with a permanently empty device
+list.
+
+What does work is the vendor protocol the dongle already advertises in its report
+descriptor — a 63-byte feature report on id `0xFF`. Write the query, read the answer back
+off the same report:
+
+```
+request   FF 0A 00 FD 04 12 F1 02 05  00…
+response  FF ss ss FE 12 04 11 08 05 05 03 05 │0F 70│ 50 │ 00…
+                                                mV     percent
+```
+
+Bytes 1-2 are a sequence that changes per call. Everything from 4 onward held still across
+reads while the voltage tracked the charge, which is what rules out byte 14 being a
+checksum. The voltage is the field that has been *watched moving*; the percentage beside it
+agrees with it on a 1S cell and is otherwise unproven, which is why the menu shows both.
+
+> **If the two ever disagree, the voltage is the one that was verified.**
+
+**The udev ordering trap.** The reader opens the node `O_RDWR` — reading the battery means
+writing the query first — and hidraw nodes are created root-only. The fix is
+`TAG+="uaccess"`, and the first attempt used `services.udev.extraRules`, which **does not
+work**: extraRules lands in `99-local.rules`, and the builtin that turns that tag into an
+ACL is invoked from `73-seat-late.rules`. A tag set at 99 is set *after* the only thing
+that reads it. There is no error anywhere — the rule loads fine, the node just stays
+`crw-------` and every read fails with EACCES. Solaar ships its own rule at 42 for exactly
+this reason, and `razer-nari/system.nix` ships a udev *package* at 60.
+
+> **Any `uaccess` rule must sort before 73.** `services.udev.extraRules` never can.
+
+Existing devices keep their old permissions until re-evaluated, so after a rebuild that
+changes one of these rules, either replug or `udevadm trigger --subsystem-match=hidraw
+--action=add`. A fresh boot needs neither.
+
+---
+
 ## Secrets
 
 Encrypted secrets live in `secrets/*.yaml`, one file per host, matched by

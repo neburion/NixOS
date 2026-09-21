@@ -80,7 +80,7 @@ NixOS/
     │   ├── core/       nix  locale  console  sudo  sops
     │   ├── boot/       limine  systemd-boot  grub
     │   ├── hardware/   audio  bluetooth  power  always-on  touchpad
-    │   │               brightness  lid  logitech  nvidia
+    │   │               brightness  lid  nvidia
     │   ├── network/
     │   │   ├── wifi/       bell096.nix        one file per known network
     │   │   ├── tailscale/  = module
@@ -112,6 +112,7 @@ NixOS/
     │   ├── browser/     zen-browser
     │   ├── music/       spotify
     │   ├── security/    keepassxc/ = module
+    │   ├── peripherals/ logitech/ = module   razer-nari/ = module
     │   ├── gaming/
     │   │   ├── launchers/  heroic  prism-launcher  sober
     │   │   │               bb-launcher/ = module   steam/ = module
@@ -155,7 +156,12 @@ the two trees — they live where their owner lives, and the NixOS half is a fil
 ```
 home/cli/shell/fish/                      system.nix    programs.fish.enable
 home/cli/flatpak/                         system.nix    services.flatpak.enable
+home/dev/tools/                           system.nix    the codeberg token, as a sops secret
 home/gaming/launchers/steam/              system.nix    programs.steam.enable
+home/office/geary/                        system.nix    services.gnome.gnome-keyring.enable
+home/security/keepassxc/                  system.nix    the Passwords syncthing folder
+home/peripherals/logitech/                system.nix    hardware.logitech.wireless
+home/peripherals/razer-nari/              system.nix    the dongle's uaccess rule
 home/desktop/glass/wm/                    system.nix    programs.hyprland.enable
 home/desktop/glass/components/wayvnc/     system.nix    the firewall hole
 ```
