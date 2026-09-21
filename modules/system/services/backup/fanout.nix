@@ -87,7 +87,11 @@ let
         # A copy leaves its lock behind if it is killed, and the next run then
         # refuses rather than retrying — observed on the very first test of
         # this, where the prune immediately after a copy hit a three-second-old
-        # lock. Only ever removes locks whose owner is gone.
+        # lock. Both ends get cleared: copy locks the source too, so a mirror
+        # backup killed mid-run would otherwise block every fan-out after it.
+        # Only ever removes locks whose owning process is gone, so this cannot
+        # interrupt a backup that is genuinely still writing.
+        restic -r "$src" unlock || true
         restic -r "$target" unlock || true
 
         if ! restic -r "$target" copy --from-repo "$src"; then
