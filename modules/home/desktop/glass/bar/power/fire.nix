@@ -33,8 +33,16 @@
 # unit of radius, so it holds the tongue WIDTH roughly constant as the dial
 # grows, and width against height is what decides whether this reads as fire,
 # as a row of petals or as a comb. Below about 0.5 the tongues are wider than
-# they are tall and scallop; the version that shipped before this one was at
-# 0.38 with gaps between, which read as spikes on a wire.
+# they are tall and scallop; at 0.38 with gaps between they read as spikes on
+# a wire.
+#
+# The version before this one tiled the arc into equal slots and drew one
+# tongue in each. That can only ever look like a row of strings, however the
+# individual tongue is shaped, because every tongue is the same width and
+# equally spaced. Tongues now carry their own centre, width and height, they
+# overlap, and the outline is the max of them — one uneven body, with a few
+# heads standing out of it. `gamma` is what makes those heads rare: heights
+# are raised to it, so most tongues sit low and a few reach.
 #
 # Sampling density does almost nothing — the apex sits near the centre of its
 # slot and a sample lands close to it either way. Worth knowing before spending
@@ -66,15 +74,18 @@
 
         // Shape. Defaults are the ones that survived the sweep; the only knob
         // a caller normally touches is `amplitude`.
-        property real density:  1.15  // tongues per unit of radius
+        property real density:  1.8   // tongues per unit of radius
         property real cusp:     0.50  // below 1 for a pointed apex
         property real flank:    0.60  // below 1 for flanks that leave the line steeply
         property real bed:      0.12  // the sheath that runs the whole lit length
         property real skew:     0.70  // lean
         property real floorFrac: 0.10 // the shortest tongue, against the tallest
+        property real gamma:    3.0   // how rare a tall head is
+        property real spread:   0.9   // how much tongue widths vary
+        property real jitter:   0.45  // how far a tongue sits off its nominal place
         property real bend:     0.85  // how hard tips are pulled upright
         property real lick:     3.0   // how far a tip drifts along the arc
-        property int  samples:  8     // polyline points per tongue slot
+        property int  samples:  8     // polyline points per tongue
 
         readonly property int tongues: Math.max(3, Math.round(radius * density))
 
@@ -91,6 +102,8 @@
         readonly property var fq:  [1.00, 1.37, 0.81, 1.62, 1.19, 0.93, 1.44]
         readonly property var fq2: [0.63, 0.92, 1.24, 0.77, 1.08, 1.35, 0.85]
         readonly property var off: [0.0,  2.1,  4.3,  1.2,  5.4,  3.1,  0.6]
+        readonly property var fq3: [0.71, 1.13, 0.88, 1.47, 0.66, 1.29, 1.02]
+        readonly property var of2: [1.7,  3.9,  0.4,  5.1,  2.6,  4.8,  1.1]
 
         readonly property real root_: radius + thickness * 0.5
 
@@ -103,32 +116,46 @@
             var N = K * root.samples;
             var rad = Math.PI / 180;
 
+            // Tongues are not slots. Each has its own centre, width and
+            // height, they overlap, and the outline is the MAX of them. That
+            // is the whole difference between one uneven body of fire with a
+            // few heads standing out of it and a row of separate strings:
+            // tiling the arc into equal slots can only ever produce the
+            // second, however the individual tongue is shaped.
+            var cen = [], halfw = [], tall = [], drift = [];
+            var baseW = 1 / K;
+            for (var i = 0; i < K; i++) {
+                var w1 = Math.sin(root.phase * root.fq[i % 7]  + root.off[i % 7]);
+                var w2 = Math.sin(root.phase * root.fq2[i % 7] + root.of2[i % 7]);
+                var w3 = Math.sin(root.phase * root.fq3[i % 7] + root.off[(i + 3) % 7]);
+
+                cen.push((i + 0.5) / K + baseW * root.jitter * w2);
+                halfw.push(baseW * (0.55 + root.spread * (0.5 + 0.5 * w3)));
+                // Raised to gamma, so most tongues sit low and a few reach.
+                // Linear height gives an even hedge.
+                tall.push(root.amplitude * (root.floorFrac + (1 - root.floorFrac)
+                          * Math.pow(0.5 + 0.5 * w1, root.gamma)));
+                drift.push(root.lick * w2);
+            }
+
             var out = [], back = [];
             for (var j = 0; j <= N; j++) {
                 var s = j / N;
-                var t = s * K;
-                var i = Math.min(K - 1, Math.floor(t));
-                var u = t - i;
 
-                var wob  = Math.sin(root.phase * root.fq[i % 7]  + root.off[i % 7]);
-                var wob2 = Math.sin(root.phase * root.fq2[i % 7] + root.off[(i + 3) % 7]);
+                var h = root.bed * root.amplitude;
+                var lean = 0;
+                for (i = 0; i < K; i++) {
+                    var d = (s - cen[i]) / halfw[i];
+                    if (d <= -1 || d >= 1) continue;
+                    var t = Math.abs(Math.pow((d + 1) * 0.5, root.skew) * 2 - 1);
+                    var hh = tall[i] * Math.pow(1 - Math.pow(t, root.cusp), root.flank);
+                    // Whichever tongue is tallest here owns this point, and
+                    // its drift is what leans the tip.
+                    if (hh > h) { h = hh; lean = drift[i]; }
+                }
 
-                var peak = root.amplitude
-                         * (root.floorFrac + (1 - root.floorFrac) * (0.5 + 0.5 * wob));
-
-                // No bare line anywhere: every tongue fills its slot, and a
-                // thin bed of fire runs the whole lit length underneath them.
-                // `bed` is taken against `amplitude` rather than this tongue's
-                // own peak, or the sheath would step at every slot boundary.
-                var cs = Math.pow(u, root.skew);
-                var t  = Math.abs(2 * cs - 1);
-                var h  = root.bed * root.amplitude
-                       + (1 - root.bed) * peak
-                         * Math.pow(1 - Math.pow(t, root.cusp), root.flank);
-
-                // The tip drifts along the arc as well as away from it.
                 var a  = (root.startAngle + root.sweepAngle * s
-                          + root.lick * wob2 * (h / root.amplitude)) * rad;
+                          + lean * (h / root.amplitude)) * rad;
                 var ab = (root.startAngle + root.sweepAngle * s) * rad;
                 var rr = r0 + h;
 

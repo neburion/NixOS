@@ -111,7 +111,7 @@ ${refreshes}
                     id: gauge
                     anchors.centerIn: parent
                     rings: root.live
-                    fire: 5
+                    fire: 5.5
                 }
             }
 
@@ -202,7 +202,7 @@ ${refreshes}
                                         outer: 44
                                         thickness: 2.8
                                         rings: [ modelData ]
-                                        fire: 8
+                                        fire: 9
                                     }
 
                                     Text {

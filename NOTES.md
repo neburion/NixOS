@@ -300,10 +300,15 @@ Four shapes were rejected on the way, and every one of them rendered happily:
 - **Either exponent above 1 rounds that end off**, which is the opposite of what `cusp`
   sounds like it should do: at exactly 1 the curve is straight, above it it goes
   tangentially flat. Both live below 1.
-- **Gaps between tongues read as spikes on a wire**, not as something burning. The whole
-  slot is filled now, and `bed` puts a thin sheath of fire along the entire lit length
-  underneath them. Take `bed` against `amplitude`, not against the tongue's own peak, or
-  the sheath steps at every slot boundary.
+- **Gaps between tongues read as spikes on a wire**, not as something burning. `bed` puts a
+  thin sheath of fire along the entire lit length underneath them. Take it against
+  `amplitude`, not against the tongue's own peak, or the sheath steps at every boundary.
+- **Tiling the arc into equal slots can only ever look like a row of strings**, however the
+  individual tongue is shaped, because every tongue ends up the same width and equally
+  spaced. Tongues carry their own centre, width and height now, they overlap, and the
+  outline is the **max** of them — one uneven body with a few heads out of it. `gamma` is
+  what keeps those heads rare: heights are raised to it, so most sit low and a few reach.
+  Linear height gives an even hedge.
 - **A purely radial tongue at the bottom of a ring points at the floor.** `bend` pulls every
   tip toward vertical.
 
