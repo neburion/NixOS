@@ -1,8 +1,8 @@
 { ... }:
 
-# Workspace pager. The focused workspace is marked by an accent pip rather
-# than a colour change, so the digits stay one hue and the only coloured thing
-# on the bar is genuinely "live".
+# Workspace pager. The focused workspace is marked by a brighter digit, so the
+# digits stay one hue and the only coloured things on the bar are the ones that
+# are genuinely "live".
 #
 # HyprlandIpc itself lives in quickshell-glass-shared — the launcher, power
 # menu and picker read it too, and registering it here made them depend on the
@@ -20,7 +20,6 @@
         spacing: 9
 
         required property string screenName
-        property color accent: Glass.accentFallback
 
         readonly property var persistent: ({
             "eDP-1":    [ 1, 2, 3, 4, 5 ],
@@ -29,13 +28,6 @@
         })
 
         readonly property var ids: root.persistent[root.screenName] || [ 1, 2, 3, 4, 5 ]
-
-        Rectangle {
-            width: 5; height: 5; radius: 2.5
-            color: root.accent
-            anchors.verticalCenter: parent.verticalCenter
-            Behavior on color { ColorAnimation { duration: 220 } }
-        }
 
         Repeater {
             model: root.ids

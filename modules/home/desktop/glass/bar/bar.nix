@@ -60,7 +60,6 @@
 
                     BarWorkspaces {
                         screenName: window.modelData.name
-                        accent:     window.accent
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
