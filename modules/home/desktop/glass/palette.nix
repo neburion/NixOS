@@ -41,6 +41,12 @@
         readonly property string fontMono: "Geist Mono"
         readonly property string fontIcon: "Material Symbols Rounded"
 
+        // The nerd-patched face, for the handful of glyphs Material Symbols
+        // simply does not have. Reach for it only when there is no Material
+        // equivalent at all — its glyphs are solid where the Material ones are
+        // outlines, so every use is a visible seam in the bar.
+        readonly property string fontGlyph: "FiraMono Nerd Font"
+
         readonly property var tnum: ({ "tnum": 1 })
 
         // Material Symbols variable axes. Active state animates FILL 0 -> 1.

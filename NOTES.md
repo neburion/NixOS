@@ -256,9 +256,16 @@ purpose — the bar cannot honestly resolve more than about five steps at 34px, 
 percentage there is precision it does not have. Below 10% the row is empty, which is what
 an idle dGPU should look like.
 
-`developer_board` was on the GPU and it is a generic circuit board, close enough to the RAM
-DIMM beside it to read as a second stick. Nothing in Material Symbols is a graphics card;
-`deployed_code` is a cube, and "the thing that draws solids" is the honest association.
+**Material Symbols has no graphics card.** It has `developer_board`, a generic circuit
+board that sat on the GPU and read as a second RAM stick, and `deployed_code`, a cube that
+reads as 3D rather than as hardware. That is the whole shortlist. The nerd-patched face
+carries the actual thing — `nf-md-expansion_card_variant`, a card with its connector edge —
+so the GPU borrows one glyph from `Glass.fontGlyph` and nothing else in the bar does. It is
+filled among outlines, so it is set a size smaller to carry the same weight.
+
+> **That codepoint needs `String.fromCodePoint`.** U+F08AE sits in Plane 15, and a `\u`
+> escape takes exactly four hex digits — `"\uf08ae"` silently becomes U+F08A followed by a
+> literal `e`, which renders as some unrelated glyph and a stray letter.
 
 **Two tones inside one glyph read as a rendering bug.** The Wi-Fi indicator used to draw
 the full `wifi` cone at 28% and lay the reached arcs on top at full strength —

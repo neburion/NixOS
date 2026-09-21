@@ -150,8 +150,11 @@
     Item {
         id: root
 
-        property string glyph:   ""
-        property int    value:   0
+        property string glyph:     ""
+        // Material Symbols unless something says otherwise.
+        property string glyphFont: Glass.fontIcon
+        property real   glyphSize: 15
+        property int    value:     0
         property int    alertAt: 101
         property color  tint:    Glass.muted
 
@@ -167,8 +170,8 @@
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                font.family: Glass.fontIcon
-                font.pixelSize: 15
+                font.family: root.glyphFont
+                font.pixelSize: root.glyphSize
                 font.variableAxes: Glass.iconIdle
                 color: root.alert ? Glass.critical : Glass.muted
                 text:  root.glyph
@@ -204,10 +207,17 @@
     import "../Common"
     import "../Widgets"
 
-    // developer_board was on the GPU and it is a circuit board — a generic
-    // one, and close enough to the RAM DIMM beside it to be read as a second
-    // stick. deployed_code is a cube: nothing in this font is a graphics
-    // card, and "the thing that draws solids" is the honest association.
+    // Material Symbols has no graphics card. It has a circuit board
+    // (developer_board, which sat here and read as a second RAM stick) and a
+    // cube (deployed_code, which reads as 3D and not as hardware), and that is
+    // the end of the shortlist. The nerd-patched face has the actual thing —
+    // an expansion card with its connector edge — so the GPU borrows one
+    // glyph from it and nothing else does.
+    //
+    // It is a filled glyph among outlines, so it is set a size smaller to
+    // carry the same weight. Codepoint via String.fromCodePoint: U+F08AE sits
+    // in Plane 15, and a "\u" escape takes four hex digits and would eat it.
+    //
     // memory is the chip (CPU), memory_alt is the DIMM (RAM).
     Row {
         id: root
@@ -233,10 +243,12 @@
 
         BarMeter {
             anchors.verticalCenter: parent.verticalCenter
-            glyph:   "\uf720"
-            value:   SystemStats.gpuPercent
-            alertAt: 95
-            tint:    root.accent
+            glyph:     String.fromCodePoint(0xF08AE)
+            glyphFont: Glass.fontGlyph
+            glyphSize: 14
+            value:     SystemStats.gpuPercent
+            alertAt:   95
+            tint:      root.accent
         }
 
         BarMeter {
