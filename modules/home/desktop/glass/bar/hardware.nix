@@ -186,15 +186,10 @@
             alert: SystemStats.memPercent >= 85
         }
 
-        BarBattery {
-            anchors.verticalCenter: parent.verticalCenter
-            accent: root.accent
-        }
-
-        // Next to the laptop's own cell rather than over with the radios:
-        // both are a percentage you read, and the separator after this group
-        // is what divides readings from things you switch on and off.
-        BarPeripherals {
+        // Every cell in reach, on one dial, with the power profile as its
+        // outer ring's colour. Last in the group because it is the only
+        // member you can click into.
+        BarPower {
             anchors.verticalCenter: parent.verticalCenter
             accent: root.accent
         }

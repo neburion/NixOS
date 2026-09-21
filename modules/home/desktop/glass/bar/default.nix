@@ -12,9 +12,11 @@
     ./bluetooth.nix
     ./clock.nix
     ./hardware.nix
-    ./power-toggle.nix
     ./monitor-toggle.nix
     ./peripherals.nix
+    ./power-profile.nix
+    ./dial.nix
+    ./power.nix
     ./phone-display.nix
     ./resolution.nix
     ./tray.nix

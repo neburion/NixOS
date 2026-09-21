@@ -250,6 +250,34 @@ recursive and everything lands in one flat carousel. Orientation is derived from
 its `width`/`height` are the physical mode, so a rotated screen still reports 2560x1440
 there. `ShellScreen` is rotation-aware.
 
+**The power dial is three widgets that became one.** The laptop battery, the peripherals
+readout and the power-profile toggle all answered the same question, so they are now one
+`BarPower`: a dial of concentric arcs — laptop outermost, then mouse, then headset — and
+one number, the lowest reading present. Its menu carries the three at full size plus the
+profile as a three-way switch, which is why `PowerProfile` gained `set` and lost `cycle`;
+cycling blind is only worth it when there is nowhere to draw the list.
+
+The ring order is fixed and **every track is drawn whether or not its device answers**. A
+headset that goes to sleep has to leave its groove behind — drop the ring instead and the
+remaining two slide outward, and the dial starts lying about which reading is which.
+
+The outer ring is tinted by the power profile rather than by the wallpaper: green idling,
+amber working, red and flickering on performance. That costs the laptop ring its low-battery
+colour, so the **number** beside the dial is what goes critical, not the arc.
+
+**`QtQuick.Shapes` is available and is what makes small arcs work.** `ShapePath` +
+`PathAngleArc` animates its sweep and its stroke colour through ordinary bindings, where
+`Canvas` would want a repaint loop. Two details that only show up at 26px: set
+`preferredRendererType: Shape.CurveRenderer`, because geometry tessellation quantises a
+1.9px stroke into a smudge; and a sweep of 360 must switch to `FlatCap`, or the round cap
+at the end lands on top of the start and puts a visible lump on a full ring.
+
+The performance flicker is two triangle waves at 430ms and 670ms summed into one opacity.
+One wave pulses like a notification; two that do not divide into each other drift in and
+out of phase for about nine seconds before repeating, and that irregularity is the whole
+effect. Measured across consecutive frames the ring's mean luma moves 186 → 206 → 188 →
+193 → 206.
+
 **Qt 6.11 specifics the glass QML relies on:** `font.features` (6.6+) for tabular figures,
 and `font.variableAxes` (6.7+) to drive the Material Symbols `FILL` axis — active state is
 an animation along that axis rather than a colour swap or a second glyph. Also
