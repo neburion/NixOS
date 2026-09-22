@@ -3,11 +3,11 @@
     "dashboard": {
       "flake": false,
       "locked": {
-        "lastModified": 1790096548,
-        "narHash": "sha256-bzsNVnlYNKKIiJXv+LUDeNZWaD86cflEmNAw+BlP8pM=",
+        "lastModified": 1790102431,
+        "narHash": "sha256-94vPwQigBTKaIVyOaQYBcF377IC+59BbT0LqEy5uEXY=",
         "owner": "neburion",
         "repo": "dashboard",
-        "rev": "61b286077e9364bcaff3fd4f743f3361b54c457c",
+        "rev": "2b5713385565b65da77fcf743a785b276e64cb81",
         "type": "github"
       },
       "original": {
