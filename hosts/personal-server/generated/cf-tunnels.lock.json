@@ -1,11 +1,11 @@
 {
+  "dashboard.azuresalt.app": {
+    "credentialsSecret": "cloudflared-dashboard-azuresalt-app",
+    "uuid": "b851f951-5b44-4c55-b711-8d0588ccffa9"
+  },
   "eldenring.azuresalt.app": {
     "credentialsSecret": "cloudflared-eldenring-azuresalt-app",
     "uuid": "c5c06856-290f-4fac-94c3-920c3441a4bd"
-  },
-  "fleet.azuresalt.app": {
-    "credentialsSecret": "cloudflared-fleet-azuresalt-app",
-    "uuid": "70e5ae32-7e68-4bc6-acc9-c15bf5f1095c"
   },
   "media.azuresalt.app": {
     "credentialsSecret": "cloudflared-media-azuresalt-app",

@@ -54,8 +54,8 @@
       url = "github:neburion/elden-ring-tracker";
       flake = false;
     };
-    fleet-dashboard = {
-      url = "github:neburion/fleet-dashboard";
+    dashboard = {
+      url = "github:neburion/dashboard";
       flake = false;
     };
   };

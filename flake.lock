@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "dashboard": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790092921,
+        "narHash": "sha256-kP+81idJADNZFdpkMAqRb/CyDv3nm8icUdoMPe6v1jw=",
+        "owner": "neburion",
+        "repo": "dashboard",
+        "rev": "796120378c88764d096fd595e5aa1b6c68b98db3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "neburion",
+        "repo": "dashboard",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -71,22 +87,6 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "type": "github"
-      }
-    },
-    "fleet-dashboard": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789992504,
-        "narHash": "sha256-ZY4eBfFOA+T3gJrt4aM2O/mBR5vzQx8r25lK5pnY4o4=",
-        "owner": "neburion",
-        "repo": "fleet-dashboard",
-        "rev": "54b7b1e8c6ceadb73ea21b0494c17e9a8d3c77fe",
-        "type": "github"
-      },
-      "original": {
-        "owner": "neburion",
-        "repo": "fleet-dashboard",
         "type": "github"
       }
     },
@@ -247,9 +247,9 @@
     },
     "root": {
       "inputs": {
+        "dashboard": "dashboard",
         "disko": "disko",
         "elden-ring-tracker": "elden-ring-tracker",
-        "fleet-dashboard": "fleet-dashboard",
         "helium": "helium",
         "home-manager": "home-manager",
         "media-tracker": "media-tracker",
