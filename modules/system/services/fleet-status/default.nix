@@ -73,6 +73,20 @@ in
       '';
     };
 
+    claudeUser = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        The user whose Claude Code transcripts to total up, or null on a host
+        where nobody runs it.
+
+        Named rather than discovered for the same reason as syncUser: the
+        files are one user's, under their home, and a collector that went
+        looking through every home directory for them would be a different and
+        much worse thing than one that was told where to look.
+      '';
+    };
+
     syncUser = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -99,6 +113,9 @@ in
       environment = environment // {
         FS_PROBES = builtins.toJSON cfg.apps;
         FS_SYNC_USER = if cfg.syncUser == null then "" else cfg.syncUser;
+        FS_CLAUDE_HOME =
+          if cfg.claudeUser == null then ""
+          else "${config.users.users.${cfg.claudeUser}.home}/.claude";
       };
     };
 

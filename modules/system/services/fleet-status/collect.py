@@ -51,6 +51,27 @@ def run(*argv, timeout=10):
                           timeout=timeout, check=False).stdout
 
 
+def cache_read(name, ttl):
+    """A previous answer, if it is younger than ttl seconds. Else None."""
+    p = OUT.parent / f"{name}.json"
+    try:
+        blob = json.loads(p.read_text())
+    except Exception:                                    # noqa: BLE001
+        return None
+    if time.time() - blob.get("at", 0) > ttl:
+        return None
+    return blob.get("value")
+
+
+def cache_write(name, value):
+    p = OUT.parent / f"{name}.json"
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps({"at": int(time.time()), "value": value},
+                              separators=(",", ":")))
+    os.replace(tmp, p)
+    return value
+
+
 # ------------------------------------------------------------------ the box
 
 def boot():
@@ -329,22 +350,320 @@ def syncthing():
 
 
 def tailnet():
+    """The mesh as this host sees it, from the local daemon.
+
+    No API token anywhere. Tailscale's control plane has one, but every fact
+    the page draws — who is up, which addresses they answer on, when each node
+    key expires — is already in `tailscale status` on each box, and asking the
+    boxes keeps the tailnet's own credentials out of a published dashboard.
+
+    What a token would add and this cannot: ACLs, DNS settings, and devices
+    that are in the tailnet but not talking to this host.
+    """
     raw = run("tailscale", "status", "--json", timeout=8)
     if not raw.strip():
         return {"error": "tailscale status returned nothing"}
     s = json.loads(raw)
-    peers = [{
-        "name": p["HostName"],
-        "online": p.get("Online", False),
-        "os": p.get("OS", ""),
-        "last_seen": p.get("LastSeen", ""),
-        "rx": p.get("RxBytes", 0),
-        "tx": p.get("TxBytes", 0),
-    } for p in (s.get("Peer") or {}).values()]
+
+    def node(p, me=False):
+        return {
+            "name": p.get("HostName", ""),
+            # The trailing dot is how MagicDNS spells it and not how anyone
+            # reads it.
+            "dns": (p.get("DNSName") or "").rstrip("."),
+            "ips": p.get("TailscaleIPs") or [],
+            "os": p.get("OS", ""),
+            "online": p.get("Online", False),
+            # Online says the node is reachable; active says traffic is moving
+            # right now. A phone is usually the first and rarely the second.
+            "active": p.get("Active", False),
+            "last_seen": p.get("LastSeen", ""),
+            # The one number on this page with a deadline attached: an expired
+            # node key drops a host off the mesh with no other warning.
+            "key_expiry": p.get("KeyExpiry", ""),
+            "exit_node": p.get("ExitNode", False),
+            "offers_exit": p.get("ExitNodeOption", False),
+            "relay": p.get("Relay", ""),
+            "rx": p.get("RxBytes", 0),
+            "tx": p.get("TxBytes", 0),
+            "self": me,
+        }
+
+    peers = [node(p) for p in (s.get("Peer") or {}).values()]
     return {
         "state": s.get("BackendState", "unknown"),
         "self": (s.get("Self") or {}).get("HostName", ""),
+        "tailnet": (s.get("CurrentTailnet") or {}).get("Name", ""),
+        "magic_dns": s.get("MagicDNSSuffix", ""),
+        "version": (s.get("Version") or "").split("-")[0],
+        "latest": (s.get("ClientVersion") or {}).get("RunningLatest"),
+        "node": node(s.get("Self") or {}, me=True),
         "peers": sorted(peers, key=lambda p: p["name"]),
+    }
+
+def secrets():
+    """Which credentials this machine holds, by name only.
+
+    The dashboard's credential inventory is "what is deployed where", not a
+    copy of the repo's secrets file — a host that never got a key should not
+    appear to have one. Names are not secrets; the values sit 0400 root beside
+    them and are never read here, which is why this can be reported at all.
+    """
+    d = Path("/run/secrets")
+    if not d.is_dir():
+        return []
+    out = []
+    for p in sorted(d.iterdir()):
+        # sops-nix keeps its templated output under rendered/; those are files
+        # built *from* secrets rather than secrets, and listing them would
+        # double-count every key that feeds one.
+        if p.name == "rendered" or p.is_dir():
+            continue
+        st = p.stat()
+        out.append({
+            "name": p.name,
+            "mode": oct(st.st_mode & 0o777)[2:],
+            "bytes": st.st_size,
+            "modified": int(st.st_mtime),
+        })
+    return out
+
+
+def b2():
+    """The Backblaze bucket, read with the key this host already has.
+
+    The dashboard never gets these credentials. It runs in public and the key
+    on this box can delete files, so the call is made here — where the key
+    already lives for restic's sake — and only the counts travel. Same split as
+    the rest of the agent: root reads, nobody serves.
+
+    Account-level numbers (storage caps, the bill) are deliberately absent:
+    B2 publishes no billing API, and this key is scoped to the one bucket
+    anyway. What the console shows about spend cannot be fetched by anyone.
+    """
+    key_id = Path("/run/secrets/backup-b2-aws-access-key-id")
+    key = Path("/run/secrets/backup-b2-aws-secret-access-key")
+    if not key_id.exists() or not key.exists():
+        return None
+
+    cached = cache_read("b2", 3600)
+    if cached is not None:
+        return cached
+
+    import base64
+    auth = base64.b64encode(
+        f"{key_id.read_text().strip()}:{key.read_text().strip()}".encode()
+    ).decode()
+
+    def call(url, token, payload=None):
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode() if payload is not None else None,
+            headers={"Authorization": token,
+                     "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.loads(r.read())
+
+    # v4, not v2 or v3: b2_authorize_account answers "not currently supported
+    # on API version number N" for every earlier version now. The error looks
+    # like a bad credential and is not one.
+    a = call("https://api.backblazeb2.com/b2api/v4/b2_authorize_account",
+             f"Basic {auth}")
+    api = a["apiInfo"]["storageApi"]
+    allowed = api["allowed"]
+    token = a["authorizationToken"]
+    buckets = allowed.get("buckets") or []
+    if not buckets:
+        return {"error": "key is not scoped to a bucket"}
+    bucket = buckets[0]
+
+    total, count, newest, oldest = 0, 0, 0, 0
+    start = None
+    # Paged rather than one big call: a restic repository is thousands of pack
+    # files, and the page size is what keeps a single reply from being tens of
+    # megabytes of filenames nobody draws.
+    while True:
+        page = call(f"{api['apiUrl']}/b2api/v4/b2_list_file_names", token,
+                    {"bucketId": bucket["id"], "maxFileCount": 10000,
+                     **({"startFileName": start} if start else {})})
+        for f in page.get("files", []):
+            total += f.get("contentLength", 0)
+            count += 1
+            ts = int(f.get("uploadTimestamp", 0) / 1000)
+            newest = max(newest, ts)
+            oldest = min(oldest or ts, ts)
+        start = page.get("nextFileName")
+        if not start:
+            break
+
+    lifecycle = call(f"{api['apiUrl']}/b2api/v4/b2_list_buckets", token,
+                     {"accountId": a["accountId"], "bucketId": bucket["id"]})
+    info = (lifecycle.get("buckets") or [{}])[0]
+
+    return cache_write("b2", {
+        "bucket": bucket["name"],
+        "bytes": total,
+        "objects": count,
+        "newest": newest or None,
+        "oldest": oldest or None,
+        "type": info.get("bucketType"),
+        "encryption": (info.get("defaultServerSideEncryption") or {}).get("mode"),
+        "lifecycle": info.get("lifecycleRules") or [],
+        "capabilities": allowed.get("capabilities") or [],
+    })
+
+
+# ----------------------------------------------------------------- the model
+
+CLAUDE_HOME = os.environ.get("FS_CLAUDE_HOME", "")
+
+
+def claude():
+    """Claude Code usage, summed out of the transcripts it writes locally.
+
+    There is no API for this. A subscription has no usage endpoint and no cost
+    report — the Admin API covers organisations paying per token, which this is
+    not — so the only account of what was spent is the JSONL Claude Code leaves
+    under ~/.claude/projects. That is the same source its own stats view reads.
+
+    Treat the totals as an estimate. The token counts come out of streaming
+    metadata, and there are builds where they are known to be wrong; the page
+    says so rather than printing them as a bill.
+
+    Incremental on purpose: the transcripts are ~200MB and grow all day, so
+    each file is remembered by size and only its new bytes are parsed. The
+    fleet total is re-summed from the per-file records every run, which means a
+    file that shrank or was rewritten corrects itself on the next pass instead
+    of leaving a number nobody can explain.
+    """
+    if not CLAUDE_HOME:
+        return None
+    root = Path(CLAUDE_HOME) / "projects"
+    if not root.is_dir():
+        return None
+
+    state_file = OUT.parent / "claude-files.json"
+    try:
+        known = json.loads(state_file.read_text())
+    except Exception:                                    # noqa: BLE001
+        known = {}
+
+    def blank():
+        return {"size": 0, "days": {}, "prompts": 0, "tools": 0,
+                "sessions": 0, "first": None, "last": None}
+
+    fresh = {}
+    for path in sorted(root.rglob("*.jsonl")):
+        key = str(path)
+        size = path.stat().st_size
+        prev = known.get(key)
+        # Same size means the same file: these are append-only, so a byte count
+        # that has not moved is a session nobody has spoken to since.
+        if prev and prev.get("size") == size:
+            fresh[key] = prev
+            continue
+        if prev and size > prev.get("size", 0):
+            rec, offset = prev, prev["size"]   # grew: only the new bytes
+        else:
+            rec, offset = blank(), 0           # new, or rewritten shorter
+        rec["sessions"] = 1
+        seen = set()
+        with path.open("r", errors="replace") as f:
+            f.seek(offset)
+            for line in f:
+                try:
+                    d = json.loads(line)
+                except Exception:                        # noqa: BLE001
+                    continue                             # a half-written tail
+                t = d.get("type")
+                if t == "user":
+                    # A tool result is also a user-role message. Counting
+                    # those as prompts would make a single question with
+                    # forty greps look like forty questions.
+                    body = (d.get("message") or {}).get("content")
+                    if isinstance(body, str) or not any(
+                        isinstance(b, dict) and b.get("type") == "tool_result"
+                        for b in (body or [])
+                    ):
+                        rec["prompts"] += 1
+                if t != "assistant":
+                    continue
+                m = d.get("message") or {}
+                u = m.get("usage") or {}
+                if not u:
+                    continue
+                # Claude Code fabricates an assistant turn for its own errors
+                # and marks the model <synthetic>. It costs nothing and did
+                # not happen; a row for it on the page is noise.
+                if m.get("model") == "<synthetic>":
+                    continue
+                # One request can appear twice in a transcript when a turn is
+                # retried; the request id is what the API counted once.
+                rid = d.get("requestId") or m.get("id")
+                if rid in seen:
+                    continue
+                seen.add(rid)
+                day = (d.get("timestamp") or "")[:10]
+                model = m.get("model") or "unknown"
+                if not day:
+                    continue
+                rec["first"] = min(rec["first"] or day, day)
+                rec["last"] = max(rec["last"] or "", day)
+                bucket = rec["days"].setdefault(day, {}).setdefault(model, {
+                    "input": 0, "output": 0, "cache_read": 0,
+                    "cache_write": 0, "thinking": 0, "requests": 0,
+                    "web_search": 0,
+                })
+                bucket["input"] += u.get("input_tokens", 0)
+                bucket["output"] += u.get("output_tokens", 0)
+                bucket["cache_read"] += u.get("cache_read_input_tokens", 0)
+                bucket["cache_write"] += u.get("cache_creation_input_tokens", 0)
+                bucket["thinking"] += (u.get("output_tokens_details") or {}).get(
+                    "thinking_tokens", 0)
+                bucket["web_search"] += (u.get("server_tool_use") or {}).get(
+                    "web_search_requests", 0)
+                bucket["requests"] += 1
+                for blk in m.get("content") or []:
+                    if isinstance(blk, dict) and blk.get("type") == "tool_use":
+                        rec["tools"] += 1
+        rec["size"] = size
+        fresh[key] = rec
+
+    tmp = state_file.with_suffix(".tmp")
+    tmp.write_text(json.dumps(fresh, separators=(",", ":")))
+    os.replace(tmp, state_file)
+
+    days, models = {}, {}
+    sessions = prompts = tools = 0
+    first = last = None
+    for rec in fresh.values():
+        sessions += rec.get("sessions", 0)
+        prompts += rec.get("prompts", 0)
+        tools += rec.get("tools", 0)
+        if rec.get("first"):
+            first = min(first or rec["first"], rec["first"])
+        if rec.get("last"):
+            last = max(last or "", rec["last"])
+        for day, per_model in rec["days"].items():
+            for model, v in per_model.items():
+                dst = days.setdefault(day, {}).setdefault(model, dict.fromkeys(v, 0))
+                tot = models.setdefault(model, dict.fromkeys(v, 0))
+                for k, n in v.items():
+                    dst[k] += n
+                    tot[k] += n
+
+    return {
+        # Trimmed to the window the page actually draws. The per-file records
+        # keep everything; sending three months of days to a phone does not.
+        "days": {d: days[d] for d in sorted(days)[-60:]},
+        "models": models,
+        "sessions": sessions,
+        "prompts": prompts,
+        "tools": tools,
+        "first": first,
+        "last": last,
+        "source": "local transcripts",
     }
 
 
@@ -362,6 +681,9 @@ def main():
         "apps": guard(apps),
         "syncthing": guard(syncthing),
         "tailnet": guard(tailnet),
+        "secrets": guard(secrets),
+        "b2": guard(b2),
+        "claude": guard(claude),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     tmp = OUT.with_suffix(".tmp")
