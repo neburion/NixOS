@@ -3,15 +3,15 @@
 # Wallpaper picker — per monitor, filtered by orientation.
 #
 # Two differences from the clean picker, both consequences of the library
-# being ~/Media/Wallpapers/<Orientation>/<Category>/ rather than per-theme
-# folders:
+# being ~/Media/Wallpapers/<Orientation>/ rather than per-theme folders:
 #
 #   1. It applies to ONE monitor — the focused one — instead of every output.
 #      That is what makes the wallpaper (and therefore the accent) per-screen.
-#   2. It scans by orientation, not by theme. Category is a filing system, so
-#      the scan is recursive and every category lands in one flat carousel.
-#      Orientation is the part the shell can act on: a portrait monitor has no
-#      use for a 3840x2160 landscape image.
+#   2. It scans by orientation, not by theme. Orientation is the one thing
+#      about a wallpaper the shell can act on: a portrait monitor has no use
+#      for a 3840x2160 landscape image. Anything else about how the library is
+#      filed is the library's business — the scan is recursive and everything
+#      it finds lands in one flat carousel.
 #
 # `orientation` is a binding on focusedMonitor.transform, so rotating a screen
 # ($mod + backslash) re-scans with no extra wiring.
@@ -269,15 +269,7 @@
                             font.pixelSize: 12
                             color: Glass.text
                             elide: Text.ElideMiddle
-                            // Category is worth showing here even though it does
-                            // not filter anything — it is how you think about
-                            // the file when you are looking for it.
-                            text: {
-                                const parts = cell.path.split("/");
-                                const name  = parts.pop();
-                                const cat   = parts.pop();
-                                return cat + "  ·  " + name;
-                            }
+                            text: cell.path.split("/").pop()
                         }
                     }
                 }
