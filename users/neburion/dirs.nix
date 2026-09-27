@@ -26,27 +26,18 @@ let
     "Media/Music"
     "Media/Books"
     "Media/Wallpapers"
-  ]
-  # Orientation/category wallpaper layout. Files are named
-  # `static-*` / `animated-*` so the two kinds stay sortable within a
-  # category instead of needing separate trees.
-  #
-  # There used to be a per-theme row here too — Catppuccin, Dark, Everforest,
-  # Gruvbox, Nord — because clean switches wallpaper by theme name. clean is
-  # not imported by anyone, so those five were recreated empty at every login
-  # and never held a file. The library is the two orientations below; if clean
-  # ever comes back it can carry its own dirs, since they are its concern.
-  ++ builtins.concatMap
-    (orientation: map (category: "Media/Wallpapers/${orientation}/${category}") [
-      "Minimal"
-      "Abstract"
-      "Drawn"
-      "Painting"
-      "Photography"
-      "Pixelart"
-    ])
-    [ "Horizontal" "Vertical" ]
-  ++ [
+
+    # Only the root. Wallpapers is a git checkout, and its shape is the
+    # repo's business — no row here may name anything inside it.
+    #
+    # It has held two layouts already: five per-theme folders (Catppuccin,
+    # Dark, Gruvbox, …), then a second level of folders under each
+    # orientation. Both were listed here, and both outlived the layout they
+    # matched, so every login recreated a dozen empty directories the library
+    # no longer used — and an empty directory is indistinguishable from one
+    # whose contents you meant to keep. This file is deliberately no longer in
+    # a position to have an opinion about it.
+
     "Projects"
     "Projects/Dev"
     "Projects/Art"
