@@ -264,10 +264,10 @@ def services():
 def probe(port):
     """Knock on a local app. Any HTTP answer means it is alive.
 
-    These all sit behind a login, so 401 and 303 are healthy replies — the
-    question is whether something is listening and speaking HTTP, not whether
-    it will let an unauthenticated collector in. Only a refused connection or
-    a timeout is a failure.
+    The reply code is not read as a verdict: 401 and 303 are as healthy as 200,
+    because an app that still carries a login answers that way to a collector
+    with no credential. The question is whether something is listening and
+    speaking HTTP. Only a refused connection or a timeout is a failure.
     """
     url = f"http://127.0.0.1:{port}/"
     started = time.monotonic()

@@ -37,22 +37,6 @@
         "type": "github"
       }
     },
-    "elden-ring-tracker": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1788949202,
-        "narHash": "sha256-cpmp4lSGb+vU5ePWWHwO1Kl2ziZ+PLO7a9LvXOKbcUI=",
-        "owner": "neburion",
-        "repo": "elden-ring-tracker",
-        "rev": "c71b474afacc0ec259eb9d0ec29918ad0d7ed498",
-        "type": "github"
-      },
-      "original": {
-        "owner": "neburion",
-        "repo": "elden-ring-tracker",
-        "type": "github"
-      }
-    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -203,7 +187,6 @@
       "inputs": {
         "dashboard": "dashboard",
         "disko": "disko",
-        "elden-ring-tracker": "elden-ring-tracker",
         "helium": "helium",
         "home-manager": "home-manager",
         "media-tracker": "media-tracker",

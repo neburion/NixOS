@@ -50,10 +50,6 @@
       url = "github:neburion/media-tracker";
       flake = false;
     };
-    elden-ring-tracker = {
-      url = "github:neburion/elden-ring-tracker";
-      flake = false;
-    };
     dashboard = {
       url = "github:neburion/dashboard";
       flake = false;

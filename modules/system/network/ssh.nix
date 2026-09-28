@@ -32,7 +32,7 @@
     };
   };
 
-  # Admit SSH only on the tailnet interface. Same pattern the elden-ring
+  # Admit SSH only on the tailnet interface. Same pattern the media
   # tracker uses for its port.
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 22 ];
 

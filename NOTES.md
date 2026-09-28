@@ -96,6 +96,12 @@ Cloudflare tunnel.
 must be one of a known few; `run` may not contain shell metacharacters. A repo can only
 ever reach its own password, and push access to it is not code execution here.
 
+**Two answers are the host's, not the manifest's.** An entry may be `{ src; public;
+withoutSecrets; extraEnv; }` instead of a bare input. `public = false` ignores the
+manifest's `urls`, so nothing is published and the tailnet firewall rule is the only way in;
+`withoutSecrets` withholds a credential the manifest asks for. Withholding `password` while
+`public` is true fails evaluation — the URL has to go before the login may.
+
 **Contract for an app:** listen on `$PORT`, keep durable things in `$STATE_DIR`, read
 secrets from `$CREDENTIALS_DIRECTORY/<name>`, exit non-zero if it cannot start. Nothing
 else — no Nix in the project.
@@ -103,9 +109,12 @@ else — no Nix in the project.
 Apps are pinned in `flake.lock`, so `nixos-rebuild --rollback` takes the app version back
 with the system generation. Updating one is `nix flake update <name>`.
 
-The Elden Ring tracker and media tracker carry HTTP Basic Auth from sops and refuse to bind
-a non-loopback address without it, so a missing Cloudflare Access policy weakens the gate
-rather than removing it. Set the policy anyway.
+All three apps compute their own `AUTH_ON` from whether a password credential arrived, and
+refuse to bind a non-loopback address without one unless told they are meant to. That check
+is why `withoutSecrets` is safe to use: getting it wrong is a restart loop, not a silently
+open page. The media tracker and the dashboard now run through that door on
+personal-server — tailnet-only, no login, no tunnel; see its `policy/apps.nix` for why the
+password and the public hostname were one decision rather than two.
 
 ---
 

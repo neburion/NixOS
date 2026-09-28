@@ -4,8 +4,8 @@
 # modules/system/backup/restic.nix.
 #
 # `/var/lib` is the whole answer, because everything durable on this box is a
-# StateDirectory underneath it: media.db and its cover cache, the Elden Ring
-# ledger, and whatever the next app in apps-layout.nix asks for — a new app
+# StateDirectory underneath it: media.db and its cover cache, and whatever the
+# next app in policy/apps.nix asks for — a new app
 # gets backed up the day it is deployed, without anyone remembering to add it
 # here. Nothing else on the machine is worth a snapshot; the system itself is
 # rebuilt from the flake, and the apps from their own repos.

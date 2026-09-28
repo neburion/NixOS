@@ -51,6 +51,24 @@
 # Those four rules are what separate a platform from a hole. An out-of-bounds
 # manifest fails evaluation with a readable message and never reaches a host.
 #
+# ── What the host overrides ──────────────────────────────────────────────────
+#
+# Two of the manifest's answers are not the app's to give. Whether this box
+# publishes a page belongs to the box, and whether a page is worth a password
+# depends on who can reach it — so an entry may be a set rather than a repo:
+#
+#     media-tracker = {
+#       src = inputs.media-tracker;
+#       public = false;                    # ignore `urls`: no tunnel, no DNS
+#       withoutSecrets = [ "password" "username" ];
+#       extraEnv.MT_ALLOW_NO_AUTH = "1";
+#     };
+#
+# `public = false` is the load-bearing half. Dropping the password is refused
+# while the app still answers to a hostname, so the two cannot drift apart into
+# an unauthenticated page on the internet — the tailnet has to be the only way
+# in before the login is allowed to go.
+#
 # ── What this deliberately does not do ───────────────────────────────────────
 #
 # There is no runtime provisioning: an app appears when a rebuild says so, not
@@ -61,7 +79,7 @@
 
 let
   inherit (lib) mkOption types mapAttrs nameValuePair concatMap attrValues
-                optionalAttrs;
+                optionalAttrs filter;
 
   cfg = config.apps;
 
@@ -78,6 +96,47 @@ let
     bash = { pkg = pkgs.bashInteractive; bin = "bash"; };
   };
 
+  # ── what a host declares per app ───────────────────────────────────────────
+
+  # A bare path is the common case and still reads as one: `media-tracker =
+  # inputs.media-tracker;`. The three options exist for the facts that belong
+  # to the machine rather than to the project.
+  instanceType = types.coercedTo types.path (src: { inherit src; })
+    (types.submodule {
+      options = {
+        src = mkOption {
+          type = types.path;
+          description = "Flake input holding the repo, with an app.json at its root.";
+        };
+        public = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Whether this host honours the manifest's `urls`. False drops them,
+            so no Cloudflare tunnel and no DNS record are declared and the only
+            way in is the tailnet firewall rule below.
+          '';
+        };
+        withoutSecrets = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = ''
+            Manifest secrets this host declines to provision. The app finds no
+            credential of that name, which for `password` means its login
+            switches itself off — allowed only when `public` is false.
+          '';
+        };
+        extraEnv = mkOption {
+          type = types.attrsOf types.str;
+          default = { };
+          description = ''
+            Environment laid over the manifest's `env`, for the switches an app
+            exposes but cannot decide for itself — MT_ALLOW_NO_AUTH and friends.
+          '';
+        };
+      };
+    });
+
   # ── reading and checking one manifest ──────────────────────────────────────
 
   # `run` lands inside a shell script, so it is held to a file name plus plain
@@ -86,8 +145,9 @@ let
   # push access to a repo equivalent to code execution on the host.
   safeCommand = c: builtins.match "[A-Za-z0-9._/= -]*" c != null;
 
-  readManifest = name: src:
+  readManifest = name: inst:
     let
+      src = inst.src;
       file = "${src}/app.json";
       m = builtins.fromJSON (builtins.readFile file);
 
@@ -97,9 +157,17 @@ let
       req = f: if has f then m.${f} else bad "missing required field `${f}`";
 
       port = req "port";
-      urls = m.urls or [ ];
       runtime = m.runtime or "python3";
-      secrets = m.secrets or [ ];
+
+      # What the manifest asks for, before the host has its say. The bounds
+      # below are checked against these rather than against what survives the
+      # override, so a manifest that names someone else's zone is still an
+      # error on a host that publishes nothing.
+      declaredUrls = m.urls or [ ];
+      declaredSecrets = m.secrets or [ ];
+
+      urls = if inst.public then declaredUrls else [ ];
+      secrets = filter (s: !(builtins.elem s inst.withoutSecrets)) declaredSecrets;
 
       checked =
         if (m.name or name) != name then
@@ -108,10 +176,15 @@ let
           bad "port ${toString port} is outside ${toString portRange.from}-${toString portRange.to}"
         else if !(runtimes ? ${runtime}) then
           bad "unknown runtime `${runtime}`; known: ${toString (builtins.attrNames runtimes)}"
-        else if !(builtins.all (u: lib.hasSuffix ".${zone}" u) urls) then
+        else if !(builtins.all (u: lib.hasSuffix ".${zone}" u) declaredUrls) then
           bad "every url must sit under ${zone}"
-        else if !(builtins.all (s: builtins.match "[a-z0-9-]+" s != null) secrets) then
+        else if !(builtins.all (s: builtins.match "[a-z0-9-]+" s != null) declaredSecrets) then
           bad "secret names must be lowercase and dash-separated"
+        else if !(builtins.all (s: builtins.elem s declaredSecrets) inst.withoutSecrets) then
+          bad ("withoutSecrets names ${toString (filter (s: !(builtins.elem s declaredSecrets)) inst.withoutSecrets)}"
+               + ", which this manifest does not declare — it may have been renamed upstream")
+        else if inst.public && builtins.elem "password" inst.withoutSecrets then
+          bad "refusing to drop the password of an app that still has a public url; set public = false"
         else if !(builtins.all safeCommand ([ (m.run or "") ] ++ [ (m.preStart or "") ]
                                             ++ map (t: t.run or "") (m.timers or [ ]))) then
           bad "run/preStart may only name a file in the repo plus plain arguments"
@@ -123,7 +196,7 @@ let
       run = req "run";
       preStart = m.preStart or null;
       timers = m.timers or [ ];
-      env = m.env or { };
+      env = (m.env or { }) // inst.extraEnv;
       summary = m.summary or "";
     };
 
@@ -250,12 +323,14 @@ let
 in
 {
   options.apps.instances = mkOption {
-    type = types.attrsOf types.path;
+    type = types.attrsOf instanceType;
     default = { };
     description = ''
       Projects this host runs, as attribute name → the flake input holding the
-      repo. Each must carry an `app.json` at its root; that manifest is what
-      generates the unit, user, state directory, firewall rule and tunnel.
+      repo, or → a set of `src` plus the host-side overrides `public`,
+      `withoutSecrets` and `extraEnv`. Each repo must carry an `app.json` at
+      its root; that manifest is what generates the unit, user, state
+      directory, firewall rule and tunnel.
     '';
   };
 
@@ -292,7 +367,8 @@ in
 
     # Every app listens on 0.0.0.0 but is reachable only over the tailnet.
     # Public access is cloudflared dialling 127.0.0.1 from inside the host,
-    # which needs no rule at all.
+    # which needs no rule at all — and for an app with `public = false` this
+    # rule is not one gate of two, it is the only one there is.
     networking.firewall.interfaces.tailscale0.allowedTCPPorts =
       map (app: app.port) (attrValues apps);
 

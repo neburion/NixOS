@@ -14,8 +14,14 @@
 # The services themselves are no longer modules here. They live in their own
 # repos and are deployed by modules/system/apps/platform.nix, which reads an
 # app.json out of each one; which repos this host runs is declared in
-# policy/apps.nix. Currently the media tracker (:8778) and the
-# Elden Ring ledger (:8777), both tailnet-only with public Cloudflare tunnels.
+# policy/apps.nix. Currently the media tracker (:8778) and the fleet dashboard
+# (:8779), both tailnet-only, both without a login — the reasoning for that
+# pairing is in policy/apps.nix.
+#
+# So this host declares no Cloudflare tunnels at all any more. The two modules
+# are still imported: cloudflared costs nothing while nothing is declared, and
+# cf-reconcile is a fleet-wide rebuild hook rather than a thing this host wants
+# for itself. Publishing something from here again is a `public = true` away.
 
 {
   imports = [
