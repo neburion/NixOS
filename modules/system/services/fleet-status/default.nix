@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 # fleet-status — what this machine would say about itself, as JSON, to anyone
 # on the tailnet who asks. Every host runs it; the dashboard on
@@ -25,6 +25,14 @@
 # fine.
 #
 # Imported from presets/base.nix, the same as sshd: every host, tailnet only.
+#
+# ── Where the two scripts live ───────────────────────────────────────────────
+#
+# In the dashboard's repo, not this one, and read from `inputs.dashboard` below.
+# The dashboard is the only thing that consumes this reading and it now carries
+# an `install.sh --agent` for hosts that are not NixOS, so the alternative was
+# the same 700 lines in two repos, drifting. This module is the NixOS way to run
+# those files; it is no longer where they are kept.
 
 let
   inherit (lib) mkOption types;
@@ -35,6 +43,8 @@ let
   stateDir = "/var/lib/fleet-status";
   statusFile = "${stateDir}/status.json";
 
+  agent = "${inputs.dashboard}/agent";
+
   collect = pkgs.writeShellApplication {
     name = "fleet-status-collect";
     runtimeInputs = [
@@ -42,13 +52,13 @@ let
       pkgs.systemd                       # systemctl: units, timers, health
       config.services.tailscale.package  # peer list
     ];
-    text = "exec python3 ${./collect.py}";
+    text = "exec python3 ${agent}/collect.py";
   };
 
   serve = pkgs.writeShellApplication {
     name = "fleet-status-serve";
     runtimeInputs = [ pkgs.python3 ];
-    text = "exec python3 ${./serve.py}";
+    text = "exec python3 ${agent}/serve.py";
   };
 
   # Shared by both units so the two halves cannot disagree about which file
