@@ -590,11 +590,44 @@ mv secrets/age-key.enc.new secrets/age-key.enc
 `sops updatekeys secrets/*.yaml`, re-encrypt the private key, redistribute
 `/var/lib/sops-nix/key.txt` to every host, rebuild each.
 
+### The desktop keyring is a different thing
+
+sops is for secrets the *flake* needs. The gnome-keyring is for secrets a *GUI app* needs
+at runtime, and the two never meet — `modules/home/office/convey/system.nix` exists only
+because libsecret is a hard requirement of Convey, and nothing else on this host asks for
+a Secret Service.
+
+**What it is.** `~/.local/share/keyrings/login.keyring`, one small file, plus a daemon that
+answers `org.freedesktop.secrets` on the session bus. Apps ask the daemon instead of each
+inventing a password store. Under flatpak they do not even get that far: Convey's manifest
+grants no `--talk-name=org.freedesktop.secrets`, so libsecret uses
+`org.freedesktop.portal.Secret`, which hands the sandbox a per-app key and keeps the real
+collection out of reach.
+
+**The failure it used to have.** At SDDM login `pam_gnome_keyring` starts the daemon and
+unlocks the collection with the password just typed — the journal says `gkr-pam:
+gnome-keyring-daemon started properly and unlocked keyring`. That daemon then dies
+mid-session, cause never pinned down and no log line when it goes. The next app wanting a
+secret makes systemd D-Bus-activate a *fresh* daemon as
+`dbus-:1.2-org.freedesktop.secrets@0.service`, that one holds no password, the collection
+is locked, and every request pops a `gcr-prompter` dialog. Seen 2026-09-20 and 2026-10-01.
+Every Chromium/Electron start triggers it too, since Chromium asks for its `os_crypt` key
+on startup — so one dead daemon reads as random popups from unrelated apps.
+
+Recovery, if a password ever goes back on: `gnome-keyring-daemon --unlock` alone fails with
+"another secret service is running", and `--replace` cannot take the bus name back because
+systemd owns the activated unit. Stop the unit first, then start a daemon with the password
+on stdin, then check
+`busctl --user get-property org.freedesktop.secrets /org/freedesktop/secrets/collection/login org.freedesktop.Secret.Collection Locked`
+for `b false`.
+
+**Why it has no password now.** See Accepted debt below.
+
 ---
 
 ## Accepted debt
 
-Both of these are decisions, not oversights. Don't "fix" them without a reason.
+All of these are decisions, not oversights. Don't "fix" them without a reason.
 
 - **Wifi PSK in plaintext** in each host's hardware layout. The threat model requires an
   attacker with physical proximity *and* knowledge of the public repo simultaneously.
@@ -602,6 +635,15 @@ Both of these are decisions, not oversights. Don't "fix" them without a reason.
 - **`server-admin` bootstrap password in plaintext.** Deliberately trivial for headless
   server-class hosts (LAN-only plus an auth-gated tunnel). If ever elevated, switch to
   `hashedPasswordFile` fed by sops.
+- **The login keyring has an empty password.** It cannot be locked, so the dead-daemon
+  lockout above cannot happen and no app ever prompts — the login experience, which is the
+  whole point of a keyring and the thing it was failing to deliver. What it costs is at-rest
+  encryption of one credential, on a root filesystem (`nvme0n1p2`, ext4) that has no LUKS,
+  in a home directory that already holds SSH keys and a world-readable Spotify autologin
+  blob in the clear. Anyone with the disk has those regardless. **The real fix is full-disk
+  encryption**, and the Arch reinstall is the moment to turn it on; after that this bullet
+  stops being debt. Do not put a password back on the keyring instead — it buys an inch and
+  re-arms the lockout.
 
 ---
 
