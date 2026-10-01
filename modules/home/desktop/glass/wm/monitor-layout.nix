@@ -20,6 +20,9 @@
 # file is how you reset it, and without the map the planner would fall back to
 # the live mode and simply pin whatever was on screen.
 #
+# The declared POSITIONS go the same way, through $MONITOR_ORDER, and for a
+# less obvious reason — see the comment on `order` below.
+#
 # ── the override file ──────────────────────────────────────────────────────
 # A nix rebuild reloads hyprland.conf, which re-applies the declared monitor
 # lines. When declarations were resting values that was almost always a no-op;
@@ -49,6 +52,20 @@ let
     (lib.mapAttrs' (_: m: lib.nameValuePair m.name m.mode)
       hostConfig.displays.monitors));
 
+  # { "DP-1": 0, "HDMI-A-1": 1080, … } — the declared left-to-right ORDER.
+  #
+  # Not geometry; the planner still packs from zero. It needs this because it
+  # used to infer the order from the live x of each output, and a disconnect
+  # rewrites those silently: reflow with DP-1 unplugged packs HDMI-A-1 to 0x0
+  # and records that in monitors.conf, which is sourced after the declared
+  # lines. DP-1 then comes back to a declared 0x0 that is already taken,
+  # Hyprland shoves it right, and the next reflow reads the shove as the truth
+  # and canonicalises it. The order was wrong from then on, permanently.
+  order = pkgs.writeText "monitor-order.json" (builtins.toJSON
+    (lib.mapAttrs' (_: m: lib.nameValuePair m.name
+      (lib.toInt (lib.head (lib.splitString "x" m.position))))
+      hostConfig.displays.monitors));
+
   # The single entry point. Reads persisted state, packs the outputs left to
   # right by effective width, applies mode, transform and position together,
   # and records the result for the next config reload.
@@ -57,6 +74,7 @@ let
     runtimeInputs = with pkgs; [ hyprland python3 xrandr ];
     text = ''
       export MONITOR_CEILINGS=${ceilings}
+      export MONITOR_ORDER=${order}
       python3 ${planner} "$@"
 
       # Re-assert xrandr primary so XWayland (Proton/Wine games) reads its mode

@@ -12,6 +12,15 @@
 #   ~/.local/state/monitor-transforms/<name>   a Hyprland transform, 0 or 3
 #   ~/.local/state/monitor-modes/<name>        a mode, e.g. 2560x1440@144.00
 #
+# The declared POSITIONS arrive the same way, via $MONITOR_ORDER, and are used
+# only to ORDER the outputs — the packing below still starts at zero. Ordering
+# by live x instead, which is what this did until 2026-10-01, loses the order
+# outright the moment an output is unplugged for a while: a reflow without
+# DP-1 packs HDMI-A-1 to 0x0 and writes that to monitors.conf, DP-1 returns to
+# a declared 0x0 that is taken, Hyprland shoves it right, and the next reflow
+# canonicalises the shove. An output nobody declared sorts after the declared
+# ones, keeping its live order.
+#
 # An absent transform file means "whatever is live". An absent MODE file means
 # the mode declared in hosts/<h>/hardware/displays.nix, handed in as a JSON map
 # via $MONITOR_CEILINGS: that declaration is a ceiling, not a resting value, and
@@ -37,8 +46,8 @@ MODES = os.path.join(STATE_HOME, "monitor-modes")
 OVERRIDE = os.path.join(CONFIG_HOME, "hypr", "monitors.conf")
 
 
-def ceilings():
-    path = os.environ.get("MONITOR_CEILINGS")
+def declared(var):
+    path = os.environ.get(var)
     if not path:
         return {}
     try:
@@ -48,7 +57,8 @@ def ceilings():
         return {}
 
 
-CEILINGS = ceilings()
+CEILINGS = declared("MONITOR_CEILINGS")
+ORDER = declared("MONITOR_ORDER")
 
 # Gap between modesets. Long enough for the DRM page-flip to retire,
 # short enough that a rotation still feels immediate.
@@ -56,10 +66,17 @@ SETTLE = 0.15
 ROTATED = (1, 3, 5, 7)
 
 
+def rank(m):
+    """Declared outputs first, in declared left-to-right order; anything
+    undeclared trails them in the order it is already on screen."""
+    x = ORDER.get(m["name"])
+    return (0, x, 0) if x is not None else (1, 0, m["x"])
+
+
 def monitors():
     out = subprocess.run(["hyprctl", "-j", "monitors"],
                          capture_output=True, text=True, check=True).stdout
-    return sorted(json.loads(out), key=lambda m: m["x"])
+    return sorted(json.loads(out), key=rank)
 
 
 def target_transform(m):
