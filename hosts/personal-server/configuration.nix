@@ -37,9 +37,16 @@
     ../../modules/system/network/wifi/bell096.nix
     ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/reconcile.nix
-    ../../modules/system/services/backup/restic.nix
-    ../../modules/system/services/backup/server.nix
-    ../../modules/system/services/backup/fanout.nix
+    # Backup, dropped 2026-10-05. R2 and B2 were emptied and every repository
+    # deleted; policy/backup.nix has the detail. These three go together:
+    # server.nix and fanout.nix both LoadCredential the restic passphrase, and
+    # restic.nix only declares that secret while some host declares
+    # `backup.paths`. With none left, importing them fails to evaluate.
+    # Re-import all three when the replacement system lands.
+    #
+    #   ../../modules/system/services/backup/restic.nix
+    #   ../../modules/system/services/backup/server.nix
+    #   ../../modules/system/services/backup/fanout.nix
     ../../modules/system/services/app-platform
 
     ../../modules/home/cli/shell/fish/system.nix

@@ -28,7 +28,21 @@
 # for browsing; the passphrase and R2 credentials are in secrets/common.yaml.
 
 {
-  backup.paths.root = [ "/var/lib" ];
+  # Deactivated 2026-10-05, with R2 dropped as a destination. The bucket was
+  # emptied the same day: this host's `/var/lib` repository (38 objects,
+  # 115 MB) and pod042's `neburion` repository (4761 objects, 84.7 GB) are
+  # both gone, as is the B2 copy downstream of the mirror.
+  #
+  # `backup.paths` is the only thing that writes to R2, so leaving root
+  # undeclared removes this host's job without editing the module. Nothing
+  # else here uploads: the mirror server below serves clients, and no client
+  # declares paths any more.
+  #
+  # That means /var/lib is currently unbacked — media.db, the dashboard's
+  # state and whatever policy/apps.nix deploys next. Deliberate, pending a
+  # replacement backup system.
+  #
+  #   backup.paths.root = [ "/var/lib" ];
 
   # Backblaze, fed by copying from the mirrored repositories this host already
   # holds — see services/backup/fanout.nix. It exists because everything else
@@ -46,11 +60,21 @@
   # B2 keeps every version of a file forever by default, so without it restic's
   # prune would hide objects that go on being billed — a repository that
   # shrinks on paper and never on the invoice.
-  backup.fanout.b2 = {
-    repository  = "s3:s3.us-east-005.backblazeb2.com/neburion-fleet-backup";
-    credentials = {
-      AWS_ACCESS_KEY_ID     = "b2-key-id";
-      AWS_SECRET_ACCESS_KEY = "b2-application-key";
-    };
-  };
+  # Deactivated 2026-10-05 alongside the R2 job above, and not by choice: the
+  # fan-out unit takes its passphrase from `sops.secrets.restic-passphrase`,
+  # which restic.nix only declares when some host declares `backup.paths`. With
+  # the last path gone that secret is gone, and the unit stops evaluating —
+  # `while evaluating the option systemd.services.restic-fanout-b2`.
+  #
+  # Nothing is lost by it: fan-out copies from the mirror, the mirror is empty,
+  # and the B2 bucket was emptied the same day (17 objects plus 21 hidden
+  # versions, purged rather than left to the lifecycle rule below).
+  #
+  #   backup.fanout.b2 = {
+  #     repository  = "s3:s3.us-east-005.backblazeb2.com/neburion-fleet-backup";
+  #     credentials = {
+  #       AWS_ACCESS_KEY_ID     = "b2-key-id";
+  #       AWS_SECRET_ACCESS_KEY = "b2-application-key";
+  #     };
+  #   };
 }
