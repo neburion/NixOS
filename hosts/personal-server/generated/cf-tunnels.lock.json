@@ -1,1 +1,6 @@
-{}
+{
+  "printer.azuresalt.app": {
+    "credentialsSecret": "cloudflared-printer-azuresalt-app",
+    "uuid": "7225cd32-a415-4506-a146-01441819f708"
+  }
+}
