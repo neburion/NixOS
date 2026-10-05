@@ -63,10 +63,23 @@ in
     publicShare = null;
   };
 
-  backup.paths.neburion = [
-    "${home}/Docs"
-    "${home}/Projects"
-    "${home}/Passwords"
-    "${home}/Media/Books"
-  ];
+  # Deactivated 2026-10-05. The repositories this fed — R2/neburion, the
+  # append-only mirror on personal-server, and the B2 copy downstream of it —
+  # were deleted the same day, on request, ahead of a replacement backup
+  # system. Commented rather than deleted: `backup.paths` is what restic.nix
+  # maps over, so leaving the user undeclared drops both the R2 job and the
+  # mirror job without touching the module, and the list stays here to undo.
+  #
+  # personal-server's own `/var/lib` → R2 job is untouched and still running;
+  # it is declared in hosts/personal-server/policy/backup.nix, not here.
+  #
+  # To bring it back, restore the list below. `initialize = true` means the
+  # first run recreates the repository from nothing.
+  #
+  #   backup.paths.neburion = [
+  #     "${home}/Docs"
+  #     "${home}/Projects"
+  #     "${home}/Passwords"
+  #     "${home}/Media/Books"
+  #   ];
 }
