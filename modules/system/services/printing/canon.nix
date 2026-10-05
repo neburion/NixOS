@@ -3,7 +3,12 @@
 let
   nixprinter = pkgs.writeShellApplication {
     name = "nixprinter";
-    runtimeInputs = [ pkgs.cups ];
+    # grep/awk/seq/sleep are as load-bearing as lpadmin here. This used to be
+    # `[ pkgs.cups ]` alone and worked, because it was only ever run by hand
+    # from a login shell that had the rest on PATH. Started from udev the unit
+    # gets writeShellApplication's PATH and nothing else, and the first run
+    # after the printer was plugged in died on `awk: command not found`.
+    runtimeInputs = with pkgs; [ cups gawk gnugrep coreutils ];
     text = ''
       # Find the USB URI from CUPS. Polled, not read once: this also runs from
       # a udev trigger the instant the device appears, and CUPS' USB backend
