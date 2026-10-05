@@ -35,6 +35,12 @@
 
     ../../modules/system/boot/systemd-boot.nix
     ../../modules/system/network/wifi/bell096.nix
+    # Print and scan, moved here from home-server on 2026-10-05: home-server
+    # stopped answering and this is the box that is up. The Canon MF3010 plugs
+    # into this machine's USB now.
+    ../../modules/system/services/printing/canon.nix
+    ../../modules/system/services/printing/web-ui.nix
+
     ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/reconcile.nix
     # Backup, dropped 2026-10-05. R2 and B2 were emptied and every repository

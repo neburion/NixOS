@@ -46,8 +46,13 @@ in
   # HTTP Basic Auth password for the print/scan UI. Sops-decrypted at
   # activation to /run/secrets/print-server-password, then wrapped in a
   # KEY=VALUE env file that the systemd unit loads via EnvironmentFile.
-  # Rotation: `sops set secrets/home-server.yaml '["print-server-password"]'
+  # Rotation: `sops set secrets/common.yaml '["print-server-password"]'
   # '"newpass"'` + rebuild.
+  #
+  # In common.yaml and not a host file because this module is host-agnostic:
+  # it moved from home-server to personal-server on 2026-10-05, and a secret
+  # named for whichever box happened to hold the printer last would have to
+  # move with it every time.
   #
   # `restartUnits` is what makes that rotation actually take effect.
   # LoadCredential snapshots the password at unit start and the app reads it
@@ -55,7 +60,7 @@ in
   # unit is never restarted and the retired password keeps working, while the
   # deploy prints "modifying secret" and "Done.".
   sops.secrets.print-server-password = {
-    sopsFile = ../../../../secrets/home-server.yaml;
+    sopsFile = ../../../../secrets/common.yaml;
     mode     = "0400";
     owner    = "print-server";
     restartUnits = [ "print-server.service" ];
