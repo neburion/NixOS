@@ -5,8 +5,16 @@ let
     name = "nixprinter";
     runtimeInputs = [ pkgs.cups ];
     text = ''
-      # Dynamically find the USB URI from CUPS
-      URI=$(lpinfo -v | grep -o 'usb://Canon/MF3010[^ ]*')
+      # Find the USB URI from CUPS. Polled, not read once: this also runs from
+      # a udev trigger the instant the device appears, and CUPS' USB backend
+      # takes a few seconds to enumerate it. Failing on the first look would
+      # mean the printer is plugged in and silently not registered.
+      URI=""
+      for _ in $(seq 1 30); do
+        URI=$(lpinfo -v 2>/dev/null | grep -o 'usb://Canon/MF3010[^ ]*' || true)
+        [[ -n "$URI" ]] && break
+        sleep 2
+      done
 
       if [[ -z "$URI" ]]; then
         echo "Error: Canon MF3010 not found by CUPS via USB."
@@ -54,4 +62,27 @@ in
   environment.etc."cngplp2/options/options.conf".text = "";
 
   environment.systemPackages = [ nixprinter ];
+
+  # Plugging the MFP in is the whole user interaction. Without this, the
+  # printer appears on the USB bus and CUPS still has no queue for it until
+  # someone remembers to ssh in and run `nixprinter` by hand.
+  #
+  # 04a9:2759 is the MF3010. The rule fires on coldplug too, so a printer
+  # already attached at boot registers the same way as one plugged in later.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="04a9", ATTR{idProduct}=="2759", TAG+="systemd", ENV{SYSTEMD_WANTS}+="canon-mf3010-register.service"
+  '';
+
+  systemd.services.canon-mf3010-register = {
+    description = "Register the Canon MF3010 with CUPS when it is plugged in";
+    after = [ "cups.service" ];
+    requires = [ "cups.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${nixprinter}/bin/nixprinter";
+      # lpadmin on an existing queue just rewrites it, so a replug or a second
+      # udev event is a no-op rather than an error.
+      SuccessExitStatus = [ 0 ];
+    };
+  };
 }
