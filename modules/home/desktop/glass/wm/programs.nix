@@ -11,7 +11,7 @@
     "$fileManager"  = "nautilus";
     "$audioManager" = "pavucontrol";
     "$taskManager"  = "$terminal -e btop";
-    "$webBrowser"   = "zen";
+    "$webBrowser"   = "helium";
     "$notesApp"     = "obsidian";
     "$messenger"    = "signal";
     "$discord"      = "vesktop";
