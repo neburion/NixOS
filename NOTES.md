@@ -593,16 +593,29 @@ mv secrets/age-key.enc.new secrets/age-key.enc
 ### The desktop keyring is a different thing
 
 sops is for secrets the *flake* needs. The gnome-keyring is for secrets a *GUI app* needs
-at runtime, and the two never meet — `modules/home/office/convey/system.nix` exists only
-because libsecret is a hard requirement of Convey, and nothing else on this host asks for
-a Secret Service.
+at runtime, and the two never meet — `modules/system/session/keyring.nix` is the whole of
+it, one line, pulled in by the graphical preset.
 
 **What it is.** `~/.local/share/keyrings/login.keyring`, one small file, plus a daemon that
 answers `org.freedesktop.secrets` on the session bus. Apps ask the daemon instead of each
-inventing a password store. Under flatpak they do not even get that far: Convey's manifest
-grants no `--talk-name=org.freedesktop.secrets`, so libsecret uses
-`org.freedesktop.portal.Secret`, which hands the sandbox a per-app key and keeps the real
-collection out of reach.
+inventing a password store.
+
+**Who asks for it.** Convey did — libsecret is a hard requirement of Geary's codebase —
+and Convey was deleted 2026-10-06. What keeps the keyring is Chromium: helium and every
+Electron app ask for an `os_crypt` key on startup, and `Chromium Safe Storage` is a live
+entry in the keyring file. Remove the daemon and they re-key in silence, which reads as
+being logged out of everything with no saved password left.
+
+**What a sandbox gets.** Nothing, as it stands. A flatpak's libsecret is not granted
+`--talk-name=org.freedesktop.secrets`, so it falls back to `org.freedesktop.portal.Secret`
+— and that interface is absent here. gnome-keyring ships the backend as
+`gnome-keyring.portal`, but the file is tagged `UseIn=gnome` while `XDG_CURRENT_DESKTOP` is
+`Hyprland`, so the `default=*` in `xdg-portal.nix` passes it over and xdg-desktop-portal
+resolves fourteen interfaces without ever mentioning Secret. That is what Convey died of:
+`application-client.vala:949: Error creating controller: ServiceUnknown`, exit 0, no
+window. The cure, when a sandboxed app next needs secrets, is to name the backend outright
+— `xdg.portal.config.common."org.freedesktop.impl.portal.Secret" = "gnome-keyring"` —
+since the wildcard will not reach it.
 
 **The failure it used to have.** At SDDM login `pam_gnome_keyring` starts the daemon and
 unlocks the collection with the password just typed — the journal says `gkr-pam:

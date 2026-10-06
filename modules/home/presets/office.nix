@@ -1,11 +1,10 @@
 { ... }:
 
-# Documents and mail. Two editors, a suite, and Convey — the one mail gets read
-# in, on the Posteo mailbox.
+# Documents. Two editors and a suite; no mail client since Convey was deleted
+# 2026-10-06, so mail is read in a browser until a replacement is picked.
 
 {
   imports = [
-    ../office/convey
     ../office/libre-office.nix
     ../office/obsidian.nix
   ];

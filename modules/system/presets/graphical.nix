@@ -6,6 +6,7 @@
 {
   imports = [
     ../session/dconf.nix
+    ../session/keyring.nix
     ../session/sddm.nix
     ../session/wayland-env.nix
     ../session/xdg-portal.nix
