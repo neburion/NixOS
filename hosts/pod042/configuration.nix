@@ -24,6 +24,7 @@
     ../../modules/home/cli/shell/fish/system.nix
     ../../modules/home/cli/flatpak/system.nix
     ../../modules/home/dev/tools/system.nix
+    ../../modules/home/dev/editors/neovim/system.nix
     ../../modules/home/gaming/launchers/steam/system.nix
     ../../modules/home/peripherals/logitech/system.nix
     ../../modules/home/peripherals/razer-nari/system.nix

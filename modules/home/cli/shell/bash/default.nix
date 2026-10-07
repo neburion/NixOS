@@ -9,6 +9,9 @@
 # build-iso alias pointing at a flake attribute that no longer exists.
 #
 # Aliases that still mean something are kept and match fish's.
+#
+# EDITOR/SUDO_EDITOR moved to dev/editors/neovim/enable.nix — setting them
+# here only ever reached bash, and fish is the login shell.
 
 {
   programs.bash = {
@@ -19,11 +22,6 @@
       spf     = "superfile";
       sspf    = "sudo superfile";
       cddev   = "cd ~/Projects/Dev";
-    };
-
-    sessionVariables = {
-      EDITOR      = "nvim";
-      SUDO_EDITOR = "nvim";
     };
 
     # Matches the fish prompt: user@host:dir$, primary colour on the name and
