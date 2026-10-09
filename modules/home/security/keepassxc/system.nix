@@ -44,8 +44,7 @@
 
     # A merge only becomes dangerous if the pre-merge file is gone. Staggered
     # keeps hourly copies for a day, daily for a month, weekly for a year, in
-    # ~/Passwords/.stversions -- which restic already backs up nightly, since
-    # users/neburion/dirs.nix lists ~/Passwords under backup.paths.
+    # ~/Passwords/.stversions. Nothing backs that up automatically.
     versioning = {
       type = "staggered";
       params = {

@@ -67,8 +67,7 @@
         # A phone can delete a note as easily as it edits one, and Obsidian's
         # own trash is per-vault and local. Staggered keeps hourly copies for
         # a day, daily for a month, weekly for a year, in .stversions --
-        # already covered by the nightly restic run, since dirs.nix lists
-        # ~/Docs under backup.paths.
+        # .stversions. Nothing backs that up automatically.
         versioning = {
           type = "staggered";
           params = {

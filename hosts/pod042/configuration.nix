@@ -18,7 +18,6 @@
     ../../modules/system/network/wifi/bell096.nix
     ../../modules/system/network/avahi.nix
     ../../modules/system/network/syncthing.nix
-    ../../modules/system/services/backup/restic.nix
 
     # System halves of modules that live with their owner under modules/home.
     ../../modules/home/cli/shell/fish/system.nix

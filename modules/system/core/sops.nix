@@ -5,7 +5,7 @@
 #                             (e.g. cloudflared credentials for THIS host's tunnels)
 #   secrets/common.yaml     — fleet-wide credentials any host may read
 #                             (API tokens for reconcilers, tailscale auth key,
-#                              restic passphrase, etc.)
+#                              etc.)
 #
 # Per-secret module usage:
 #   sops.secrets.cloudflared-home-server = {

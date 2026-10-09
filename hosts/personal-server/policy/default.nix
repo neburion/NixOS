@@ -1,7 +1,6 @@
 { ... }:
 
-# What this box has been asked to do. Both entries are genuine per-host
-# choices: which repos it deploys, and what gets snapshotted nightly.
+# What this box has been asked to do: which repos it deploys.
 #
 # cloudflare.nix used to sit here too and held an empty attrset — the four
 # tunnels this host runs are declared by the services that need them, which is
@@ -11,6 +10,5 @@
 {
   imports = [
     ./apps.nix
-    ./backup.nix
   ];
 }
