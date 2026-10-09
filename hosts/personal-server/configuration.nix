@@ -44,6 +44,7 @@
     ../../modules/system/services/cloudflare/tunnel.nix
     ../../modules/system/services/cloudflare/reconcile.nix
     ../../modules/system/services/app-platform
+    ../../modules/system/services/backup-store.nix
 
     ../../modules/home/cli/shell/fish/system.nix
 
